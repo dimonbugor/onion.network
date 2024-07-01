@@ -656,9 +656,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void load() {
 
-        torStatusView = findViewById(R.id.torStatusView);
-        torStatusView.setVisibility(View.GONE);
-
         updateMenu();
 
         initTabs();

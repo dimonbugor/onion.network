@@ -35,7 +35,9 @@ public class TorStatusView extends LinearLayout {
         TextView view = (TextView) findViewById(R.id.status);
 
         String prefix = "Bootstrapped";
-        if (status.contains("%") && status.length() > prefix.length() && status.startsWith(prefix)) {
+        if (status.contains("98")) {
+            this.setVisibility(View.GONE);
+        } else if (status.contains("%") && status.length() > prefix.length() && status.startsWith(prefix)) {
             status = status.substring(prefix.length());
             status = status.trim();
             view.setText(status);

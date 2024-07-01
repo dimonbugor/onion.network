@@ -229,7 +229,10 @@ public class Tor {
                     log(domain);
                     if (listener != null) listener.onChange();
 
-
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    //throw new Error(ex);
+                } finally {
                     final MainActivity mainActivity = MainActivity.getInstance();
                     if (mainActivity != null) {
                         mainActivity.runOnUiThread(new Runnable() {
@@ -239,9 +242,6 @@ public class Tor {
                             }
                         });
                     }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    //throw new Error(ex);
                 }
             }
         }.start();
