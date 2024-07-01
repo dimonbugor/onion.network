@@ -1,0 +1,59 @@
+<resources>
+
+    <string name="app_name">ourbook</string>
+
+    <string name="invitation_text">
+        %1$s\n
+        \n
+        Let\'s connect via %4$s, a fully decentralized peer-to-peer social network!\n
+        \n
+        contact: network.onion/%2$s/%3$s\n
+        (click after installation to connect)\n
+        \n
+        onion: http://%2$s.onion/network.onion\n
+        \n
+        clearnet: http://%2$s.onion.to/network.onion\n
+        \n
+        ID: %2$s\n
+        (copy manually if the links are not displayed correctly)\n
+    </string>
+
+    <string-array name="acceptmessagesvalues">
+        <item></item>
+        <item>friends</item>
+        <item>none</item>
+    </string-array>
+
+    <string-array name="acceptmessageslabels">
+        <item>Everyone</item>
+        <item>Only Friends</item>
+        <item>None</item>
+    </string-array>
+
+    <string-array name="wallbotintervalvalues">
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+        <item>300</item>
+        <item>600</item>
+        <item>1800</item>
+        <item>3600</item>
+        <item>7200</item>
+    </string-array>
+
+    <string-array name="wallbotintervallabels">
+        <item>10s</item>
+        <item>20s</item>
+        <item>30s</item>
+        <item>1min</item>
+        <item>2min</item>
+        <item>5min</item>
+        <item>10min</item>
+        <item>30min</item>
+        <item>1h</item>
+        <item>2h</item>
+    </string-array>
+
+</resources>
