@@ -10,6 +10,8 @@
 
 package onion.network;
 
+import static onion.network.helpers.BitmapHelper.getCircledBitmap;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -161,7 +163,7 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
 
             Bitmap th = ItemCache.getInstance(activity).get(remoteAddress, "thumb").one().bitmap("thumb");
             if (th != null) {
-                holder.thumb.setImageBitmap(th);
+                holder.thumb.setImageBitmap(getCircledBitmap(th));
             } else {
                 holder.thumb.setImageResource(R.drawable.nothumb);
             }

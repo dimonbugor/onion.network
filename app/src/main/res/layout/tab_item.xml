@@ -1,26 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
-    android:layout_gravity="center"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainContainer"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/icon"
-        android:src="@drawable/ic_format_list_bulleted_white_36dp"
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/itemFab"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/appbar_padding_top"
+        android:src="@drawable/ic_menu"
+        android:visibility="visible"
+        app:rippleColor="#fff" />
 
     <TextView
-        android:singleLine="true"
-        android:textColor="#fff"
         android:id="@+id/badge"
-        android:textStyle="bold"
-        android:textSize="20dp"
-        android:layout_marginLeft="4dp"
-        android:layout_gravity="center_vertical"
-        android:text="1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-</LinearLayout>
+</RelativeLayout>

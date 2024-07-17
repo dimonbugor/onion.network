@@ -25,9 +25,10 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -41,11 +42,10 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,33 +75,13 @@ public class MainActivity extends AppCompatActivity {
     BasePage[] pages;
     int REQUEST_QR = 12;
     String TAG = "Activity";
-    TabLayout tabLayout;
+
     ItemResult nameItemResult = new ItemResult();
     Timer timer = null;
-    private ViewPager viewPager;
     ChatPage chatPage;
-    TorStatusView torStatusView;
-
-    public void blink(final int id) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < tabLayout.getTabCount(); i++) {
-                    if (pages[i].getIcon() == id) {
-                        View v = ((ViewGroup) tabLayout.getChildAt(0)).getChildAt(i);
-                        //View v = tabLayout.getTabAt(i).getCustomView();
-                        ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
-                                "backgroundColor",
-                                new ArgbEvaluator(),
-                                0x88ffffff,
-                                0x00ffffff);
-                        backgroundColorAnimator.setDuration(300);
-                        backgroundColorAnimator.start();
-                    }
-                }
-            }
-        });
-    }
+    LinearLayout tabs;
+    FloatingActionButton menuFab;
+    private ViewPager viewPager;
 
     public static void addFriendItem(final Context context, String a, String name) {
 
@@ -131,6 +111,37 @@ public class MainActivity extends AppCompatActivity {
 
     static void prefetchExtra(Context context, String address) {
         new ItemTask(context, address, "thumb").execute2();
+    }
+
+    public void blink(final int id) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < getChildrenViews(tabs); i++) {
+                    if (pages[i].getIcon() == id) {
+                        View v = ((ViewGroup) tabs.getChildAt(0)).getChildAt(i);
+                        //View v = tabLayout.getTabAt(i).getCustomView();
+                        ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
+                                "backgroundColor",
+                                new ArgbEvaluator(),
+                                0x88ffffff,
+                                0x00ffffff);
+                        backgroundColorAnimator.setDuration(300);
+                        backgroundColorAnimator.start();
+                    }
+                }
+            }
+        });
+    }
+
+    public int getChildrenViews(ViewGroup parent) {
+        int count = parent.getChildCount();
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            if (parent.getChildAt(i) instanceof ViewGroup) {
+                count += getChildrenViews((ViewGroup) parent.getChildAt(i));
+            }
+        }
+        return count;
     }
 
     @Override
@@ -237,7 +248,6 @@ public class MainActivity extends AppCompatActivity {
         if (address.equals(Tor.getInstance(this).getID())) address = "";
 
 
-
         db = ItemDatabase.getInstance(this);
 
         startService(new Intent(this, HostService.class));
@@ -310,43 +320,40 @@ public class MainActivity extends AppCompatActivity {
         });
         //viewPager.setOffscreenPageLimit(3)
 
-        tabLayout = (TabLayout) findViewById(R.id.tabs);
-
-
-        tabLayout.setupWithViewPager(viewPager);
-
+        tabs = findViewById(R.id.containerFabs);
+        menuFab = findViewById(R.id.menuFab);
+        menuFab.setOnClickListener(v -> {
+            if (tabs.getVisibility() == View.GONE) {
+                tabs.setVisibility(View.VISIBLE);
+            } else {
+                tabs.setVisibility(View.GONE);
+            }
+        });
 
         for (int i = 0; i < pages.length; i++) {
-
             int icon = pages[i].getIcon();
 
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
+            RelativeLayout relativeLayout =
+                    (RelativeLayout) View.inflate(this, R.layout.tab_item, null);
+            relativeLayout.setId(300 + i);
+            FloatingActionButton fab = relativeLayout.findViewById(R.id.itemFab);
+            fab.setId(100 + i);
+            fab.setImageDrawable(ContextCompat.getDrawable(this, icon));
+            fab.setContentDescription(pages[i].getTitle());
+            int finalI = i;
+            fab.setOnClickListener(v -> onTabSelected(finalI));
 
-            tab.setCustomView(R.layout.tab_item);
-            ((ImageView) tab.getCustomView().findViewById(R.id.icon)).setImageResource(icon);
-
-            tab.setContentDescription(pages[i].getTitle());
+            if (relativeLayout.getParent() != null) {
+                ((CoordinatorLayout) relativeLayout.getParent()).removeView(relativeLayout);
+            }
+            relativeLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            tabs.addView(relativeLayout);
 
         }
 
         initTabs();
-
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition(), true);
-                fabvis();
-                pages[tab.getPosition()].onTabSelected();
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-            }
-        });
 
 
         String pagestr = getIntent().getStringExtra("page");
@@ -437,21 +444,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         for (int i = 0; i < pages.length; i++) {
-
             BasePage page = pages[i];
-
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
-
-            TextView badge = (TextView) tab.getCustomView().findViewById(R.id.badge);
-
+            RelativeLayout relativeLayout = tabs.findViewById(300 + i);
+            TextView badge = (TextView) relativeLayout.findViewById(R.id.badge);
             String t = page.getBadge();
             if (t == null) t = "";
-
             badge.setVisibility("".equals(t) ? View.GONE : View.VISIBLE);
             badge.setText(t);
-
         }
 
+    }
+
+    void onTabSelected(int tabPosition) {
+        viewPager.setCurrentItem(tabPosition, true);
+        fabvis();
+        pages[tabPosition].onTabSelected();
+        tabs.setVisibility(View.GONE);
     }
 
     void showAddFriend() {
@@ -673,7 +681,7 @@ public class MainActivity extends AppCompatActivity {
                         page.onNameItem(item);
                     }
                     if (!address.isEmpty()) {
-                        if(item.json().has("name")) {
+                        if (item.json().has("name")) {
                             name = item.json().optString("name");
                         }
                         if (db.hasKey("friend", a)) {
@@ -709,7 +717,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void updateActionBar() {
-        if(address.isEmpty()) {
+        if (address.isEmpty()) {
             getSupportActionBar().setTitle(getAppName());
             getSupportActionBar().setSubtitle(null);
         } else {
@@ -841,7 +849,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        if(id == R.id.action_clear_chat) {
+        if (id == R.id.action_clear_chat) {
             new AlertDialog.Builder(this)
                     .setTitle("Clear chat")
                     .setMessage("Do you really want to delete all messages exchanged with this contact?")

@@ -10,6 +10,8 @@
 
 package onion.network;
 
+import static onion.network.helpers.BitmapHelper.getCircledBitmap;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -142,7 +144,7 @@ public class FriendPage extends BasePage {
 
                     Bitmap th = item.bitmap("thumb");
                     if (th != null) {
-                        thumb.setImageBitmap(th);
+                        thumb.setImageBitmap(getCircledBitmap(th));
                     }
 
                     if (activity.address.isEmpty()) {

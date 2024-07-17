@@ -10,6 +10,8 @@
 
 package onion.network;
 
+import static onion.network.helpers.BitmapHelper.getCircledBitmap;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -317,7 +319,8 @@ public class WallPage extends BasePage {
                         if (!str.isEmpty()) {
                             byte[] photodata = Base64.decode(str, Base64.DEFAULT);
                             if (photodata.length > 0) {
-                                thumb.setImageBitmap(BitmapFactory.decodeByteArray(photodata, 0, photodata.length));
+                                thumb.setImageBitmap(
+                                        getCircledBitmap(BitmapFactory.decodeByteArray(photodata, 0, photodata.length)));
                             }
                         }
                     } catch (Exception ex) {
