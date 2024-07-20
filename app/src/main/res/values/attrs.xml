@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ArcButtonLayout">
+        <attr name="fabPosition" format="enum">
+            <enum name="bottom_left" value="0"/>
+            <enum name="bottom_center" value="1"/>
+            <enum name="bottom_right" value="2"/>
+        </attr>
+        <attr name="fabMarginLeft" format="dimension"/>
+        <attr name="fabMarginTop" format="dimension"/>
+        <attr name="fabMarginRight" format="dimension"/>
+        <attr name="fabMarginBottom" format="dimension"/>
+        <attr name="centerMarginBottom" format="dimension"/>
+        <attr name="centerMarginTop" format="dimension"/>
+        <attr name="centerMarginLeft" format="dimension"/>
+        <attr name="centerMarginRight" format="dimension"/>
+    </declare-styleable>
+</resources>

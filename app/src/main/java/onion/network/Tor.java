@@ -12,6 +12,8 @@ package onion.network;
 
 import android.content.Context;
 import android.os.Build;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 
@@ -34,6 +36,10 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
 import java.security.Signature;
@@ -41,6 +47,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 
@@ -89,18 +96,28 @@ public class Tor {
 
                     log("sdk " + Build.VERSION.SDK_INT);
 
-                    if (arch.equals("X86")) {
-                        if (Build.VERSION.SDK_INT < 16) {
-                            v = "tor_x86_old";
-                        } else {
-                            v = "tor_x86";
-                        }
-                    } else {
-                        if (Build.VERSION.SDK_INT < 16) {
-                            v = "tor_arm_old";
-                        } else {
-                            v = "tor_arm";
-                        }
+                    switch (arch.toLowerCase()) {
+                        case "x86":
+                            if (Build.VERSION.SDK_INT < 16) {
+                                v = "tor_x86_old";
+                            } else {
+                                v = "tor_x86";
+                            }
+                            break;
+                        case "armeabi-v7a":
+                            if (Build.VERSION.SDK_INT < 16) {
+                                v = "tor_arm_old";
+                            } else {
+                                v = "tor_arm";
+                            }
+                            break;
+                        case "arm64-v8a":
+                            v = "tor_arm64";
+                            break;
+                        default:
+                        case "x86_64":
+                            v = "tor_x86_64";
+                            break;
                     }
 
 
@@ -124,7 +141,7 @@ public class Tor {
 
                             int s = (int) e.getSize();
 
-                            OutputStream os = context.openFileOutput(torname, context.MODE_PRIVATE);
+                            OutputStream os = context.openFileOutput(torname, Context.MODE_PRIVATE);
 
                             int p = 0;
                             byte[] b = new byte[1024 * 16];
@@ -161,7 +178,7 @@ public class Tor {
                     torsrv.mkdirs();
 
                     log("configure");
-                    PrintWriter torcfg = new PrintWriter(context.openFileOutput("torcfg", context.MODE_PRIVATE));
+                    PrintWriter torcfg = new PrintWriter(context.openFileOutput("torcfg", Context.MODE_PRIVATE));
                     //torcfg.println("Log debug stdout");
                     torcfg.println("Log notice stdout");
                     torcfg.println("DataDirectory " + tordir.getAbsolutePath());
@@ -187,7 +204,6 @@ public class Tor {
                     BufferedReader torreader = new BufferedReader(
                             new InputStreamReader(tor.getInputStream()));
                     for (String line = torreader.readLine(); line != null; line = torreader.readLine()) {
-                        //final String line = Base64.encodeToString(torreader.readLine().getBytes(), Base64.DEFAULT);
                         log(line);
 
                         status = line;
@@ -347,17 +363,17 @@ public class Tor {
     }
 
     KeyFactory getKeyFactory() {
-        if (Security.getProvider("BC") == null) {
+        /*if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());
-        }
+        }*/
         try {
-            return KeyFactory.getInstance("RSA", "BC");
+            return KeyFactory.getInstance("RSA", "AndroidKeyStore");
         } catch (Exception ex) {
             throw new Error(ex);
         }
     }
 
-    RSAPrivateKey getPrivateKey() {
+    /*RSAPrivateKey getPrivateKey() {
         String priv = Utils.filestr(new File(getServiceDir(), "private_key"));
         //log(priv);
         priv = priv.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
@@ -373,13 +389,45 @@ public class Tor {
         } catch (InvalidKeySpecException ex) {
             throw new Error(ex);
         }
+    }*/
+
+    private static final String KEY_ALIAS = "your_key_alias";
+    public PrivateKey generateAndRetrievePrivateKey() throws Exception {
+        // Initialize KeyPairGenerator
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
+
+        // Configure KeyGenParameterSpec
+        keyPairGenerator.initialize(
+                new KeyGenParameterSpec.Builder(
+                        KEY_ALIAS,
+                        KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                        .setAlgorithmParameterSpec(new RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4))
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                        .build());
+
+        // Generate the key pair
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        // Retrieve the private key from the KeyStore
+        KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+        KeyStore.PrivateKeyEntry privateKeyEntry =
+                (KeyStore.PrivateKeyEntry) keyStore.getEntry(KEY_ALIAS, null);
+        if (privateKeyEntry != null) {
+            return privateKeyEntry.getPrivateKey();
+        } else {
+            throw new Exception("Failed to generate key pair.");
+        }
     }
 
     RSAPrivateKeySpec getPrivateKeySpec() {
         try {
-            return getKeyFactory().getKeySpec(getPrivateKey(), RSAPrivateKeySpec.class);
+            return getKeyFactory().getKeySpec(generateAndRetrievePrivateKey(), RSAPrivateKeySpec.class);
         } catch (InvalidKeySpecException ex) {
             throw new Error(ex);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -406,7 +454,7 @@ public class Tor {
     byte[] sign(byte[] msg) {
         try {
             Signature signature = Signature.getInstance("SHA1withRSA");
-            signature.initSign(getPrivateKey());
+            signature.initSign(generateAndRetrievePrivateKey());
             signature.update(msg);
             return signature.sign();
         } catch (Exception ex) {

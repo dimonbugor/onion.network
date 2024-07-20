@@ -49,28 +49,27 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/containerFabs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom"
-            android:visibility="gone"
-            android:layout_marginLeft="@dimen/fab_margin"
-            android:layout_marginStart="@dimen/fab_margin"
-            android:layout_marginBottom="72dp"
-            android:paddingBottom="@dimen/fab_margin"
-            android:orientation="vertical">
+        <onion.network.ui.ArcButtonLayout
+            android:id="@+id/arcButtonLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:centerMarginTop="16dp"
+            app:fabPosition="bottom_left"
+            app:fabMarginLeft="32dp"
+            app:fabMarginTop="16dp"
+            app:fabMarginRight="16dp"
+            app:fabMarginBottom="16dp">
 
-        </LinearLayout>
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/menuFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|bottom"
+                android:layout_margin="@dimen/fab_margin"
+                android:src="@drawable/ic_menu"
+                app:rippleColor="#fff" />
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/menuFab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom"
-            android:layout_margin="@dimen/fab_margin"
-            android:src="@drawable/ic_menu"
-            app:rippleColor="#fff" />
+        </onion.network.ui.ArcButtonLayout>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/wallFab"
@@ -79,7 +78,7 @@
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/fab_margin"
             android:src="@drawable/ic_create_white_48dp"
-            android:visibility="gone"
+            android:visibility="visible"
             app:rippleColor="#fff" />
 
         <android.support.design.widget.FloatingActionButton

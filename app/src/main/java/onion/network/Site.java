@@ -30,6 +30,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import onion.network.pages.ProfilePage;
+
 public class Site {
 
     static Charset utf8 = Utils.utf8;

@@ -1,5 +1,5 @@
 echo packing ...
-tar -cf bin.tar tor_arm tor_arm_old tor_x86 tor_x86_old
+tar -cf bin.tar tor_arm tor_arm_old tor_arm64 tor_x86 tor_x86_old tor_x86_64
 echo compressing ...
 lzma -k -9 -f bin.tar #3.9mb
 #xz --format=lzma -k -f -9 -e --memory=80MiB bin.tar

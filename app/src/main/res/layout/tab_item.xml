@@ -12,6 +12,7 @@
         android:layout_marginBottom="@dimen/appbar_padding_top"
         android:src="@drawable/ic_menu"
         android:visibility="visible"
+        app:fabCustomSize="36dp"
         app:rippleColor="#fff" />
 
     <TextView

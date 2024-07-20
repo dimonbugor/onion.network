@@ -9,8 +9,13 @@ android {
         targetSdkVersion 34
         versionCode 1200
         versionName "12"
-        minSdkVersion 14
-        multiDexEnabled = true;
+        minSdkVersion 16
+        multiDexEnabled = true
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64", "arm64-v8a", "x86", "x86_64"
+        }
+        signingConfig signingConfigs.debug
     }
     buildTypes {
 
@@ -30,10 +35,11 @@ android {
     sourceSets {
         main {
             jniLibs.srcDirs = ['libs']
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
 
-    /*packagingOptions {
+    packagingOptions {
         exclude("META-INF/DEPENDENCIES")
         exclude("META-INF/LICENSE")
         exclude("META-INF/LICENSE.txt")
@@ -43,7 +49,15 @@ android {
         exclude("META-INF/notice.txt")
         exclude("META-INF/ASL2.0")
         exclude("META-INF/*.kotlin_module")
-    }*/
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    dependenciesInfo {
+        includeInApk true
+        includeInBundle true
+    }
 
 }
 

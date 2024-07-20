@@ -62,11 +62,23 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import onion.network.pages.BasePage;
+import onion.network.pages.ChatPage;
+import onion.network.pages.CloudPage;
+import onion.network.pages.ConversationPage;
+import onion.network.pages.FriendPage;
+import onion.network.pages.InfoPage;
+import onion.network.pages.PrivacyPage;
+import onion.network.pages.ProfilePage;
+import onion.network.pages.RequestPage;
+import onion.network.pages.WallPage;
+import onion.network.ui.ArcButtonLayout;
+
 public class MainActivity extends AppCompatActivity {
 
     private static MainActivity instance = null;
-    String address = "";
-    String name = "";
+    public String address = "";
+    public String name = "";
     ItemDatabase db;
 
     WallPage wallPage;
@@ -76,10 +88,11 @@ public class MainActivity extends AppCompatActivity {
     int REQUEST_QR = 12;
     String TAG = "Activity";
 
-    ItemResult nameItemResult = new ItemResult();
+    public ItemResult nameItemResult = new ItemResult();
     Timer timer = null;
     ChatPage chatPage;
-    LinearLayout tabs;
+
+    ArcButtonLayout arcButtonLayout;
     FloatingActionButton menuFab;
     private ViewPager viewPager;
 
@@ -117,9 +130,9 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < getChildrenViews(tabs); i++) {
+                for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
                     if (pages[i].getIcon() == id) {
-                        View v = ((ViewGroup) tabs.getChildAt(0)).getChildAt(i);
+                        View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
                         //View v = tabLayout.getTabAt(i).getCustomView();
                         ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
                                 "backgroundColor",
@@ -158,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         return new Intent(this, MainActivity.class);
     }
 
-    void log(String s) {
+    public void log(String s) {
         Log.i(TAG, s);
     }
 
@@ -266,6 +279,9 @@ public class MainActivity extends AppCompatActivity {
                     requestPage,
                     new ConversationPage(this),
                     new ProfilePage(this),
+                    new InfoPage(this),
+                    new CloudPage(this),
+                    new PrivacyPage(this),
             };
         } else {
             chatPage = new ChatPage(this);
@@ -274,6 +290,9 @@ public class MainActivity extends AppCompatActivity {
                     friendPage,
                     chatPage,
                     new ProfilePage(this),
+                    new InfoPage(this),
+                    new CloudPage(this),
+                    new PrivacyPage(this),
             };
         }
 
@@ -320,15 +339,16 @@ public class MainActivity extends AppCompatActivity {
         });
         //viewPager.setOffscreenPageLimit(3)
 
-        tabs = findViewById(R.id.containerFabs);
         menuFab = findViewById(R.id.menuFab);
-        menuFab.setOnClickListener(v -> {
+        /*menuFab.setOnClickListener(v -> {
             if (tabs.getVisibility() == View.GONE) {
                 tabs.setVisibility(View.VISIBLE);
             } else {
                 tabs.setVisibility(View.GONE);
             }
-        });
+        });*/
+        arcButtonLayout = findViewById(R.id.arcButtonLayout);
+        arcButtonLayout.setFab(menuFab);
 
         for (int i = 0; i < pages.length; i++) {
             int icon = pages[i].getIcon();
@@ -349,8 +369,8 @@ public class MainActivity extends AppCompatActivity {
             relativeLayout.setLayoutParams(new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT));
-            tabs.addView(relativeLayout);
 
+            arcButtonLayout.addButton(relativeLayout);
         }
 
         initTabs();
@@ -417,27 +437,21 @@ public class MainActivity extends AppCompatActivity {
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("Enter ID")
                 .setView(dialogView)
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
+                .setNegativeButton("Cancel", (dialog, which) -> {
                 })
-                .setPositiveButton("Open", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        final String address = addressEdit.getText().toString().trim().toLowerCase();
-                        if (address.length() != 16) {
-                            snack("Invalid ID");
-                            return;
-                        }
-                        startActivity(new Intent(MainActivity.this, MainActivity.class).putExtra("address", address));
-
+                .setPositiveButton("Open", (dialog, which) -> {
+                    final String address = addressEdit.getText().toString().trim().toLowerCase();
+                    if (address.length() != 16) {
+                        snack("Invalid ID");
+                        return;
                     }
+                    startActivity(new Intent(MainActivity.this, MainActivity.class).putExtra("address", address));
+
                 })
                 .show();
     }
 
-    void initTabs() {
+    public void initTabs() {
 
         if (pages == null) {
             return;
@@ -445,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < pages.length; i++) {
             BasePage page = pages[i];
-            RelativeLayout relativeLayout = tabs.findViewById(300 + i);
+            RelativeLayout relativeLayout = arcButtonLayout.findViewById(300 + i);
             TextView badge = (TextView) relativeLayout.findViewById(R.id.badge);
             String t = page.getBadge();
             if (t == null) t = "";
@@ -459,10 +473,10 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setCurrentItem(tabPosition, true);
         fabvis();
         pages[tabPosition].onTabSelected();
-        tabs.setVisibility(View.GONE);
+        arcButtonLayout.toggleMenu();
     }
 
-    void showAddFriend() {
+    public void showAddFriend() {
         new AlertDialog.Builder(this)
                 .setTitle("Add Friend")
                 .setItems(new String[]{
@@ -602,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
         a.show();
     }
 
-    String getID() {
+    public String getID() {
         if (address != null && !address.isEmpty()) return address.trim().toLowerCase();
         return Tor.getInstance(this).getID();
     }
@@ -636,7 +650,7 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    void addFriend(final String address, String name) {
+    public void addFriend(final String address, String name) {
 
         if (db.hasKey("friend", address)) return;
 
@@ -731,7 +745,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    BasePage currentPage() {
+    public BasePage currentPage() {
         if (viewPager == null) return null;
         Object o = viewPager.getCurrentItem();
         //Log.i(TAG, "" + o + " " + o.getClass().toString());
@@ -882,7 +896,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void showId() {
+    public void showId() {
         final String id = getID();
         /*new AlertDialog.Builder(this)
                 .setTitle("" + id)
@@ -1036,12 +1050,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    void toast(String s) {
+    public void toast(String s) {
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
 
-    void publishPost(JSONObject o) {
+    public void publishPost(JSONObject o) {
         long k = System.currentTimeMillis();
         long i = 100000000000000l - k;
         db.put(new Item("post", "" + k, "" + i, o));

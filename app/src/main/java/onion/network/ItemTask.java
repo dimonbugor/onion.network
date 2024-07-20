@@ -36,7 +36,7 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
     String type;
     String index;
     int count;
-    String TAG = "ItemTask";
+    protected String TAG = "ItemTask";
 
     public ItemTask(Context context, String address, String type) {
         this(context, address, type, "", 1);
