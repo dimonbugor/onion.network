@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context="onion.network.MainActivity">
 
-
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/main_content"
         android:layout_width="match_parent"
@@ -47,6 +46,40 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
+            <onion.network.TorStatusView
+                android:id="@+id/torStatusView"
+                android:background="#eee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <LinearLayout
+                        android:padding="8dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_marginLeft="8dp"
+                            android:singleLine="true"
+                            android:padding="8dp"
+                            android:layout_gravity="center_vertical"
+                            android:id="@+id/status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <ProgressBar
+                        android:layout_gravity="top"
+                        android:indeterminate="true"
+                        android:id="@+id/progressbar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="16dp"
+                        android:layout_marginTop="-6dp"
+                        android:max="100"
+                        />
+                </FrameLayout>
+            </onion.network.TorStatusView>
+
         </LinearLayout>
 
         <onion.network.ui.ArcButtonLayout
@@ -54,6 +87,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:centerMarginTop="16dp"
+            app:centerMarginLeft="16dp"
+            app:centerMarginRight="4dp"
             app:fabPosition="bottom_left"
             app:fabMarginLeft="32dp"
             app:fabMarginTop="16dp"
