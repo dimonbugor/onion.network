@@ -85,7 +85,7 @@ public class SettingsActivity extends AppCompatActivity {
             getPreferenceManager().findPreference("clearcache").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    new AlertDialog.Builder(getActivity())
+                    new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                             .setTitle("Clear Cache")
                             .setMessage("Remove all cache data?")
                             .setNegativeButton("No", null)
@@ -119,7 +119,7 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            new AlertDialog.Builder(getActivity())
+            new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                     .setTitle("Third party software used by this app (click to view license)")
                     .setItems(items, new DialogInterface.OnClickListener() {
                         @Override
@@ -137,7 +137,7 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            new AlertDialog.Builder(getActivity())
+            new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                     .setTitle(name)
                     .setMessage(text)
                     .show();

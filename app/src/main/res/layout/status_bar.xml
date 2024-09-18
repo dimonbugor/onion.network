@@ -21,7 +21,6 @@
             android:max="100"
             />
         <TextView
-            android:textColor="#000"
             android:text="Loading..."
             android:singleLine="true"
             android:paddingLeft="16dp"
@@ -42,7 +41,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <View
-            android:background="#bbbbbb"
             android:layout_width="match_parent"
             android:layout_height="1dp" />
         <TextView

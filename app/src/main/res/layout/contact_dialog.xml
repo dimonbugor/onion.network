@@ -20,7 +20,6 @@
 
     <TextView
         android:id="@+id/is_friend"
-        android:textColor="#222"
         android:padding="8dp"
         android:gravity="center_vertical"
         android:text="   Friends"

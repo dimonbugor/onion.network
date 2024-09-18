@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
     void showEnterId() {
         View dialogView = getLayoutInflater().inflate(R.layout.friend_dialog, null);
         final EditText addressEdit = (EditText) dialogView.findViewById(R.id.address);
-        new AlertDialog.Builder(MainActivity.this)
+        new AlertDialog.Builder(MainActivity.this, R.style.RoundedAlertDialog)
                 .setTitle("Enter ID")
                 .setView(dialogView)
                 .setNegativeButton("Cancel", (dialog, which) -> {
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAddFriend() {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle("Add Friend")
                 .setItems(new String[]{
                         "Scan QR",
@@ -584,7 +584,7 @@ public class MainActivity extends AppCompatActivity {
             name += "  (friend)";
         }
 
-        AlertDialog.Builder a = new AlertDialog.Builder(this)
+        AlertDialog.Builder a = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle(name)
                 .setMessage(id);
 
@@ -645,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
         int s = (int) (Math.min(displayRectangle.width(), displayRectangle.height()) * 0.9);
         view.setMinimumWidth(s);
         view.setMinimumHeight(s);
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setView(view)
                 .show();
     }
@@ -800,7 +800,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_friends) {
-            new AlertDialog.Builder(this)
+            new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                     .setTitle("Friends")
                     .setMessage("You are friends with this user")
                     .setNeutralButton("Remove friend", new DialogInterface.OnClickListener() {
@@ -864,7 +864,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_clear_chat) {
-            new AlertDialog.Builder(this)
+            new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                     .setTitle("Clear chat")
                     .setMessage("Do you really want to delete all messages exchanged with this contact?")
                     .setNegativeButton("No", null)
@@ -910,7 +910,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .show();*/
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this , R.style.RoundedAlertDialog)
                 .setTitle("ID: " + id)
                 .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
                     @Override
@@ -1043,7 +1043,7 @@ public class MainActivity extends AppCompatActivity {
         ((RadioButton)v.findViewById(R.id.link_type_clearnet)).setChecked(true);
         */
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setView(v)
                 .show();
 

@@ -133,7 +133,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="#376"
                 android:text="fosuehnvjkdzshaw.onion/network.onion"
                 android:id="@+id/onion_link_text" />
             <LinearLayout
@@ -186,7 +185,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="#379"
                 android:text="fosuehnvjkdzshaw.onion.to/network.onion"
                 android:id="@+id/clearnet_link_text" />
             <LinearLayout

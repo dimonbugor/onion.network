@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
@@ -19,170 +20,230 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
-            android:configChanges="screenSize|screenLayout|orientation|uiMode"
+            android:name=".SplashActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
-            android:windowSoftInputMode="adjustPan"
-            android:name=".MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
-
+            android:theme="@style/AppTheme.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-
-
-
-
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="screenSize|screenLayout|orientation|uiMode"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan">
 
             <!-- http://network.onion/?... -->
 
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="network.onion" android:scheme="http" />
-            </intent-filter>
 
+                <data
+                    android:host="network.onion"
+                    android:scheme="http" />
+            </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="network.onion" android:scheme="https" />
+
+                <data
+                    android:host="network.onion"
+                    android:scheme="https" />
             </intent-filter>
-
-
-
-
 
             <!-- onnet -->
 
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="onnet" />
             </intent-filter>
-
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="onionet" />
             </intent-filter>
-
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="onionnet" />
             </intent-filter>
-
-
-
 
             <!-- http://....onion/network.onion -->
 
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion" android:path="/network.onion" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion" android:pathPrefix="/network.onion/" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion.*" android:path="/network.onion" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion.*" android:pathPrefix="/network.onion/" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion.to" android:path="/network.onion" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="*.onion.to" android:pathPrefix="/network.onion/" />
-            </intent-filter>
 
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion" android:path="/network.onion" />
+
+                <data
+                    android:host="*.onion"
+                    android:path="/network.onion"
+                    android:scheme="http" />
             </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion" android:pathPrefix="/network.onion/" />
+
+                <data
+                    android:host="*.onion"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="http" />
             </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion.*" android:path="/network.onion" />
+
+                <data
+                    android:host="*.onion.*"
+                    android:path="/network.onion"
+                    android:scheme="http" />
             </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion.*" android:pathPrefix="/network.onion/" />
+
+                <data
+                    android:host="*.onion.*"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="http" />
             </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion.to" android:path="/network.onion" />
+
+                <data
+                    android:host="*.onion.to"
+                    android:path="/network.onion"
+                    android:scheme="http" />
             </intent-filter>
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="*.onion.to" android:pathPrefix="/network.onion/" />
+
+                <data
+                    android:host="*.onion.to"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="http" />
             </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
+                <data
+                    android:host="*.onion"
+                    android:path="/network.onion"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
+                <data
+                    android:host="*.onion"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
+                <data
+                    android:host="*.onion.*"
+                    android:path="/network.onion"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="*.onion.*"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="*.onion.to"
+                    android:path="/network.onion"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="*.onion.to"
+                    android:pathPrefix="/network.onion/"
+                    android:scheme="https" />
+            </intent-filter>
 
             <!-- share post -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
             <!-- share photo -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="image/*" />
             </intent-filter>
-
-
-
         </activity>
 
         <service
@@ -190,23 +251,26 @@
             android:enabled="true"
             android:exported="false" />
 
-        <receiver android:name="onion.network.OnBootReceiver" android:enabled="true" android:exported="true">
+        <receiver
+            android:name=".OnBootReceiver"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action	android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
         </receiver>
 
         <activity
-            android:parentActivityName=".MainActivity"
             android:name=".SettingsActivity"
             android:label="Settings"
-            tools:targetApi="jelly_bean"></activity>
-
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

@@ -37,7 +37,6 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:src="@drawable/nothumb"
-                    android:background="#ddd"
                     android:layout_gravity="center" />
             </android.support.v7.widget.CardView>
 
@@ -74,7 +73,6 @@
         </LinearLayout>
 
         <FrameLayout
-            android:background="#ddd"
             android:layout_width="match_parent"
             android:layout_height="1dp"></FrameLayout>
 

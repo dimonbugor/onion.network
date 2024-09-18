@@ -17,18 +17,16 @@
             android:id="@+id/appbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="@dimen/appbar_padding_top"
-            android:theme="@style/AppTheme.AppBarOverlay">
+            android:paddingTop="@dimen/appbar_padding_top">
 
             <!-- app:layout_scrollFlags="scroll|enterAlways" -->
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
+                android:layout_height="45dp"
                 android:background="?attr/colorPrimary"
-                app:layout_scrollFlags=""
-                app:popupTheme="@style/AppTheme.PopupOverlay">
+                app:layout_scrollFlags="">
 
             </android.support.v7.widget.Toolbar>
 
@@ -48,7 +46,6 @@
 
             <onion.network.TorStatusView
                 android:id="@+id/torStatusView"
-                android:background="#eee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <FrameLayout
@@ -132,7 +129,6 @@
         android:id="@+id/lightbox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000"
         android:clickable="true"
         android:src="@drawable/nophoto"
         android:visibility="gone" />

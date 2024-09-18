@@ -2,17 +2,21 @@
 <resources>
     <declare-styleable name="ArcButtonLayout">
         <attr name="fabPosition" format="enum">
-            <enum name="bottom_left" value="0"/>
-            <enum name="bottom_center" value="1"/>
-            <enum name="bottom_right" value="2"/>
+            <enum name="bottom_left" value="0" />
+            <enum name="bottom_center" value="1" />
+            <enum name="bottom_right" value="2" />
         </attr>
-        <attr name="fabMarginLeft" format="dimension"/>
-        <attr name="fabMarginTop" format="dimension"/>
-        <attr name="fabMarginRight" format="dimension"/>
-        <attr name="fabMarginBottom" format="dimension"/>
-        <attr name="centerMarginBottom" format="dimension"/>
-        <attr name="centerMarginTop" format="dimension"/>
-        <attr name="centerMarginLeft" format="dimension"/>
-        <attr name="centerMarginRight" format="dimension"/>
+        <attr name="fabMarginLeft" format="dimension" />
+        <attr name="fabMarginTop" format="dimension" />
+        <attr name="fabMarginRight" format="dimension" />
+        <attr name="fabMarginBottom" format="dimension" />
+        <attr name="centerMarginBottom" format="dimension" />
+        <attr name="centerMarginTop" format="dimension" />
+        <attr name="centerMarginLeft" format="dimension" />
+        <attr name="centerMarginRight" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="FullscreenAttrs">
+        <attr name="fullscreenBackgroundColor" format="color" />
+        <attr name="fullscreenTextColor" format="color" />
     </declare-styleable>
 </resources>

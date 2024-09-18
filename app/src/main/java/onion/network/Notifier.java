@@ -69,7 +69,7 @@ public class Notifier {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder b = new NotificationCompat.Builder(context)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setColor(context.getResources().getColor(R.color.colorNotification))
+                .setColor(context.getResources().getColor(R.color.accent_dark))
                 .setContentTitle(context.getResources().getString(R.string.app_name))
                 .setContentText("New Message")
                 .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class).putExtra("page", "chat"), PendingIntent.FLAG_UPDATE_CURRENT))

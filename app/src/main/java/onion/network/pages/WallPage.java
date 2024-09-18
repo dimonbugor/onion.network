@@ -178,7 +178,7 @@ public class WallPage extends BasePage {
             dialogView.findViewById(R.id.image).setVisibility(View.GONE);
         }
 
-        AlertDialog.Builder b = new AlertDialog.Builder(activity).setView(dialogView);
+        AlertDialog.Builder b = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog).setView(dialogView);
 
         final Bitmap bmp = bitmap;
 
@@ -210,16 +210,13 @@ public class WallPage extends BasePage {
                     d.cancel();
                 }
             });
-            dialogView.findViewById(R.id.add_image).setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    postEditText = textEdit.getText().toString();
-                    //Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    //intent.setType("image/*");
-                    //activity.startActivityForResult(intent, REQUEST_PHOTO);
-                    startImageChooser(REQUEST_PHOTO);
-                    d.cancel();
-                }
+            dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
+                postEditText = textEdit.getText().toString();
+                //Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                //intent.setType("image/*");
+                //activity.startActivityForResult(intent, REQUEST_PHOTO);
+                startImageChooser(REQUEST_PHOTO);
+                d.cancel();
             });
         } else {
             dialogView.findViewById(R.id.take_photo).setVisibility(View.GONE);
@@ -397,7 +394,7 @@ public class WallPage extends BasePage {
                         delete.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                new AlertDialog.Builder(context)
+                                new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
                                         .setTitle("Delete Post?")
                                         .setMessage("Do you really want to delete this post?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {

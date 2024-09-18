@@ -80,7 +80,7 @@ public class ProfilePage extends BasePage {
         findViewById(R.id.delete_photo).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(activity)
+                new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                         .setTitle("Delete Photo")
                         .setMessage("Do you really want to delete this photo?")
                         .setNegativeButton("No", null)
@@ -152,7 +152,7 @@ public class ProfilePage extends BasePage {
 
                 final Bitmap fbmp = bmp;
 
-                new AlertDialog.Builder(activity)
+                new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                         .setTitle("Set Photo")
                         .setView(view)
                         .setNegativeButton("Cancel", null)
@@ -379,7 +379,7 @@ public class ProfilePage extends BasePage {
                                 final EditText textEdit = (EditText) dialogView.findViewById(R.id.text);
                                 textEdit.setText(val);
                                 textEdit.setInputType(row.type);
-                                AlertDialog.Builder dlg = new AlertDialog.Builder(getContext())
+                                AlertDialog.Builder dlg = new AlertDialog.Builder(getContext(), R.style.RoundedAlertDialog)
                                         .setView(dialogView)
                                         .setTitle("Change " + label)
                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

@@ -153,7 +153,7 @@ public class Utils {
             ClickableSpan s2 = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    new AlertDialog.Builder(context)
+                    new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
                             .setTitle(url)
                             .setMessage("Open link in external app?")
                             .setNegativeButton("No", null)

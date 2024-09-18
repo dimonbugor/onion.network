@@ -159,7 +159,7 @@ public class FriendPage extends BasePage {
                             @Override
                             public boolean onLongClick(View v) {
 
-                                new AlertDialog.Builder(context)
+                                new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
                                         .setTitle("Delete Friend?")
                                         .setMessage("Do you really want to delete this friend?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {

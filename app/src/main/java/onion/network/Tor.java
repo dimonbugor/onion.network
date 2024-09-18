@@ -102,6 +102,14 @@ public class Tor {
                         } else {
                             v = "tor_x86";
                         }
+                    } else if (arch.equals("X86_64")) {
+                        v = "tor_x86_64";
+                    } else if (arch.equals("ARM64")) {
+                        v = "tor_arm64-v8a";
+                    } else if (arch.equals("armeabi-v7a")) {
+                        v = "tor_armeabi-v7a";
+                    } else if (arch.equals("MIPS")) {
+                        v = "tor_mips";
                     } else {
                         if (Build.VERSION.SDK_INT < 16) {
                             v = "tor_arm_old";

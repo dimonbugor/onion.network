@@ -23,7 +23,6 @@
         android:id="@+id/key" />
 
     <TextView
-        android:textColor="#222"
         android:paddingTop="16sp"
         android:paddingBottom="16sp"
         android:paddingRight="8sp"
