@@ -21,12 +21,6 @@ public class PermissionHelper {
     private final Activity activity;
     private final PermissionListener permissionListener;
 
-    // Інтерфейс для зворотного виклику (callback)
-    public interface PermissionListener {
-        void onPermissionsGranted();
-        void onPermissionsDenied();
-    }
-
     public PermissionHelper(Activity activity, PermissionListener listener) {
         this.activity = activity;
         this.permissionListener = listener;
@@ -48,9 +42,11 @@ public class PermissionHelper {
     }
 
     private boolean hasStoragePermission() {
-        int readPermission = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
-        int writePermission = ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        return readPermission == PackageManager.PERMISSION_GRANTED && writePermission == PackageManager.PERMISSION_GRANTED;
+        int readPermission = ContextCompat.checkSelfPermission(activity,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ? Manifest.permission.READ_MEDIA_IMAGES
+                        : Manifest.permission.READ_EXTERNAL_STORAGE);
+        return readPermission == PackageManager.PERMISSION_GRANTED;
     }
 
     private boolean hasNotificationPermission() {
@@ -102,14 +98,7 @@ public class PermissionHelper {
 
     public void onRequestPermissionsResult(int requestCode, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_CODE_STORAGE:
-                if (arePermissionsGranted(grantResults)) {
-                    permissionListener.onPermissionsGranted();
-                } else {
-                    showPermissionExplanationDialog();
-                }
-                break;
-            case REQUEST_CODE_NOTIFICATION:
+            case REQUEST_CODE_STORAGE, REQUEST_CODE_NOTIFICATION:
                 if (arePermissionsGranted(grantResults)) {
                     permissionListener.onPermissionsGranted();
                 } else {
@@ -126,5 +115,12 @@ public class PermissionHelper {
             }
         }
         return true;
+    }
+
+    // Інтерфейс для зворотного виклику (callback)
+    public interface PermissionListener {
+        void onPermissionsGranted();
+
+        void onPermissionsDenied();
     }
 }

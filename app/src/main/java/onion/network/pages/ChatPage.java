@@ -10,7 +10,10 @@
 
 package onion.network.pages;
 
+import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
+import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;

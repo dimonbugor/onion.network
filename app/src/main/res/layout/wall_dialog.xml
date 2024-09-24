@@ -1,164 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scrollbarAlwaysDrawVerticalTrack="true"
-    >
+    android:layout_height="wrap_content">
 
-<LinearLayout
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingTop="16dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingBottom="8dp">
-
-    <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <EditText
-            android:inputType="textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine|textLongMessage"
-            android:imeOptions="flagNoExtractUi"
-            android:hint="Text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/text" />
-    </android.support.design.widget.TextInputLayout>
-
-    <ImageView
-        android:layout_marginTop="8dp"
-        android:padding="16dp"
-        android:maxHeight="84dp"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/image" />
+        android:scrollbarAlwaysDrawVerticalTrack="true">
 
-    <!--
-    <RadioGroup
-        android:id="@+id/access_group"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <RadioButton
-            android:layout_margin="8dp"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Public"
-            android:id="@+id/access_public" />
+            android:orientation="vertical"
+            android:paddingLeft="16dp"
+            android:paddingTop="16dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="8dp">
 
-        <RadioButton
-            android:layout_margin="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Friends"
-            android:id="@+id/access_friends" />
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-        <RadioButton
-            android:layout_margin="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Only Me"
-            android:id="@+id/access_private" />
+                <EditText
+                    android:id="@+id/text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Text"
+                    android:imeOptions="flagNoExtractUi"
+                    android:inputType="textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine|textLongMessage" />
+            </android.support.design.widget.TextInputLayout>
 
-    </RadioGroup>
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:maxHeight="84dp"
+                android:padding="16dp" />
 
-    android:drawableLeft="@drawable/ic_photo_library_black_24dp"
-    android:drawableLeft="@drawable/ic_add_a_photo_black_24dp"
-    android:drawableLeft="@drawable/ic_check_black_36dp"
-    -->
+            <!--
+            <RadioGroup
+                android:id="@+id/access_group"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-    <!--
-    <LinearLayout
-        android:layout_marginTop="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <Button
-            android:textColor="?colorPrimary"
-            android:text="Image"
-            android:id="@+id/add_image"
-            android:background="?selectableItemBackground"
+                <RadioButton
+                    android:layout_margin="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Public"
+                    android:id="@+id/access_public" />
 
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="16dp"
-            />
-        <Button
-            android:textColor="?colorPrimary"
-            android:text="Photo"
-            android:id="@+id/take_photo"
-            android:background="?selectableItemBackground"
+                <RadioButton
+                    android:layout_margin="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Friends"
+                    android:id="@+id/access_friends" />
 
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="16dp"
-            />
-        <FrameLayout
-            android:layout_weight="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></FrameLayout>
-        <Button
-            android:textColor="?colorPrimary"
-            android:id="@+id/publish"
-            android:background="?selectableItemBackground"
+                <RadioButton
+                    android:layout_margin="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Only Me"
+                    android:id="@+id/access_private" />
 
-            android:text="Publish"
-            android:drawablePadding="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            />
-    </LinearLayout>
-    -->
+            </RadioGroup>
 
+            android:drawableLeft="@drawable/ic_photo_library_black_24dp"
+            android:drawableLeft="@drawable/ic_add_a_photo_black_24dp"
+            android:drawableLeft="@drawable/ic_check_black_36dp"
+            -->
 
-    <LinearLayout
-        android:layout_marginTop="8dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ImageButton
-            android:alpha="0.6"
-            android:layout_gravity="center_vertical"
-            android:padding="12dp"
-            android:id="@+id/add_image"
-            android:background="?selectableItemBackground"
-            android:src="@drawable/ic_photo_black_24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            />
-        <ImageButton
-            android:alpha="0.6"
-            android:layout_gravity="center_vertical"
-            android:padding="12dp"
-            android:id="@+id/take_photo"
-            android:background="?selectableItemBackground"
-            android:src="@drawable/ic_photo_camera_black_24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            />
-        <FrameLayout
-            android:layout_weight="1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></FrameLayout>
-        <Button
-            android:alpha="0.8"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/publish"
-            android:background="?selectableItemBackground"
-            android:drawableLeft="@drawable/ic_check_black_24dp"
-            android:text="Publish"
-            android:drawablePadding="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            />
-    </LinearLayout>
+            <!--
+            <LinearLayout
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <Button
+                    android:textColor="?colorPrimary"
+                    android:text="Image"
+                    android:id="@+id/add_image"
+                    android:background="?selectableItemBackground"
+
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    />
+                <Button
+                    android:textColor="?colorPrimary"
+                    android:text="Photo"
+                    android:id="@+id/take_photo"
+                    android:background="?selectableItemBackground"
+
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="16dp"
+                    />
+                <FrameLayout
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"></FrameLayout>
+                <Button
+                    android:textColor="?colorPrimary"
+                    android:id="@+id/publish"
+                    android:background="?selectableItemBackground"
+
+                    android:text="Publish"
+                    android:drawablePadding="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
+            </LinearLayout>
+            -->
 
 
-</LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <ImageButton
+                    android:id="@+id/add_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="8dp"
+                    android:alpha="0.6"
+                    android:background="?selectableItemBackground"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_photo_black_24dp"
+                    android:tint="@android:color/white" />
+
+                <ImageButton
+                    android:id="@+id/take_photo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="8dp"
+                    android:alpha="0.6"
+                    android:background="?selectableItemBackground"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_photo_camera_black_24dp"
+                    android:tint="@android:color/white" />
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"></FrameLayout>
+
+                <Button
+                    android:id="@+id/publish"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:alpha="0.8"
+                    android:background="?selectableItemBackground"
+                    android:drawableLeft="@drawable/ic_check_black_24dp"
+                    android:drawablePadding="8dp"
+                    android:drawableTint="@android:color/white"
+                    android:text="Publish" />
+            </LinearLayout>
 
 
-</ScrollView>
+        </LinearLayout>
+
+    </ScrollView>
+</RelativeLayout>

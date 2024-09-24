@@ -11,7 +11,8 @@
     <color name="bg_dark">#1F1F1F</color> <!-- Темно-сірий фон -->
     <color name="primary_dark">#262626</color> <!-- Основний темний колір -->
     <color name="primary_dark_variant">#202020</color> <!-- Варіант основного кольору -->
-    <color name="card_bg">#CC494949</color> <!-- Варіант основного кольору -->
+    <color name="dialog_bg">#99494949</color>
+    <color name="card_bg">#33FFFFFF</color>
     <color name="accent_dark">#0088CC</color> <!-- Акцентний колір (синій) -->
     <color name="text_primary_dark">#FFFFFF</color> <!-- Білий текст -->
     <color name="text_secondary_dark">#B0B0B0</color> <!-- Світло-сірий текст -->
