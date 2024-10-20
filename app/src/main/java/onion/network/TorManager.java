@@ -47,6 +47,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import info.guardianproject.netcipher.proxy.OrbotHelper;
 
@@ -130,11 +132,7 @@ public class TorManager {
                 TorService.LocalBinder binder = (TorService.LocalBinder) service;
                 torService = binder.getService();
                 torControlConnection = torService.getTorControlConnection();
-                try {
-                    torControlConnection.authenticate(pubkey());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+
             }
 
             @Override
@@ -180,12 +178,20 @@ public class TorManager {
     }
 
     public String getID() {
+        String id = null;
         if (torService != null) {
-            String onionKey = torService.getInfo("md/id/<identity>");
+            final String regex = "(id ed\\d*)";
             String md = torService.getInfo("md/all");
-            log(onionKey);
+            if(md != null) {
+                final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                final Matcher matcher = pattern.matcher(md);
+
+                while (matcher.find()) {
+                    id = matcher.group(0).trim().replace("id ", "");
+                }
+            }
         }
-        return domain.replace(".onion", "").trim();
+        return id;
     }
 
     File getServiceDir() {

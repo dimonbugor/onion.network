@@ -46,8 +46,8 @@ public class ChatDatabase extends SQLiteOpenHelper {
     @Override
     public void onOpen(SQLiteDatabase db) {
         Cursor c = db.rawQuery("PRAGMA secure_delete = true", null);
-        while(c.moveToNext()) {
-            for(int i = 0; i < c.getColumnCount(); i++) {
+        while (c.moveToNext()) {
+            for (int i = 0; i < c.getColumnCount(); i++) {
                 Log.i("secure_delete", "" + c.getColumnName(i) + " " + c.getString(i));
             }
         }
@@ -87,11 +87,17 @@ public class ChatDatabase extends SQLiteOpenHelper {
 
     public Cursor getUnsent(String b) {
         String a = TorManager.getInstance(context).getID();
+        if (a == null) {
+            a = "";
+        }
         return getReadableDatabase().query("messages", null, "sender=? AND receiver=? AND outgoing=1", new String[]{a, b}, null, null, null, null);
     }
 
     public Cursor getUnsent() {
         String a = TorManager.getInstance(context).getID();
+        if (a == null) {
+            a = "";
+        }
         return getReadableDatabase().query("messages", null, "sender=? AND outgoing=1", new String[]{a}, null, null, null, null);
     }
 
