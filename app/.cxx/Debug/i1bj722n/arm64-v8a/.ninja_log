@@ -1,0 +1,11 @@
+# ninja log v5
+4	374	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/icmp.c.o	417306ceb048eb2b
+2	377	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/session.c.o	b6dc9aa0bd1c0381
+1	387	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/invizible.c.o	d68a73e0fdc38850
+4	408	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/dhcp.c.o	c6a598f197382904
+2	430	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/udp.c.o	29ac18b31951291d
+3	435	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/dns.c.o	3655c8ddadf92ada
+0	454	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/ip.c.o	8f847ed5e9c919a
+2	519	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/tcp.c.o	87ab74c2515f3f
+8	539	1729330776	CMakeFiles/invizible.dir/src/main/jni/invizible/util.c.o	5ebee0d1f8669c2a
+539	1147	1729330777	../../../../build/intermediates/cxx/Debug/i1bj722n/obj/arm64-v8a/libinvizible.so	329a0cd9ab2b9461

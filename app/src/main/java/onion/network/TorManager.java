@@ -21,16 +21,22 @@ import android.util.Log;
 
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
 import org.spongycastle.asn1.ASN1OutputStream;
 import org.spongycastle.asn1.x509.RSAPublicKeyStructure;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
 import org.torproject.jni.TorService;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -49,7 +55,6 @@ public class TorManager {
     private static TorManager instance = null;
     private Context context;
 
-    private int port = -1;
     private String domain = "";
     private Listener listener = null;
     private LogListener logListener;
@@ -92,7 +97,66 @@ public class TorManager {
 
         stopTor();
 
-        startTor();
+        try {
+            log("make dir");
+            File tordir = TorService.getTorrc(context);
+            tordir.mkdirs();
+
+            log("make service");
+            File torsrv = new File(context.getFilesDir(), torservdir);
+            torsrv.mkdirs();
+
+            log("configure");
+            PrintWriter torcfg = new PrintWriter(context.openFileOutput("torcfg", context.MODE_PRIVATE));
+            //torcfg.println("Log debug stdout");
+            torcfg.println("Log notice stdout");
+            torcfg.println("DataDirectory " + tordir.getAbsolutePath());
+            torcfg.println("SOCKSPort auto");
+            torcfg.println("HiddenServiceDir " + torsrv.getAbsolutePath());
+            //torcfg.println("HiddenServicePort 80 unix:" + server.getSocketName());
+            torcfg.println("HiddenServicePort " + TorService.httpTunnelPort + " " + server.getSocketName());
+            //torcfg.println("HiddenServicePort 80 unix:");
+            torcfg.println();
+            torcfg.close();
+            log(Utils.filestr(new File(context.getFilesDir(), "torcfg")));
+
+            log("start");
+
+            startTor();
+
+            boolean ready2 = ready;
+
+            domain = Utils.filestr(new File(torsrv, "hostname")).trim();
+            log(domain);
+            if (listener != null) listener.onChange();
+            //ready = true;
+            //test();
+            ready2 = true;
+
+
+            final MainActivity mainActivity = MainActivity.getInstance();
+            if (mainActivity != null) {
+                mainActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainActivity.load();
+                    }
+                });
+            }
+
+            if (!ready) {
+                ready = ready2;
+                LogListener l = logListener;
+                if (l != null) {
+                    l.onLog();
+                }
+            }
+
+            ready = ready2;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            //throw new Error(ex);
+        }
     }
 
     synchronized public static TorManager getInstance(Context context) {

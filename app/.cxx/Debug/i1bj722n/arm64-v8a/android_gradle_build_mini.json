@@ -1,0 +1,33 @@
+{
+  "buildFiles": [
+    "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/i1bj722n/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/i1bj722n/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "invizible-Debug-arm64-v8a": {
+      "artifactName": "invizible",
+      "buildCommandComponents": [
+        "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/i1bj722n/arm64-v8a",
+        "invizible"
+      ],
+      "abi": "arm64-v8a",
+      "output": "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/i1bj722n/obj/arm64-v8a/libinvizible.so",
+      "runtimeFiles": []
+    }
+  }
+}
