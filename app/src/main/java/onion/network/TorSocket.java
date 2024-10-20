@@ -12,6 +12,8 @@ package onion.network;
 
 import android.content.Context;
 
+import net.freehaven.tor.control.TorControlConnection;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,7 +36,7 @@ public class TorSocket extends Socket {
 
             int torport = torManager.getPort();
             if (torport > 0) {
-                connect(new InetSocketAddress("127.0.0.1", torport), timeout);
+                connect(new InetSocketAddress("127.0.0.1", port), timeout);
             }
 
             setSoTimeout(timeout);
@@ -43,25 +45,7 @@ public class TorSocket extends Socket {
             OutputStream os = getOutputStream();
 
             // connect to proxy
-            {
-                os.write(4); // socks 4a
-                os.write(1); // stream
-
-                os.write((port >> 8) & 0xff);
-                os.write((port >> 0) & 0xff);
-
-                os.write(0);
-                os.write(0);
-                os.write(0);
-                os.write(1);
-
-                os.write(0);
-
-                os.write(host.getBytes());
-                os.write(0);
-
-                os.flush();
-            }
+            TorControlConnection torControlConnection = new TorControlConnection(is, os);
 
             // get proxy response
             {

@@ -11,43 +11,44 @@
 package onion.network;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Base64;
 import android.util.Log;
 
+import net.freehaven.tor.control.TorControlConnection;
+
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
 import org.spongycastle.asn1.ASN1OutputStream;
 import org.spongycastle.asn1.x509.RSAPublicKeyStructure;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
 import org.torproject.jni.TorService;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
 import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+
+import info.guardianproject.netcipher.proxy.OrbotHelper;
 
 public class TorManager {
 
@@ -60,6 +61,9 @@ public class TorManager {
     private LogListener logListener;
     private String status = "";
     private boolean ready = false;
+
+    private TorService torService;
+    private TorControlConnection torControlConnection;
 
     private BroadcastReceiver torStatusReceiver = new BroadcastReceiver() {
         @Override
@@ -90,73 +94,11 @@ public class TorManager {
                     new IntentFilter(TorService.ACTION_STATUS));
         }
 
-        final Server server = Server.getInstance(context);
-
         domain = Utils.filestr(new File(getServiceDir(), "hostname")).trim();
         log(domain);
 
         stopTor();
-
-        try {
-            log("make dir");
-            File tordir = TorService.getTorrc(context);
-            tordir.mkdirs();
-
-            log("make service");
-            File torsrv = new File(context.getFilesDir(), torservdir);
-            torsrv.mkdirs();
-
-            log("configure");
-            PrintWriter torcfg = new PrintWriter(context.openFileOutput("torcfg", context.MODE_PRIVATE));
-            //torcfg.println("Log debug stdout");
-            torcfg.println("Log notice stdout");
-            torcfg.println("DataDirectory " + tordir.getAbsolutePath());
-            torcfg.println("SOCKSPort auto");
-            torcfg.println("HiddenServiceDir " + torsrv.getAbsolutePath());
-            //torcfg.println("HiddenServicePort 80 unix:" + server.getSocketName());
-            torcfg.println("HiddenServicePort " + TorService.httpTunnelPort + " " + server.getSocketName());
-            //torcfg.println("HiddenServicePort 80 unix:");
-            torcfg.println();
-            torcfg.close();
-            log(Utils.filestr(new File(context.getFilesDir(), "torcfg")));
-
-            log("start");
-
-            startTor();
-
-            boolean ready2 = ready;
-
-            domain = Utils.filestr(new File(torsrv, "hostname")).trim();
-            log(domain);
-            if (listener != null) listener.onChange();
-            //ready = true;
-            //test();
-            ready2 = true;
-
-
-            final MainActivity mainActivity = MainActivity.getInstance();
-            if (mainActivity != null) {
-                mainActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mainActivity.load();
-                    }
-                });
-            }
-
-            if (!ready) {
-                ready = ready2;
-                LogListener l = logListener;
-                if (l != null) {
-                    l.onLog();
-                }
-            }
-
-            ready = ready2;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            //throw new Error(ex);
-        }
+        startTor();
     }
 
     synchronized public static TorManager getInstance(Context context) {
@@ -164,20 +106,6 @@ public class TorManager {
             instance = new TorManager(context.getApplicationContext());
         }
         return instance;
-    }
-
-    public void startTor() {
-        Intent intent = new Intent(context, TorService.class);
-        context.startService(intent);
-    }
-
-    public void stopTor() {
-        Intent intent = new Intent(context, TorService.class);
-        context.stopService(intent);
-    }
-
-    public void stopReceiver() {
-        context.unregisterReceiver(torStatusReceiver);
     }
 
     static String computeID(RSAPublicKeySpec pubkey) {
@@ -194,6 +122,38 @@ public class TorManager {
         return new Base32().encodeAsString(b).toLowerCase().substring(0, 16);
     }
 
+    public void startTor() {
+        Intent intent = new Intent(context, TorService.class);
+        context.bindService(intent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                TorService.LocalBinder binder = (TorService.LocalBinder) service;
+                torService = binder.getService();
+                torControlConnection = torService.getTorControlConnection();
+                try {
+                    torControlConnection.authenticate(pubkey());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                torService = null;
+                torControlConnection = null;
+            }
+        }, Context.BIND_AUTO_CREATE);
+    }
+
+    public void stopTor() {
+        Intent intent = new Intent(context, TorService.class);
+        context.stopService(intent);
+    }
+
+    public void stopReceiver() {
+        context.unregisterReceiver(torStatusReceiver);
+    }
+
     void stat(String s) {
         status = s;
         if (listener != null) listener.onChange();
@@ -205,7 +165,7 @@ public class TorManager {
     }
 
     private void log(String s) {
-        if(s == null) {
+        if (s == null) {
             s = "";
         }
         Log.i("TorManager", s);
@@ -220,6 +180,11 @@ public class TorManager {
     }
 
     public String getID() {
+        if (torService != null) {
+            String onionKey = torService.getInfo("md/id/<identity>");
+            String md = torService.getInfo("md/all");
+            log(onionKey);
+        }
         return domain.replace(".onion", "").trim();
     }
 
@@ -239,33 +204,31 @@ public class TorManager {
         return ready;
     }
 
-    KeyFactory getKeyFactory() {
-        if (Security.getProvider("BC") == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
+    public KeyFactory getKeyFactory() {
         try {
-            return KeyFactory.getInstance("RSA", "BC");
-        } catch (Exception ex) {
-            throw new Error(ex);
+            // Використовуйте стандартну реалізацію Android для RSA
+            return KeyFactory.getInstance("RSA");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new Error("RSA algorithm not available", ex);
         }
     }
 
-    RSAPrivateKey getPrivateKey() {
+    // Метод для відновлення публічного ключа з закодованої строки
+    public PublicKey getPublicKey(String key) throws Exception {
+        byte[] keyBytes = Base64.decode(key, Base64.DEFAULT);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        return getKeyFactory().generatePublic(spec);
+    }
+
+    PrivateKey getPrivateKey() throws InvalidKeySpecException {
         String priv = Utils.filestr(new File(getServiceDir(), "private_key"));
         //log(priv);
         priv = priv.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
         priv = priv.replace("-----END RSA PRIVATE KEY-----", "");
         priv = priv.replaceAll("\\s", "");
-        //log(priv);
-        byte[] data = Base64.decode(priv, Base64.DEFAULT);
-        //log("" + data.length);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(data);
-        //log(keySpec.toString());
-        try {
-            return (RSAPrivateKey) getKeyFactory().generatePrivate(keySpec);
-        } catch (InvalidKeySpecException ex) {
-            throw new Error(ex);
-        }
+        byte[] keyBytes = Base64.decode(priv, Base64.DEFAULT);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        return getKeyFactory().generatePrivate(spec);
     }
 
     RSAPrivateKeySpec getPrivateKeySpec() {
