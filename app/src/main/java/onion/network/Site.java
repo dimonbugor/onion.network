@@ -266,9 +266,9 @@ public class Site {
         }
 
         ItemDatabase db = ItemDatabase.getInstance(context);
-        Tor tor = Tor.getInstance(context);
+        TorManager torManager = TorManager.getInstance(context);
 
-        String addr = tor.getID();
+        String addr = torManager.getID();
 
         String name = db.getstr("name");
         if (name == null || name.isEmpty()) {
@@ -433,7 +433,7 @@ public class Site {
 
         {
             //String url = "http://network.onion/" + uri.getHost();
-            String url = "onionnet:" + Tor.getInstance(context).getID();
+            String url = "onionnet:" + TorManager.getInstance(context).getID();
             page = treplace(page, "url2", html(url));
         }
 

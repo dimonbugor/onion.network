@@ -41,7 +41,7 @@ import onion.network.ItemResult;
 import onion.network.ItemTask;
 import onion.network.MainActivity;
 import onion.network.R;
-import onion.network.Tor;
+import onion.network.TorManager;
 import onion.network.Utils;
 
 public class WallPage extends BasePage {
@@ -284,7 +284,7 @@ public class WallPage extends BasePage {
 
             void fill(ItemResult itemResult, boolean finished) {
 
-                String myAddress = Tor.getInstance(context).getID();
+                String myAddress = TorManager.getInstance(context).getID();
 
                 String wallAddress = address;
                 if (wallAddress.isEmpty()) wallAddress = myAddress;

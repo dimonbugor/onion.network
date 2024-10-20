@@ -10,10 +10,7 @@
 
 package onion.network.pages;
 
-import android.app.Activity;
-import android.content.Context;
 import android.database.Cursor;
-import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -36,7 +33,7 @@ import onion.network.Item;
 import onion.network.MainActivity;
 import onion.network.R;
 import onion.network.Settings;
-import onion.network.Tor;
+import onion.network.TorManager;
 import onion.network.UpdateScheduler;
 import onion.network.Utils;
 
@@ -45,7 +42,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
     String TAG = "chat";
     ChatAdapter adapter;
     ChatDatabase chatDatabase;
-    Tor tor;
+    TorManager torManager;
     Cursor cursor;
     RecyclerView recycler;
     ChatServer chatServer;
@@ -60,7 +57,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
         chatDatabase = ChatDatabase.getInstance(activity);
         chatServer = ChatServer.getInstance(activity);
         chatClient = ChatClient.getInstance(activity);
-        tor = Tor.getInstance(activity);
+        torManager = TorManager.getInstance(activity);
 
         inflate(activity, R.layout.chat_page, this);
 
@@ -73,7 +70,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String sender = tor.getID();
+                String sender = torManager.getID();
                 if (sender == null || sender.trim().equals("")) {
                     sendPendingAndUpdate();
                     Log.i(TAG, "no sender id");
@@ -305,9 +302,9 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             String sender = cursor.getString(cursor.getColumnIndex("sender"));
             String time = Utils.date(cursor.getString(cursor.getColumnIndex("time")));
             boolean pending = cursor.getInt(cursor.getColumnIndex("outgoing")) > 0;
-            boolean tx = sender.equals(tor.getID());
+            boolean tx = sender.equals(torManager.getID());
 
-            if (sender.equals(tor.getID())) sender = "You";
+            if (sender.equals(torManager.getID())) sender = "You";
 
             if (tx) {
                 holder.left.setVisibility(View.VISIBLE);

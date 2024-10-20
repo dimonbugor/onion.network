@@ -89,7 +89,7 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
     @Override
     protected ItemResult doInBackground(Void... params) {
 
-        if (address == null || address.equals(Tor.getInstance(context).getID())) {
+        if (address == null || address.equals(TorManager.getInstance(context).getID())) {
             address = "";
         }
 

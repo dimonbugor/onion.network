@@ -23,12 +23,12 @@ public class ChatServer {
     String TAG = "chatserver";
     ChatDatabase chatDatabase;
     private Context context;
-    private Tor tor;
+    private TorManager torManager;
     private HashSet<OnMessageReceivedListener> listeners = new HashSet<OnMessageReceivedListener>();
 
     public ChatServer(Context context) {
         this.context = context;
-        this.tor = Tor.getInstance(context);
+        this.torManager = TorManager.getInstance(context);
         this.chatDatabase = ChatDatabase.getInstance(context);
     }
 
@@ -58,13 +58,13 @@ public class ChatServer {
         final String signature = uri.getQueryParameter("s");
         final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
 
-        if (!receiver.equals(tor.getID())) {
+        if (!receiver.equals(torManager.getID())) {
             log("message wrong address");
             return false;
         }
         log("message address ok");
 
-        if (!tor.checksig(
+        if (!torManager.checksig(
                 sender,
                 Utils.base64decode(pubkey),
                 Utils.base64decode(signature),

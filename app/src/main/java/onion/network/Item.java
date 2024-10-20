@@ -77,7 +77,7 @@ public class Item {
         if (address == null) {
             address = "";
         }
-        if (address.equals(Tor.getInstance(context).getID())) {
+        if (address.equals(TorManager.getInstance(context).getID())) {
             address = "";
         }
         address = address.trim();
@@ -89,7 +89,7 @@ public class Item {
             // set addr if it's my post
             if (!json.has("addr") || json.optString("addr").trim().isEmpty()) {
                 if ("".equals(address)) {
-                    address = Tor.getInstance(context).getID();
+                    address = TorManager.getInstance(context).getID();
                 }
                 try {
                     json.put("addr", address);
@@ -99,7 +99,7 @@ public class Item {
             }
 
             // update name and thumb if it's my post
-            if (json.optString("addr").equals(Tor.getInstance(context).getID())) {
+            if (json.optString("addr").equals(TorManager.getInstance(context).getID())) {
 
                 {
                     String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");

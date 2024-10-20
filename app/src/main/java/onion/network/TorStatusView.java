@@ -23,24 +23,18 @@ public class TorStatusView extends LinearLayout {
     }
 
     void update() {
-        Tor tor = Tor.getInstance(getContext());
+        TorManager torManager = TorManager.getInstance(getContext());
 
-        setVisibility(!tor.isReady() ? View.VISIBLE : View.GONE);
+        setVisibility(!torManager.isReady() ? View.VISIBLE : View.GONE);
 
-        String status = tor.getStatus();
-        int i = status.indexOf(']');
-        if (i >= 0) status = status.substring(i + 1);
+        String status = torManager.getStatus();
+        if(status == null) {
+            status = "";
+        }
         status = status.trim();
-
         TextView view = (TextView) findViewById(R.id.status);
-
-        String prefix = "Bootstrapped";
-        if (status.contains("98")) {
+        if (status.contains("ON")) {
             this.setVisibility(View.GONE);
-        } else if (status.contains("%") && status.length() > prefix.length() && status.startsWith(prefix)) {
-            status = status.substring(prefix.length());
-            status = status.trim();
-            view.setText(status);
         } else if (status.startsWith("Loading ")) {
             view.setText(status);
         } else if (view.length() == 0) {
@@ -54,8 +48,8 @@ public class TorStatusView extends LinearLayout {
         super.onAttachedToWindow();
 
         if (!isInEditMode()) {
-            Tor tor = Tor.getInstance(getContext());
-            tor.setLogListener(new Tor.LogListener() {
+            TorManager torManager = TorManager.getInstance(getContext());
+            torManager.setLogListener(new TorManager.LogListener() {
                 @Override
                 public void onLog() {
                     post(new Runnable() {
@@ -74,12 +68,13 @@ public class TorStatusView extends LinearLayout {
     @Override
     protected void onDetachedFromWindow() {
 
-        Tor tor = Tor.getInstance(getContext());
-        tor.setLogListener(null);
+        TorManager torManager = TorManager.getInstance(getContext());
+        torManager.setLogListener(null);
 
         if (!isInEditMode()) {
             super.onDetachedFromWindow();
         }
 
     }
+
 }

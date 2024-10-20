@@ -71,7 +71,7 @@ public class ChatDatabase extends SQLiteOpenHelper {
     }
 
     public Cursor getMessages(String a) {
-        String b = Tor.getInstance(context).getID();
+        String b = TorManager.getInstance(context).getID();
         Log.i(TAG, "a " + a);
         Log.i(TAG, "b " + b);
         return getReadableDatabase().rawQuery("SELECT * FROM (SELECT * FROM messages WHERE ((sender=? AND receiver=?) OR (sender=? AND receiver=?)) ORDER BY _id DESC LIMIT 64) ORDER BY _id ASC", new String[]{a, b, b, a});
@@ -79,19 +79,19 @@ public class ChatDatabase extends SQLiteOpenHelper {
 
     public synchronized void clearChat(String a) {
         Log.i(TAG, "clearChat");
-        String b = Tor.getInstance(context).getID();
+        String b = TorManager.getInstance(context).getID();
         Log.i(TAG, "a " + a);
         Log.i(TAG, "b " + b);
         getWritableDatabase().delete("messages", "((sender=? AND receiver=?) OR (sender=? AND receiver=?))", new String[]{a, b, b, a});
     }
 
     public Cursor getUnsent(String b) {
-        String a = Tor.getInstance(context).getID();
+        String a = TorManager.getInstance(context).getID();
         return getReadableDatabase().query("messages", null, "sender=? AND receiver=? AND outgoing=1", new String[]{a, b}, null, null, null, null);
     }
 
     public Cursor getUnsent() {
-        String a = Tor.getInstance(context).getID();
+        String a = TorManager.getInstance(context).getID();
         return getReadableDatabase().query("messages", null, "sender=? AND outgoing=1", new String[]{a}, null, null, null, null);
     }
 

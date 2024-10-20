@@ -85,8 +85,8 @@ public class Server {
             }
             if (((!uri.getPathSegments().isEmpty() && "network.onion".equalsIgnoreCase(uri.getPathSegments().get(0))))) {
                 String host = request.getHeader("Host");
-                if (host == null || !host.contains(Tor.getInstance(context).getID())) {
-                    host = Tor.getInstance(context).getOnion();
+                if (host == null || !host.contains(TorManager.getInstance(context).getID())) {
+                    host = TorManager.getInstance(context).getOnion();
                 }
                 uri = Uri.parse("http://" + host + uri.getPath());
                 Site.Response rs = Site.getInstance(context).get(uri);
@@ -139,7 +139,7 @@ public class Server {
                     o.put("t", data.at(i).type());
                     o.put("k", data.at(i).key());
                     o.put("i", data.at(i).index());
-                    o.put("d", data.at(i).json(context, Tor.getInstance(context).getID()));
+                    o.put("d", data.at(i).json(context, TorManager.getInstance(context).getID()));
                     items.put(o);
                 }
                 JSONObject o = new JSONObject();

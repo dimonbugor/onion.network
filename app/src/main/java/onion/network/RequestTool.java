@@ -53,10 +53,10 @@ public class RequestTool {
 
     public boolean sendRequest(String dest) {
 
-        String addr = Tor.getInstance(context).getID();
+        String addr = TorManager.getInstance(context).getID();
         String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");
-        String sign = Utils.base64encode(Tor.getInstance(context).sign(msg(dest, addr, name)));
-        String pkey = Utils.base64encode(Tor.getInstance(context).pubkey());
+        String sign = Utils.base64encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
+        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
 
         String uri = "http://" + dest + ".onion/f?";
         uri += "dest=" + Uri.encode(dest) + "&";
@@ -102,12 +102,12 @@ public class RequestTool {
             return false;
         }
 
-        if (!dest.equals(Tor.getInstance(context).getID())) {
+        if (!dest.equals(TorManager.getInstance(context).getID())) {
             log("Wrong destination");
             return false;
         }
 
-        if (!Tor.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), msg(dest, addr, name))) {
+        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), msg(dest, addr, name))) {
             log("Invalid signature");
             return false;
         }

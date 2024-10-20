@@ -25,7 +25,7 @@ public class HostService extends Service {
     String TAG = "HostService";
     Timer timer;
     Server server;
-    Tor tor;
+    TorManager torManager;
     PowerManager.WakeLock wakeLock;
 
     public HostService() {
@@ -40,7 +40,7 @@ public class HostService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Server.getInstance(this);
-        Tor.getInstance(this);
+        TorManager.getInstance(this);
 
         return START_STICKY;
     }
@@ -57,7 +57,7 @@ public class HostService extends Service {
         super.onCreate();
 
         server = Server.getInstance(this);
-        tor = Tor.getInstance(this);
+        torManager = TorManager.getInstance(this);
 
         PowerManager pMgr = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WakeLock");

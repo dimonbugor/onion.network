@@ -123,7 +123,7 @@
                 android:layout_height="wrap_content" />
             <!--
             <TextView
-                android:text="Fully anonymous Hidden Service URL that allows people to contact you or view a preview of your Network.onion profile using Tor-enabled web browsers."
+                android:text="Fully anonymous Hidden Service URL that allows people to contact you or view a preview of your Network.onion profile using TorManager-enabled web browsers."
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
                 -->
@@ -222,7 +222,7 @@
 
             <!--
             <TextView
-                android:text="Only compatible with the Network.onion app and Tor-enabled web browsers."
+                android:text="Only compatible with the Network.onion app and TorManager-enabled web browsers."
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 

@@ -30,9 +30,9 @@ public class TorSocket extends Socket {
 
         try {
 
-            Tor tor = Tor.getInstance(context);
+            TorManager torManager = TorManager.getInstance(context);
 
-            int torport = tor.getPort();
+            int torport = torManager.getPort();
             if (torport > 0) {
                 connect(new InetSocketAddress("127.0.0.1", torport), timeout);
             }

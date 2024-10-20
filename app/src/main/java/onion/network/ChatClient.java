@@ -24,12 +24,12 @@ public class ChatClient {
     ChatDatabase chatDatabase;
     private String TAG = "chatclient";
     private Context context;
-    private Tor tor;
+    private TorManager torManager;
     private HashSet<OnMessageSentListener> listeners = new HashSet<OnMessageSentListener>();
 
     public ChatClient(Context context) {
         this.context = context;
-        this.tor = Tor.getInstance(context);
+        this.torManager = TorManager.getInstance(context);
         this.chatDatabase = ChatDatabase.getInstance(context);
     }
 
@@ -55,7 +55,7 @@ public class ChatClient {
 
         content = Utils.base64encode(content.getBytes(Utils.utf8));
 
-        String sig = Utils.base64encode(tor.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.utf8)));
+        String sig = Utils.base64encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.utf8)));
 
         String name = ItemDatabase.getInstance(context).getstr("name");
         if (name == null) name = "";
@@ -65,7 +65,7 @@ public class ChatClient {
         uri += "b=" + Uri.encode(receiver) + "&";
         uri += "t=" + Uri.encode("" + time) + "&";
         uri += "m=" + Uri.encode(content) + "&";
-        uri += "p=" + Uri.encode(Utils.base64encode(tor.pubkey())) + "&";
+        uri += "p=" + Uri.encode(Utils.base64encode(torManager.pubkey())) + "&";
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);
 

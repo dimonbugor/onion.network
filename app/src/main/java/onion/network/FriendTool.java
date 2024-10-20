@@ -51,12 +51,12 @@ public class FriendTool {
             return false;
         }
 
-        if (!dest.equals(Tor.getInstance(context).getID())) {
+        if (!dest.equals(TorManager.getInstance(context).getID())) {
             log("Wrong destination");
             return false;
         }
 
-        if (!Tor.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), buildUnfriendMessage(dest, addr))) {
+        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), buildUnfriendMessage(dest, addr))) {
             log("Invalid signature");
             return false;
         }
@@ -68,9 +68,9 @@ public class FriendTool {
     }
 
     public boolean doSendUnfriend(String dest) {
-        String addr = Tor.getInstance(context).getID();
-        String sign = Utils.base64encode(Tor.getInstance(context).sign(buildUnfriendMessage(dest, addr)));
-        String pkey = Utils.base64encode(Tor.getInstance(context).pubkey());
+        String addr = TorManager.getInstance(context).getID();
+        String sign = Utils.base64encode(TorManager.getInstance(context).sign(buildUnfriendMessage(dest, addr)));
+        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
 
         String uri = "http://" + dest + ".onion/u?";
         uri += "dest=" + Uri.encode(dest) + "&";
@@ -118,12 +118,12 @@ public class FriendTool {
             return false;
         }
 
-        if (!dest.equals(Tor.getInstance(context).getID())) {
+        if (!dest.equals(TorManager.getInstance(context).getID())) {
             log("Wrong destination");
             return false;
         }
 
-        if (!Tor.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.utf8))) {
+        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.utf8))) {
             log("Invalid signature");
             return false;
         }
@@ -141,10 +141,10 @@ public class FriendTool {
 
     private boolean requestUpdate(String dest) {
         log("requestUpdate " + dest);
-        String addr = Tor.getInstance(context).getID();
+        String addr = TorManager.getInstance(context).getID();
         String time = "" + System.currentTimeMillis();
-        String pkey = Utils.base64encode(Tor.getInstance(context).pubkey());
-        String sign = Utils.base64encode(Tor.getInstance(context).sign((dest + " " + addr + " " + time).getBytes(Utils.utf8)));
+        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
+        String sign = Utils.base64encode(TorManager.getInstance(context).sign((dest + " " + addr + " " + time).getBytes(Utils.utf8)));
         try {
             return "1".equals(
                     HttpClient.get(context,

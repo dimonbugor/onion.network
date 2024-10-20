@@ -9,7 +9,7 @@ android {
         targetSdkVersion 34
         versionCode 1300
         versionName "13"
-        minSdkVersion 18
+        minSdkVersion 21
         multiDexEnabled = true
 
         ndk {
@@ -34,8 +34,7 @@ android {
 
     sourceSets {
         main {
-            jniLibs.srcDirs = ['libs']
-            jniLibs.srcDirs = ['src/main/jniLibs']
+            jniLibs.srcDirs = ['src/main/jniLibs', 'libs']
         }
     }
 
@@ -49,6 +48,11 @@ android {
         exclude("META-INF/notice.txt")
         exclude("META-INF/ASL2.0")
         exclude("META-INF/*.kotlin_module")
+    }
+    packagingOptions {
+        resources {
+            excludes += 'META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version'
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -65,6 +69,10 @@ android {
 }
 
 dependencies {
+    implementation 'info.guardianproject:tor-android:0.4.8.12'
+    implementation 'info.guardianproject:jtorctl:0.4.5.7'
+    implementation 'info.guardianproject.netcipher:netcipher:2.1.0'
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -72,6 +80,6 @@ dependencies {
     implementation 'com.android.support:cardview-v7:28.0.0'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation 'com.google.zxing:core:3.5.3'
-    implementation 'org.apache.commons:commons-compress:1.26.2'
-    implementation 'org.tukaani:xz:1.9'
+    implementation 'org.apache.commons:commons-compress:1.27.1'
+    implementation 'org.tukaani:xz:1.10'
 }

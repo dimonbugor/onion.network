@@ -28,7 +28,7 @@ import onion.network.ChatServer;
 import onion.network.ItemCache;
 import onion.network.MainActivity;
 import onion.network.R;
-import onion.network.Tor;
+import onion.network.TorManager;
 
 public class ConversationPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 
@@ -37,13 +37,13 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
     ConversationAdapter adapter;
     RecyclerView recycler;
     View empty;
-    Tor tor;
+    TorManager torManager;
     Cursor cursor;
 
     public ConversationPage(MainActivity activity) {
         super(activity);
 
-        tor = Tor.getInstance(activity);
+        torManager = TorManager.getInstance(activity);
 
         chatServer = ChatServer.getInstance(activity);
         chatClient = ChatClient.getInstance(activity);
@@ -163,7 +163,7 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             String content = cursor.getString(cursor.getColumnIndex("content"));
             String sender = cursor.getString(cursor.getColumnIndex("sender"));
             String receiver = cursor.getString(cursor.getColumnIndex("receiver"));
-            String myid = tor.getID();
+            String myid = torManager.getID();
             final String remoteAddress = myid.equals(sender) ? receiver : sender;
 
             holder.message.setText(content);

@@ -58,6 +58,8 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -258,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (address == null) address = "";
         address = address.trim().toLowerCase();
-        if (address.equals(Tor.getInstance(this).getID())) address = "";
+        if (address.equals(TorManager.getInstance(this).getID())) address = "";
 
 
         db = ItemDatabase.getInstance(this);
@@ -618,7 +620,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String getID() {
         if (address != null && !address.isEmpty()) return address.trim().toLowerCase();
-        return Tor.getInstance(this).getID();
+        return TorManager.getInstance(this).getID();
     }
 
     String getName() {
@@ -1123,6 +1125,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        TorManager.getInstance(this).stopReceiver();
+        TorManager.getInstance(this).stopTor();
+    }
+
 
     public void lightbox(Bitmap bitmap) {
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
@@ -1159,12 +1168,44 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        //checkTor();
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
         if (v.getVisibility() == View.VISIBLE) {
             lightboxHide();
             return;
         }
         super.onBackPressed();
+    }
+
+    public void checkTor() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean isRunning = isTorRunning();
+                // Повертаємося на основний потік, щоб оновити UI
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isRunning) {
+                            Log.d("TorCheck", "Tor is running");
+                        } else {
+                            Log.d("TorCheck", "Tor is not running");
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public boolean isTorRunning() {
+        try {
+            // Підключення до Tor на локальному хості
+            Socket socket = new Socket("127.0.0.1", 9050);
+            socket.close(); // Закриття сокету, якщо з'єднання успішне
+            return true; // Tor працює
+        } catch (IOException e) {
+            return false; // Tor не працює
+        }
     }
 
     void inviteFriend() {
@@ -1176,7 +1217,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_REFERRER, url);
         intent.putExtra("customAppUri", url);
 
-        intent.putExtra(Intent.EXTRA_TEXT, String.format(getString(R.string.invitation_text), url, Tor.getInstance(this).getID(), Uri.encode(getName()), getAppName()));
+        intent.putExtra(Intent.EXTRA_TEXT, String.format(getString(R.string.invitation_text), url, TorManager.getInstance(this).getID(), Uri.encode(getName()), getAppName()));
         intent.setType("text/plain");
 
         startActivity(intent);

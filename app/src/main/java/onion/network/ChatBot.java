@@ -83,7 +83,7 @@ public class ChatBot {
                 String respstr = null;
                 try {
                     respstr = HttpClient.get(context, ChatClient.getInstance(context).makeUri(
-                            Tor.getInstance(context).getID(),
+                            TorManager.getInstance(context).getID(),
                             address,
                             response,
                             Math.max(time + 100, System.currentTimeMillis()
@@ -101,7 +101,7 @@ public class ChatBot {
                     if (saveResponse) {
                         long t = Math.max(time + 100, System.currentTimeMillis());
                         ChatDatabase.getInstance(context).addMessage(
-                                Tor.getInstance(context).getID(),
+                                TorManager.getInstance(context).getID(),
                                 address,
                                 response,
                                 t,
