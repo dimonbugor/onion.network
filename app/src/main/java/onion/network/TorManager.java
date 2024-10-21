@@ -16,12 +16,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Base64;
 import android.util.Log;
 
+import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
 
 import org.apache.commons.codec.binary.Base32;
@@ -47,6 +49,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,16 +57,17 @@ import info.guardianproject.netcipher.proxy.OrbotHelper;
 
 public class TorManager {
 
-    private static String torservdir = "torserv";
     private static TorManager instance = null;
     private Context context;
 
+    private File hiddenServiceDir;
     private String domain = "";
     private Listener listener = null;
     private LogListener logListener;
     private String status = "";
     private boolean ready = false;
 
+    private Server server;
     private TorService torService;
     private TorControlConnection torControlConnection;
 
@@ -78,6 +82,40 @@ public class TorManager {
                         String stringValue = (String) value;
                         // Використовуйте stringValue, як вам потрібно
                         log("Tor status: " + stringValue);
+                        if(stringValue.equals("ON")) {
+                            try {
+                                torControlConnection.signal("DEBUG");
+                                torControlConnection.launchThread(true);
+                                torControlConnection.authenticate(new byte[0]); // Аутентифікація
+
+                                // Створіть директорію, якщо не існує
+                                if (!hiddenServiceDir.exists()) {
+                                    hiddenServiceDir.mkdirs();
+                                }
+
+                                // Налаштування HiddenServiceDir
+                                //torControlConnection.setConf("HiddenServiceDir", hiddenServiceDir.getAbsolutePath());
+                                torControlConnection.setConf("HiddenServiceDir",
+                                        Uri.fromFile(hiddenServiceDir).getEncodedPath());
+
+                                // Налаштування HiddenServicePort
+                                torControlConnection.setConf("HiddenServicePort", "80 " + getSocketName());
+
+                                // Налаштування логів
+                                torControlConnection.setConf("Log", "debug file " +
+                                        new File(hiddenServiceDir, "LOG").getAbsolutePath());
+
+                                // Виконання команди перезавантаження
+                                torControlConnection.signal("RELOAD");
+                                torControlConnection.getInfo("md/id/OR");
+                            } catch (IOException e) {
+                                Log.e("Tor", "Error during Tor configuration: " + e.getMessage(), e);
+                            } finally {
+                                domain = Utils.filestr(new File(hiddenServiceDir, "hostname")).trim();
+                                log(domain);
+                                if (listener != null) listener.onChange();
+                            }
+                        }
                         stat(stringValue);
                     }
                 }
@@ -85,9 +123,15 @@ public class TorManager {
         }
     };
 
+    private String getSocketName() {
+        //return "127.0.0.1:8080";
+        return "127.0.0.1:" + getHiddenServicePort();
+    }
+
     public TorManager(Context c) {
 
         this.context = c;
+        server = Server.getInstance(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.registerReceiver(torStatusReceiver,
                     new IntentFilter(TorService.ACTION_STATUS), Context.RECEIVER_EXPORTED);
@@ -96,7 +140,18 @@ public class TorManager {
                     new IntentFilter(TorService.ACTION_STATUS));
         }
 
-        domain = Utils.filestr(new File(getServiceDir(), "hostname")).trim();
+        hiddenServiceDir = new File(getServiceDir(), "hidden_service");
+        if (!hiddenServiceDir.exists()) {
+            hiddenServiceDir.mkdirs();
+        }
+
+        if (!hiddenServiceDir.canWrite()) {
+            // Лог або обробка, якщо директорія не має дозволів на запис
+            Log.e("Tor", "Directory is not writable: " + hiddenServiceDir.getAbsolutePath());
+        }
+
+        //domain = Utils.filestr(new File(getServiceDir(), "hostname")).trim();
+        domain = Utils.filestr(new File(getServiceDir(), "hidden_service")).trim();
         log(domain);
 
         stopTor();
@@ -132,7 +187,6 @@ public class TorManager {
                 TorService.LocalBinder binder = (TorService.LocalBinder) service;
                 torService = binder.getService();
                 torControlConnection = torService.getTorControlConnection();
-
             }
 
             @Override
@@ -162,6 +216,11 @@ public class TorManager {
         log(s);
     }
 
+    public static int getHiddenServicePort() {
+        //return 9051;
+        return 31512;
+    }
+
     private void log(String s) {
         if (s == null) {
             s = "";
@@ -178,24 +237,12 @@ public class TorManager {
     }
 
     public String getID() {
-        String id = null;
-        if (torService != null) {
-            final String regex = "(id ed\\d*)";
-            String md = torService.getInfo("md/all");
-            if(md != null) {
-                final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(md);
-
-                while (matcher.find()) {
-                    id = matcher.group(0).trim().replace("id ", "");
-                }
-            }
-        }
-        return id;
+        return domain.replace(".onion", "").trim();
     }
 
     File getServiceDir() {
-        return new File(context.getFilesDir(), torservdir);
+        //return new File(context.getExternalFilesDir(null), torservdir);
+        return TorService.getDefaultsTorrc(context).getParentFile();
     }
 
     public void setLogListener(LogListener l) {
