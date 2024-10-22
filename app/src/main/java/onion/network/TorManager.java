@@ -147,7 +147,7 @@ public class TorManager {
                             // Налаштовуємо Tor як прихований сервіс
                             log("configure");
                             try {
-                                File torcc = new File(appTorServiceDir, "torrc-defaults");
+                                    File torcc = new File(appTorServiceDir, "torrc-defaults");
                                 if (!torcc.canWrite()) {
                                     log("Cannot write to directory: " + appTorServiceDir.getAbsolutePath());
                                     return;
@@ -157,7 +157,8 @@ public class TorManager {
                                 sb.append("\n");
                                 sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath());
                                 sb.append("\n");
-                                sb.append("HiddenServicePort ").append(getHiddenServicePort()).append(" ").append(getSocketName());
+                                //sb.append("HiddenServicePort ").append(getHiddenServicePort()).append(" ").append(getSocketName());
+                                sb.append("HiddenServicePort ").append("80 127.0.0.1:8080");
                                 sb.append("\n");
 
                                 FileWriter fileWriter = new FileWriter(torcc, true);

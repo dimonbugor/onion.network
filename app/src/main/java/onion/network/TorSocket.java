@@ -14,7 +14,11 @@ import android.content.Context;
 
 import net.freehaven.tor.control.TorControlConnection;
 
+import org.torproject.jni.TorService;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
@@ -24,8 +28,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class TorSocket extends Socket {
-
-    static final int timeout = 60000;
 
     /*public TorSocket(Context context, String host, int port) throws IOException {
 
@@ -82,44 +84,43 @@ public class TorSocket extends Socket {
         }
     }*/
 
-    public TorSocket(Context context, String onionUrl, int port) throws IOException {
-        String scheme = "http://";
-        if (port != 80) {
-            scheme = "https://";
-        }
-        if (onionUrl.contains("http")) {
-            return;
+    public TorSocket(Context context, String onionAddress, int port) throws IOException {
+        TorControlConnection torControlConnection = TorManager.getInstance(context).getTorControlConnection();
+        if(torControlConnection != null){
+            String response = fetchOnionService(onionAddress, port);
+            System.out.println(response);
         } else {
-            onionUrl = scheme + onionUrl;
+            throw new IOException("torControlConnection = null");
         }
-        // Отримуємо TorManager і порт
-        TorManager torManager = TorManager.getInstance(context);
-        int torPort = torManager.getPort(); // Порт Tor
-        // Створюємо з'єднання з Tor через TorControlConnection
-        TorControlConnection torControlConnection = torManager.getTorControlConnection();
-        // Переконайтеся, що з'єднання існує
-        if (torControlConnection != null) {
+    }
 
-            // Налаштування OkHttpClient з SOCKS проксі
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", torPort))) // Порт Tor
-                    .build();
+    private static String fetchOnionService(String onionAddress, int port) throws IOException {
 
-            Request request = new Request.Builder()
-                    .url(onionUrl)
-                    .build();
+        //String TOR_HOST = "127.0.0.1";
+        String TOR_HOST = "localhost";
+        int TOR_PORT = TorService.socksPort;
 
-            try (Response response = client.newCall(request).execute()) {
-                if (response.isSuccessful()) {
-                    System.out.println("Response: " + response.body().string());
-                } else {
-                    System.out.println("Request failed: " + response.code());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        // Налаштування проксі
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(TOR_HOST, TOR_PORT));
+
+        // Налаштування OkHttpClient
+        OkHttpClient client = new OkHttpClient.Builder()
+                .proxy(proxy)
+                .build();
+
+        // Створення запиту
+        Request request = new Request.Builder()
+                .url((port == 80 ? "http://" : "https://") + onionAddress)
+                .build();
+
+        // Виконання запиту
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
             }
-        } else {
-            throw new IOException("TorControlConnection is null. Check Tor Manager.");
+            return response.body().string();
+        } catch (Exception e) {
+            throw new IOException(e);
         }
     }
 }
