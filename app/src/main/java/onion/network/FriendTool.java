@@ -56,7 +56,7 @@ public class FriendTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), buildUnfriendMessage(dest, addr))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), buildUnfriendMessage(dest, addr))) {
             log("Invalid signature");
             return false;
         }
@@ -123,7 +123,7 @@ public class FriendTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.utf8))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.utf8))) {
             log("Invalid signature");
             return false;
         }

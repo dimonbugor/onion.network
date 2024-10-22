@@ -452,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setPositiveButton("Open", (dialog, which) -> {
                     final String address = addressEdit.getText().toString().trim().toLowerCase();
-                    if (address.length() != 16) {
+                    if (address.length() > 56) {
                         snack("Invalid ID");
                         return;
                     }

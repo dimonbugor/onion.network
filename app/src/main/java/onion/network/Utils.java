@@ -42,7 +42,11 @@ public class Utils {
     public static Charset utf8 = Charset.forName("UTF-8");
 
     public static String base64encode(byte[] data) {
-        return Base64.encodeToString(data, Base64.NO_WRAP);
+        if (data != null) {
+            return Base64.encodeToString(data, Base64.NO_WRAP);
+        } else {
+            return "";
+        }
     }
 
     public static byte[] base64decode(String str) {
@@ -176,9 +180,9 @@ public class Utils {
     }
 
     public static boolean isAlnum(String s) {
-        if(s == null) return false;
-        for(int i = 0; i < s.length(); i++) {
-            if(!Character.isLetterOrDigit(s.charAt(i))) {
+        if (s == null) return false;
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isLetterOrDigit(s.charAt(i))) {
                 return false;
             }
         }

@@ -1,61 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="@color/cardview_light_background"
-    android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/cardview_light_background"
+    android:orientation="vertical">
 
 
     <LinearLayout
         android:id="@+id/loading"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <ProgressBar
-            android:layout_marginTop="-6dp"
-            android:indeterminate="true"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="16dp"
-            android:max="100"
-            />
+            android:layout_marginTop="-6dp"
+            android:indeterminate="true"
+            android:max="100" />
+
         <TextView
-            android:text="Loading..."
-            android:singleLine="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:paddingLeft="16dp"
-            android:paddingRight="16dp"
 
             android:paddingTop="4dp"
-            android:paddingBottom="10dp"
+            android:paddingRight="16dp"
 
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:paddingBottom="10dp"
+            android:singleLine="true"
+            android:text="Loading..."
+            android:textAppearance="?android:attr/textAppearanceMedium" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/offline"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp" />
+
         <TextView
-            android:text="Offline"
-            android:singleLine="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:paddingLeft="16dp"
-            android:paddingRight="16dp"
 
             android:paddingTop="10dp"
-            android:paddingBottom="10dp"
+            android:paddingRight="16dp"
 
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:paddingBottom="10dp"
+            android:singleLine="true"
+            android:text="Offline"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
     </LinearLayout>
 
 </LinearLayout>

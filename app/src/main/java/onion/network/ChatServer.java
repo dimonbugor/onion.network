@@ -65,7 +65,6 @@ public class ChatServer {
         log("message address ok");
 
         if (!torManager.checksig(
-                sender,
                 Utils.base64decode(pubkey),
                 Utils.base64decode(signature),
                 (receiver + " " + sender + " " + time + " " + m).getBytes(Charset.forName("UTF-8")))) {

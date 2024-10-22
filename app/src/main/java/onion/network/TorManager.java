@@ -16,44 +16,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Base64;
 import android.util.Log;
 
-import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
 
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.spongycastle.asn1.ASN1OutputStream;
 import org.spongycastle.asn1.x509.RSAPublicKeyStructure;
-import org.spongycastle.jce.provider.BouncyCastleProvider;
 import org.torproject.jni.TorService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.Signature;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
+import java.io.PrintWriter;
 import java.security.spec.RSAPublicKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import info.guardianproject.netcipher.proxy.OrbotHelper;
 
 public class TorManager {
 
@@ -82,51 +63,12 @@ public class TorManager {
                         String stringValue = (String) value;
                         // Використовуйте stringValue, як вам потрібно
                         log("Tor status: " + stringValue);
-                        if(stringValue.equals("ON")) {
-                            try {
-                                torControlConnection.signal("DEBUG");
-                                torControlConnection.launchThread(true);
-                                torControlConnection.authenticate(new byte[0]); // Аутентифікація
-
-                                // Створіть директорію, якщо не існує
-                                if (!hiddenServiceDir.exists()) {
-                                    hiddenServiceDir.mkdirs();
-                                }
-
-                                // Налаштування HiddenServiceDir
-                                //torControlConnection.setConf("HiddenServiceDir", hiddenServiceDir.getAbsolutePath());
-                                torControlConnection.setConf("HiddenServiceDir",
-                                        Uri.fromFile(hiddenServiceDir).getEncodedPath());
-
-                                // Налаштування HiddenServicePort
-                                torControlConnection.setConf("HiddenServicePort", "80 " + getSocketName());
-
-                                // Налаштування логів
-                                torControlConnection.setConf("Log", "debug file " +
-                                        new File(hiddenServiceDir, "LOG").getAbsolutePath());
-
-                                // Виконання команди перезавантаження
-                                torControlConnection.signal("RELOAD");
-                                torControlConnection.getInfo("md/id/OR");
-                            } catch (IOException e) {
-                                Log.e("Tor", "Error during Tor configuration: " + e.getMessage(), e);
-                            } finally {
-                                domain = Utils.filestr(new File(hiddenServiceDir, "hostname")).trim();
-                                log(domain);
-                                if (listener != null) listener.onChange();
-                            }
-                        }
                         stat(stringValue);
                     }
                 }
             }
         }
     };
-
-    private String getSocketName() {
-        //return "127.0.0.1:8080";
-        return "127.0.0.1:" + getHiddenServicePort();
-    }
 
     public TorManager(Context c) {
 
@@ -140,22 +82,11 @@ public class TorManager {
                     new IntentFilter(TorService.ACTION_STATUS));
         }
 
-        hiddenServiceDir = new File(getServiceDir(), "hidden_service");
-        if (!hiddenServiceDir.exists()) {
-            hiddenServiceDir.mkdirs();
-        }
-
-        if (!hiddenServiceDir.canWrite()) {
-            // Лог або обробка, якщо директорія не має дозволів на запис
-            Log.e("Tor", "Directory is not writable: " + hiddenServiceDir.getAbsolutePath());
-        }
-
-        //domain = Utils.filestr(new File(getServiceDir(), "hostname")).trim();
-        domain = Utils.filestr(new File(getServiceDir(), "hidden_service")).trim();
+        domain = Utils.filestr(new File(getHiddenServiceDir(), "hostname")).trim();
         log(domain);
 
         stopTor();
-        startTor();
+        startTorServer();
     }
 
     synchronized public static TorManager getInstance(Context context) {
@@ -165,28 +96,94 @@ public class TorManager {
         return instance;
     }
 
-    static String computeID(RSAPublicKeySpec pubkey) {
-        RSAPublicKeyStructure myKey = new RSAPublicKeyStructure(pubkey.getModulus(), pubkey.getPublicExponent());
-        ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        ASN1OutputStream as = new ASN1OutputStream(bs);
-        try {
-            as.writeObject(myKey.toASN1Object());
-        } catch (IOException ex) {
-            throw new Error(ex);
-        }
-        byte[] b = bs.toByteArray();
-        b = DigestUtils.getSha1Digest().digest(b);
-        return new Base32().encodeAsString(b).toLowerCase().substring(0, 16);
+    public static int getHiddenServicePort() {
+        return 80;
+        //return 31512;
     }
 
-    public void startTor() {
+    private String getSocketName() {
+        return "127.0.0.1:8080";
+        //return "127.0.0.1:" + getHiddenServicePort();
+    }
+
+    public void startTorServer() {
         Intent intent = new Intent(context, TorService.class);
+
         context.bindService(intent, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 TorService.LocalBinder binder = (TorService.LocalBinder) service;
                 torService = binder.getService();
+                while (torService.getTorControlConnection() == null) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 torControlConnection = torService.getTorControlConnection();
+                if (torControlConnection != null) {
+                    new Thread(() -> {
+                        try {
+                            // Аутентифікація
+                            torControlConnection.authenticate(new byte[0]);
+
+                            // Перевіряємо і створюємо директорію для прихованого сервісу
+                            File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
+                            if (!appTorServiceDir.exists()) {
+                                appTorServiceDir.mkdirs();  // Створюємо директорію, якщо її немає
+                            }
+
+                            hiddenServiceDir = new File(appTorServiceDir, "app_TorHiddenService");
+                            if (!hiddenServiceDir.exists()) {
+                                hiddenServiceDir.mkdirs();  // Створюємо директорію, якщо її немає
+                            }
+
+                            if (!hiddenServiceDir.canWrite()) {
+                                log("Directory is not writable: " + hiddenServiceDir.getAbsolutePath());
+                                return;  // Зупиняємо, якщо немає прав на запис
+                            }
+
+                            // Налаштовуємо Tor як прихований сервіс
+                            log("configure");
+                            try {
+                                File torcc = new File(appTorServiceDir, "torrc-defaults");
+                                if (!torcc.canWrite()) {
+                                    log("Cannot write to directory: " + appTorServiceDir.getAbsolutePath());
+                                    return;
+                                }
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("Log notice stdout");
+                                sb.append("\n");
+                                sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath());
+                                sb.append("\n");
+                                sb.append("HiddenServicePort ").append(getHiddenServicePort()).append(" ").append(getSocketName());
+                                sb.append("\n");
+
+                                FileWriter fileWriter = new FileWriter(torcc, true);
+                                PrintWriter printWriter = new PrintWriter(fileWriter);
+                                printWriter.print(sb);
+                                printWriter.close();
+                                // Оновлюємо конфігурацію Tor
+                                torControlConnection.signal("RELOAD");
+                            } catch (IOException e) {
+                                log("Error setting hidden service config: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+
+                            // Перевіряємо статус Tor
+                            String torStatus = torControlConnection.getInfo("status/circuit-established");
+                            log("Tor Circuit Status: " + torStatus);
+
+                            // Отримуємо адресу .onion
+                            domain = Utils.filestr(new File(getHiddenServiceDir(), "hostname")).trim();
+
+                        } catch (IOException e) {
+                            log("Error in configuring hidden service: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
             }
 
             @Override
@@ -197,13 +194,19 @@ public class TorManager {
         }, Context.BIND_AUTO_CREATE);
     }
 
+    public TorControlConnection getTorControlConnection() {
+        return torControlConnection;
+    }
+
     public void stopTor() {
         Intent intent = new Intent(context, TorService.class);
         context.stopService(intent);
     }
 
     public void stopReceiver() {
-        context.unregisterReceiver(torStatusReceiver);
+        try {
+            context.unregisterReceiver(torStatusReceiver);
+        } catch (IllegalArgumentException ignore){}
     }
 
     void stat(String s) {
@@ -214,11 +217,6 @@ public class TorManager {
             l.onLog();
         }
         log(s);
-    }
-
-    public static int getHiddenServicePort() {
-        //return 9051;
-        return 31512;
     }
 
     private void log(String s) {
@@ -240,9 +238,8 @@ public class TorManager {
         return domain.replace(".onion", "").trim();
     }
 
-    File getServiceDir() {
-        //return new File(context.getExternalFilesDir(null), torservdir);
-        return TorService.getDefaultsTorrc(context).getParentFile();
+    File getHiddenServiceDir() {
+        return hiddenServiceDir;
     }
 
     public void setLogListener(LogListener l) {
@@ -257,81 +254,26 @@ public class TorManager {
         return ready;
     }
 
-    public KeyFactory getKeyFactory() {
-        try {
-            // Використовуйте стандартну реалізацію Android для RSA
-            return KeyFactory.getInstance("RSA");
-        } catch (NoSuchAlgorithmException ex) {
-            throw new Error("RSA algorithm not available", ex);
-        }
-    }
-
-    // Метод для відновлення публічного ключа з закодованої строки
-    public PublicKey getPublicKey(String key) throws Exception {
-        byte[] keyBytes = Base64.decode(key, Base64.DEFAULT);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        return getKeyFactory().generatePublic(spec);
-    }
-
-    PrivateKey getPrivateKey() throws InvalidKeySpecException {
-        String priv = Utils.filestr(new File(getServiceDir(), "private_key"));
-        //log(priv);
-        priv = priv.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
-        priv = priv.replace("-----END RSA PRIVATE KEY-----", "");
-        priv = priv.replaceAll("\\s", "");
-        byte[] keyBytes = Base64.decode(priv, Base64.DEFAULT);
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-        return getKeyFactory().generatePrivate(spec);
-    }
-
-    RSAPrivateKeySpec getPrivateKeySpec() {
-        try {
-            return getKeyFactory().getKeySpec(getPrivateKey(), RSAPrivateKeySpec.class);
-        } catch (InvalidKeySpecException ex) {
-            throw new Error(ex);
-        }
-    }
-
     byte[] pubkey() {
-        return getPrivateKeySpec().getModulus().toByteArray();
+        try {
+            return Ed25519Signature.getEd25519PublicKey(getHiddenServiceDir());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     byte[] sign(byte[] msg) {
         try {
-            Signature signature = Signature.getInstance("SHA1withRSA");
-            signature.initSign(getPrivateKey());
-            signature.update(msg);
-            return signature.sign();
-        } catch (Exception ex) {
-            throw new Error(ex);
+            return Ed25519Signature.signWithEd25519(getHiddenServiceDir(), msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
-    boolean checksig(String id, byte[] pubkey, byte[] sig, byte[] msg) {
-        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(new BigInteger(pubkey), BigInteger.valueOf(65537));
-
-        if (!id.equals(computeID(publicKeySpec))) {
-            log("invalid id");
-            return false;
-        }
-
-        PublicKey publicKey;
-        try {
-            publicKey = getKeyFactory().generatePublic(publicKeySpec);
-        } catch (InvalidKeySpecException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-
-        try {
-            Signature signature = Signature.getInstance("SHA1withRSA");
-            signature.initVerify(publicKey);
-            signature.update(msg);
-            return signature.verify(sig);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
+    boolean checksig(byte[] pubkey, byte[] sig, byte[] msg) {
+        return Ed25519Signature.checkEd25519Signature(pubkey, sig, msg);
     }
 
     public interface Listener {

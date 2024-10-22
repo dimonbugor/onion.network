@@ -9,7 +9,7 @@
         android:layout_height="wrap_content">
         <EditText
             android:singleLine="true"
-            android:maxLength="16"
+            android:maxLength="56"
             android:inputType="textUri"
             android:imeOptions="flagNoExtractUi"
             android:hint="ID"

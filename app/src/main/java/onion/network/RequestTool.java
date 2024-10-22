@@ -107,7 +107,7 @@ public class RequestTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(addr, Utils.base64decode(pkey), Utils.base64decode(sign), msg(dest, addr, name))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), msg(dest, addr, name))) {
             log("Invalid signature");
             return false;
         }
