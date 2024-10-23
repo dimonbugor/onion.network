@@ -1,8 +1,11 @@
 package onion.network;
 
+import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -14,14 +17,14 @@ import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class HostService extends Service {
+import fi.iki.elonen.NanoHTTPD;
 
-    // Змінили тег на унікальний з префіксом
+public class HostService extends Service {
     private static final String TAG = "onion.network:HostService";
     private Timer timer;
-    private Server server;
     private TorManager torManager;
     private PowerManager.WakeLock wakeLock;
+    private HttpServer httpServer;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -30,9 +33,9 @@ public class HostService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        server = Server.getInstance(this);
         torManager = TorManager.getInstance(this);
         checkTor();
+        startHttpServer(); // Запускаємо HTTP сервер
         return START_STICKY; // Сервіс перезапускається після зупинки
     }
 
@@ -65,6 +68,12 @@ public class HostService extends Service {
     @Override
     public void onDestroy() {
         log("Service destroyed");
+
+        // Зупиняємо HTTP сервер
+        if (httpServer != null) {
+            httpServer.stop();
+            httpServer = null;
+        }
 
         // Скасовуємо таймер
         if (timer != null) {
@@ -115,6 +124,44 @@ public class HostService extends Service {
             return true; // Tor працює
         } catch (IOException e) {
             return false; // Tor не працює
+        }
+    }
+
+    private void startHttpServer() {
+        httpServer = new HttpServer(8080); // Використовуємо порт 8080
+        try {
+            httpServer.start();
+            log("HTTP Server started on port 8080");
+        } catch (IOException e) {
+            log("Failed to start HTTP server: " + e.getMessage());
+        }
+    }
+
+    public class HttpServer extends NanoHTTPD {
+        private HttpClient httpClient;
+
+        public HttpServer(int port) {
+            super(port);
+            this.httpClient = new HttpClient(); // Ініціалізація HttpClient
+        }
+
+        @Override
+        public Response serve(NanoHTTPD.IHTTPSession session) {
+            String uri = session.getUri(); // Отримуємо URI запиту
+            String responseMsg;
+
+            try {
+                // Використовуємо HttpClient для обробки запиту
+                Uri requestUri = Uri.parse(uri);
+                byte[] content = httpClient.getbin(requestUri, true, false, 0); // Передаємо через Tor
+                responseMsg = new String(content, Utils.utf8); // Конвертуємо в рядок
+            } catch (IOException e) {
+                responseMsg = "<html><body><h1>Error: " + e.getMessage() + "</h1></body></html>";
+                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);
+            }
+
+            // Повертаємо успішну відповідь
+            return newFixedLengthResponse(Response.Status.OK, "text/html", responseMsg);
         }
     }
 }

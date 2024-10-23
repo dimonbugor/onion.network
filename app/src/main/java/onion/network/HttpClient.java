@@ -41,8 +41,7 @@ public class HttpClient {
         return getbin(uri, true, false, 0);
     }
 
-    private static byte[] getbin(Uri uri, boolean torified, boolean allowTls, int redirs) throws IOException {
-        uri = Uri.parse("http://check.torproject.org");
+    static byte[] getbin(Uri uri, boolean torified, boolean allowTls, int redirs) throws IOException {
         log("request " + uri + " " + torified + " " + allowTls + " " + redirs);
 
         byte[] content;
@@ -50,8 +49,8 @@ public class HttpClient {
 
         // Налаштування OkHttpClient з тайм-аутами
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS) // Тайм-аут на підключення
-                .readTimeout(60, TimeUnit.SECONDS); // Тайм-аут на читання
+                .connectTimeout(120, TimeUnit.SECONDS) // Збільшено до 120 секунд
+                .readTimeout(120, TimeUnit.SECONDS);
 
         // Додавання проксі для Tor, якщо потрібно
         if (torified) {
