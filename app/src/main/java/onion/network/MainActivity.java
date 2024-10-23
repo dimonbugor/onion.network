@@ -55,20 +55,11 @@ import com.google.zxing.RGBLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
-import net.freehaven.tor.control.TorControlCommands;
-import net.freehaven.tor.control.TorControlConnection;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -90,16 +81,14 @@ public class MainActivity extends AppCompatActivity {
     private static MainActivity instance = null;
     public String address = "";
     public String name = "";
+    public ItemResult nameItemResult = new ItemResult();
     ItemDatabase db;
-
     WallPage wallPage;
     FriendPage friendPage;
     RequestPage requestPage;
     BasePage[] pages;
     int REQUEST_QR = 12;
     String TAG = "Activity";
-
-    public ItemResult nameItemResult = new ItemResult();
     Timer timer = null;
     ChatPage chatPage;
 
@@ -274,8 +263,6 @@ public class MainActivity extends AppCompatActivity {
 
         db = ItemDatabase.getInstance(this);
 
-        startService(new Intent(this, HostService.class));
-
         //String[] headers;
 
 
@@ -440,6 +427,10 @@ public class MainActivity extends AppCompatActivity {
 
         WallBot.getInstance(this);
 
+    }
+
+    public void startHostService() {
+        startService(new Intent(this, HostService.class));
     }
 
     void showEnterId() {
@@ -921,7 +912,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .show();*/
-        new AlertDialog.Builder(this , R.style.RoundedAlertDialog)
+        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle("ID: " + id)
                 .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
                     @Override
@@ -1060,11 +1051,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     public void toast(String s) {
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
-
 
     public void publishPost(JSONObject o) {
         long k = System.currentTimeMillis();
@@ -1141,7 +1130,6 @@ public class MainActivity extends AppCompatActivity {
         TorManager.getInstance(this).stopTor();
     }
 
-
     public void lightbox(Bitmap bitmap) {
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
         v.setImageBitmap(bitmap);
@@ -1177,44 +1165,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        //checkTor();
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
         if (v.getVisibility() == View.VISIBLE) {
             lightboxHide();
             return;
         }
         super.onBackPressed();
-    }
-
-    public void checkTor() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                boolean isRunning = isTorRunning();
-                // Повертаємося на основний потік, щоб оновити UI
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isRunning) {
-                            Log.d("TorCheck", "Tor is running");
-                        } else {
-                            Log.d("TorCheck", "Tor is not running");
-                        }
-                    }
-                });
-            }
-        }).start();
-    }
-
-    public boolean isTorRunning() {
-        try {
-            // Підключення до Tor на локальному хості
-            Socket socket = new Socket("127.0.0.1", 9050);
-            socket.close(); // Закриття сокету, якщо з'єднання успішне
-            return true; // Tor працює
-        } catch (IOException e) {
-            return false; // Tor не працює
-        }
     }
 
     void inviteFriend() {

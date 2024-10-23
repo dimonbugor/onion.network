@@ -31,8 +31,8 @@ public class StatusTool {
 
     public boolean isOnline(String address) {
         try {
-            String rs = HttpClient.get(context, new ItemTask(context, address, "name").getUrl());
-            if (rs == null || rs.isEmpty()) {
+            String rs = HttpClient.get(new ItemTask(context, address, "name").getUrl());
+            if (rs.isEmpty()) {
                 return false;
             }
         } catch (IOException ex) {

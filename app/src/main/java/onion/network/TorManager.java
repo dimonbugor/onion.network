@@ -63,6 +63,12 @@ public class TorManager {
                         String stringValue = (String) value;
                         // Використовуйте stringValue, як вам потрібно
                         log("Tor status: " + stringValue);
+                        if(stringValue.equals("ON")) {
+                            MainActivity mainActivity = MainActivity.getInstance();
+                            if(mainActivity != null) {
+                                mainActivity.startHostService();
+                            }
+                        }
                         stat(stringValue);
                     }
                 }

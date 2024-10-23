@@ -1,101 +1,120 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
-
 package onion.network;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class HostService extends Service {
 
-    String TAG = "HostService";
-    Timer timer;
-    Server server;
-    TorManager torManager;
-    PowerManager.WakeLock wakeLock;
-
-    public HostService() {
-    }
+    // Змінили тег на унікальний з префіксом
+    private static final String TAG = "onion.network:HostService";
+    private Timer timer;
+    private Server server;
+    private TorManager torManager;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return null; // Сервіс не прив'язується до активності
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        Server.getInstance(this);
-        TorManager.getInstance(this);
-
-        return START_STICKY;
-    }
-
-    void log(String s) {
-        Log.i(TAG, s);
+        server = Server.getInstance(this);
+        torManager = TorManager.getInstance(this);
+        checkTor();
+        return START_STICKY; // Сервіс перезапускається після зупинки
     }
 
     @Override
     public void onCreate() {
-
-        log("onCreate");
-
         super.onCreate();
+        log("Service created");
 
-        server = Server.getInstance(this);
-        torManager = TorManager.getInstance(this);
+        // Отримуємо WakeLock для запобігання відключення
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null) {
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+            wakeLock.acquire(); // Отримуємо WakeLock
+        }
 
-        PowerManager pMgr = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WakeLock");
-        wakeLock.acquire();
-
+        // Ініціалізуємо таймер для періодичних задач
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
             public void run() {
-
-                log("update");
-
+                log("Updating unsent messages and requests");
                 ChatClient.getInstance(getApplicationContext()).sendUnsent();
-
                 RequestTool.getInstance(getApplicationContext()).sendAllRequests();
-
             }
-        }, 0, 1000 * 60 * 60); // TODO: set correct delay
+        }, 0, 1000 * 60 * 60); // Оновлюємо раз на годину
 
-        WallBot.getInstance(this);
-
+        WallBot.getInstance(this); // Ініціалізація WallBot
     }
 
     @Override
     public void onDestroy() {
+        log("Service destroyed");
 
-        log("onDestroy");
+        // Скасовуємо таймер
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
 
-        timer.cancel();
-        timer.purge();
-        timer = null;
-
-        if (wakeLock != null) {
+        // Звільняємо WakeLock
+        if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
             wakeLock = null;
         }
 
         super.onDestroy();
+    }
 
+    private void log(String message) {
+        Log.i(TAG, message); // Логування з унікальним тегом
+    }
+
+    public void checkTor() {
+        Handler handler = new Handler(Looper.myLooper());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean isRunning = isTorRunning();
+                // Повертаємося на основний потік, щоб оновити UI
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isRunning) {
+                            Log.d("TorCheck", "Tor is running");
+                        } else {
+                            Log.d("TorCheck", "Tor is not running");
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public boolean isTorRunning() {
+        try {
+            // Підключення до Tor на локальному хості
+            Socket socket = new Socket("127.0.0.1", 9050);
+            socket.close(); // Закриття сокету, якщо з'єднання успішне
+            return true; // Tor працює
+        } catch (IOException e) {
+            return false; // Tor не працює
+        }
     }
 }
-

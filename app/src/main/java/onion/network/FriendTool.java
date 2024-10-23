@@ -81,7 +81,7 @@ public class FriendTool {
         log(uri);
 
         try {
-            byte[] rs = HttpClient.getbin(context, uri);
+            byte[] rs = HttpClient.getbin(Uri.parse(uri));
             log("sendUnfriend OK");
             return true;
         } catch (IOException ex) {
@@ -147,8 +147,7 @@ public class FriendTool {
         String sign = Utils.base64encode(TorManager.getInstance(context).sign((dest + " " + addr + " " + time).getBytes(Utils.utf8)));
         try {
             return "1".equals(
-                    HttpClient.get(context,
-                            new OnionUrlBuilder(dest, "r")
+                    HttpClient.get(new OnionUrlBuilder(dest, "r")
                                     .arg("dest", dest)
                                     .arg("addr", addr)
                                     .arg("time", time)

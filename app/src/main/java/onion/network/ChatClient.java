@@ -78,7 +78,7 @@ public class ChatClient {
         log("" + uri);
 
         try {
-            boolean rs = HttpClient.get(context, uri).trim().equals("1");
+            boolean rs = HttpClient.get(uri).trim().equals("1");
             if (!rs) {
                 log("declined");
                 return false;

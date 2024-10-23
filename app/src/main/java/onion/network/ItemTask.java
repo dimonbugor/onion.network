@@ -11,6 +11,7 @@
 package onion.network;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -177,7 +178,7 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
             boolean loadOk = false;
             try {
                 String url = getUrl();
-                byte[] data = HttpClient.getbin(context, url);
+                byte[] data = HttpClient.getbin(Uri.parse(url));
                 ItemResult itemResult = process(data, true, false);
                 if (itemResult != null) {
                     itemCache.delete(address, type, index, itemResult.more());

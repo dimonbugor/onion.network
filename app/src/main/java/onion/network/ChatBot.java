@@ -72,7 +72,7 @@ public class ChatBot {
                 log("" + botUri);
                 final String response;
                 try {
-                    response = HttpClient.getNoTor(context, botUri);
+                    response = HttpClient.getNoTor(botUri);
                 } catch (IOException ex) {
                     log("failed to get response from bot");
                     ex.printStackTrace();
@@ -82,7 +82,7 @@ public class ChatBot {
                 // send message
                 String respstr = null;
                 try {
-                    respstr = HttpClient.get(context, ChatClient.getInstance(context).makeUri(
+                    respstr = HttpClient.get(ChatClient.getInstance(context).makeUri(
                             TorManager.getInstance(context).getID(),
                             address,
                             response,

@@ -67,7 +67,7 @@ public class RequestTool {
         log(uri);
 
         try {
-            byte[] rs = HttpClient.getbin(context, uri);
+            byte[] rs = HttpClient.getbin(Uri.parse(uri));
             RequestDatabase.getInstance(context).removeOutgoing(dest);
             return true;
         } catch (IOException ex) {

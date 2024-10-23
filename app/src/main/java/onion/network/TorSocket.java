@@ -11,6 +11,7 @@
 package onion.network;
 
 import android.content.Context;
+import android.util.Log;
 
 import net.freehaven.tor.control.TorControlConnection;
 
@@ -22,6 +23,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -86,7 +88,8 @@ public class TorSocket extends Socket {
 
     public TorSocket(Context context, String onionAddress, int port) throws IOException {
         TorControlConnection torControlConnection = TorManager.getInstance(context).getTorControlConnection();
-        if(torControlConnection != null){
+        if (torControlConnection != null) {
+            Log.d("TorSocket", "Attempting to connect to " + onionAddress + ":" + port);
             String response = fetchOnionService(onionAddress, port);
             System.out.println(response);
         } else {
@@ -96,8 +99,8 @@ public class TorSocket extends Socket {
 
     private static String fetchOnionService(String onionAddress, int port) throws IOException {
 
-        //String TOR_HOST = "127.0.0.1";
-        String TOR_HOST = "localhost";
+        String TOR_HOST = "127.0.0.1";
+        //String TOR_HOST = "localhost";
         int TOR_PORT = TorService.socksPort;
 
         // Налаштування проксі
@@ -106,6 +109,8 @@ public class TorSocket extends Socket {
         // Налаштування OkHttpClient
         OkHttpClient client = new OkHttpClient.Builder()
                 .proxy(proxy)
+                .connectTimeout(10, TimeUnit.SECONDS) // Тайм-аут на підключення
+                .readTimeout(30, TimeUnit.SECONDS) // Тайм-аут на читання
                 .build();
 
         // Створення запиту
@@ -113,9 +118,14 @@ public class TorSocket extends Socket {
                 .url((port == 80 ? "http://" : "https://") + onionAddress)
                 .build();
 
+        if (!onionAddress.endsWith(".onion")) {
+            throw new IllegalArgumentException("Invalid onion address: " + onionAddress);
+        }
+
         // Виконання запиту
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                Log.e("TorSocket", "Request failed with code: " + response.code());
                 throw new IOException("Unexpected code " + response);
             }
             return response.body().string();
