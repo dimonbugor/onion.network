@@ -23,6 +23,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 
+import onion.network.cashes.ItemCache;
+import onion.network.clients.HttpClient;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
+
 public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
 
     private static Executor executor = new Executor() {
@@ -115,50 +120,6 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
 
         } else {
 
-
-            /*
-            // remote request
-
-            ItemCache itemCache = ItemCache.getInstance(context);
-
-            // view current cache contents
-            {
-                ItemResult itemResult = itemCache.get(address, type, index, count);
-                itemResult.setLoading(true);
-                itemResult.setOk(true);
-                publishProgress(itemResult);
-            }
-
-            // try to load and view real data
-            boolean loadOk = false;
-            try {
-                String url = getUrl();
-                byte[] data = HttpClient.getbin(context, url);
-                ItemResult itemResult = process(data, true, false);
-                if (itemResult != null) {
-                    itemCache.delete(address, type, index, itemResult.more());
-                    for (int i = 0; i < itemResult.size(); i++) {
-                        itemCache.put(address, itemResult.at(i));
-                    }
-                    loadOk = true;
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            // publish final result
-            {
-                ItemResult itemResult = itemCache.get(address, type, index, count);
-                itemResult.setLoading(false);
-                itemResult.setOk(loadOk);
-                publishProgress(itemResult);
-                return itemResult;
-            }
-            */
-
-
-
-
             // remote request
 
             ItemCache itemCache = ItemCache.getInstance(context);
@@ -178,7 +139,7 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
             boolean loadOk = false;
             try {
                 String url = getUrl();
-                byte[] data = HttpClient.getbin(Uri.parse(url));
+                byte[] data = HttpClient.getbin(url);
                 ItemResult itemResult = process(data, true, false);
                 if (itemResult != null) {
                     itemCache.delete(address, type, index, itemResult.more());

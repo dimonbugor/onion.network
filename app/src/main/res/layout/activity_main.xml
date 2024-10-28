@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/pikaso"
-    tools:context="onion.network.MainActivity">
+    tools:context="onion.network.ui.MainActivity">
 
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
-        tools:context="onion.network.MainActivity">
+        tools:context="onion.network.ui.MainActivity">
 
         <android.support.design.widget.AppBarLayout
             android:id="@+id/appbar"
@@ -45,7 +45,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <onion.network.TorStatusView
+            <onion.network.ui.views.TorStatusView
                 android:id="@+id/torStatusView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -76,11 +76,11 @@
                         android:max="100"
                         />
                 </FrameLayout>
-            </onion.network.TorStatusView>
+            </onion.network.ui.views.TorStatusView>
 
         </LinearLayout>
 
-        <onion.network.ui.ArcButtonLayout
+        <onion.network.ui.views.ArcButtonLayout
             android:id="@+id/arcButtonLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -102,7 +102,7 @@
                 android:src="@drawable/ic_menu"
                 app:rippleColor="#fff" />
 
-        </onion.network.ui.ArcButtonLayout>
+        </onion.network.ui.views.ArcButtonLayout>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/wallFab"

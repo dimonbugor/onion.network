@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.servers;
 
 import android.content.Context;
 import android.net.LocalServerSocket;
@@ -25,6 +25,15 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import onion.network.FriendTool;
+import onion.network.Item;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
+import onion.network.ui.views.RequestTool;
+import onion.network.settings.Settings;
+import onion.network.Site;
+import onion.network.TorManager;
 
 public class Server {
 

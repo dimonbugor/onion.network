@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -22,6 +22,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.io.IOException;
+
+import onion.network.cashes.ItemCache;
+import onion.network.R;
+import onion.network.settings.Settings;
+import onion.network.cashes.SiteCache;
+import onion.network.helpers.Utils;
+import onion.network.WallBot;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -133,7 +140,7 @@ public class SettingsActivity extends AppCompatActivity {
         void showLicense(String name) {
             String text;
             try {
-                text = Utils.str(getResources().getAssets().open("licenses/" + name));
+                text = Utils.readInputStreamToString(getResources().getAssets().open("licenses/" + name));
             } catch (IOException ex) {
                 throw new Error(ex);
             }

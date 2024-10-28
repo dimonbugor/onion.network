@@ -1,12 +1,4 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network;
 
@@ -23,18 +15,17 @@ import android.util.Log;
 
 import net.freehaven.tor.control.TorControlConnection;
 
-import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.spongycastle.asn1.ASN1OutputStream;
-import org.spongycastle.asn1.x509.RSAPublicKeyStructure;
 import org.torproject.jni.TorService;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.spec.RSAPublicKeySpec;
+
+import onion.network.helpers.Ed25519Signature;
+import onion.network.servers.Server;
+import onion.network.helpers.Utils;
+import onion.network.ui.MainActivity;
 
 public class TorManager {
 
@@ -88,7 +79,7 @@ public class TorManager {
                     new IntentFilter(TorService.ACTION_STATUS));
         }
 
-        domain = Utils.filestr(new File(getHiddenServiceDir(), "hostname")).trim();
+        domain = Utils.readFileAsString(new File(getHiddenServiceDir(), "hostname")).trim();
         log(domain);
 
         stopTor();
@@ -183,7 +174,7 @@ public class TorManager {
                             log("Tor Circuit Status: " + torStatus);
 
                             // Отримуємо адресу .onion
-                            domain = Utils.filestr(new File(getHiddenServiceDir(), "hostname")).trim();
+                            domain = Utils.readFileAsString(new File(getHiddenServiceDir(), "hostname")).trim();
 
                         } catch (IOException e) {
                             log("Error in configuring hidden service: " + e.getMessage());
@@ -261,7 +252,7 @@ public class TorManager {
         return ready;
     }
 
-    byte[] pubkey() {
+    public byte[] pubkey() {
         try {
             return Ed25519Signature.getEd25519PublicKey(getHiddenServiceDir());
         } catch (IOException e) {
@@ -270,7 +261,7 @@ public class TorManager {
         }
     }
 
-    byte[] sign(byte[] msg) {
+    public byte[] sign(byte[] msg) {
         try {
             return Ed25519Signature.signWithEd25519(getHiddenServiceDir(), msg);
         } catch (IOException e) {
@@ -279,7 +270,7 @@ public class TorManager {
         }
     }
 
-    boolean checksig(byte[] pubkey, byte[] sig, byte[] msg) {
+    public boolean checksig(byte[] pubkey, byte[] sig, byte[] msg) {
         return Ed25519Signature.checkEd25519Signature(pubkey, sig, msg);
     }
 

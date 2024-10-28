@@ -16,6 +16,12 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import onion.network.clients.ChatClient;
+import onion.network.clients.HttpClient;
+import onion.network.databases.ChatDatabase;
+import onion.network.settings.Settings;
+import onion.network.ui.views.StatusTool;
+
 public class ChatBot {
 
     private static ChatBot instance;
@@ -72,7 +78,7 @@ public class ChatBot {
                 log("" + botUri);
                 final String response;
                 try {
-                    response = HttpClient.getNoTor(botUri);
+                    response = HttpClient.getNoTor(botUri.toString());
                 } catch (IOException ex) {
                     log("failed to get response from bot");
                     ex.printStackTrace();

@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.ui.views;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -17,6 +17,15 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+
+import onion.network.databases.ItemDatabase;
+import onion.network.R;
+import onion.network.settings.Settings;
+import onion.network.TorManager;
+import onion.network.helpers.Utils;
+import onion.network.clients.HttpClient;
+import onion.network.databases.RequestDatabase;
+import onion.network.ui.MainActivity;
 
 public class RequestTool {
 
@@ -55,8 +64,8 @@ public class RequestTool {
 
         String addr = TorManager.getInstance(context).getID();
         String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");
-        String sign = Utils.base64encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
-        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
+        String sign = Utils.base64Encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
+        String pkey = Utils.base64Encode(TorManager.getInstance(context).pubkey());
 
         String uri = "http://" + dest + ".onion/f?";
         uri += "dest=" + Uri.encode(dest) + "&";
@@ -67,7 +76,7 @@ public class RequestTool {
         log(uri);
 
         try {
-            byte[] rs = HttpClient.getbin(Uri.parse(uri));
+            byte[] rs = HttpClient.getbin(uri);
             RequestDatabase.getInstance(context).removeOutgoing(dest);
             return true;
         } catch (IOException ex) {
@@ -107,7 +116,7 @@ public class RequestTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), msg(dest, addr, name))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64Decode(pkey), Utils.base64Decode(sign), msg(dest, addr, name))) {
             log("Invalid signature");
             return false;
         }

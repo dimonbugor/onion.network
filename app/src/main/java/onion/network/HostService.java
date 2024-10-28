@@ -2,14 +2,19 @@ package onion.network;
 
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.IOException;
@@ -18,11 +23,18 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import fi.iki.elonen.NanoHTTPD;
+import onion.network.clients.ChatClient;
+import onion.network.clients.HttpClient;
+import onion.network.helpers.Utils;
+import onion.network.servers.Server;
+import onion.network.ui.views.RequestTool;
 
 public class HostService extends Service {
     private static final String TAG = "onion.network:HostService";
     private Timer timer;
     private TorManager torManager;
+    private ChatClient chatClient;
+    private Server server;
     private PowerManager.WakeLock wakeLock;
     private HttpServer httpServer;
 
@@ -33,10 +45,35 @@ public class HostService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundServiceWithNotification();
+        } else {
+            startForeground(1, createNotification());
+        }
         torManager = TorManager.getInstance(this);
         checkTor();
         startHttpServer(); // Запускаємо HTTP сервер
-        return START_STICKY; // Сервіс перезапускається після зупинки
+        return START_STICKY;
+    }
+
+    private void startForegroundServiceWithNotification() {
+        Notification notification = createNotification();
+        startForeground(1, notification);
+    }
+
+    private Notification createNotification() {
+        NotificationChannel channel = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channel = new NotificationChannel(
+                    "service_channel", "Service Channel", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+        return new NotificationCompat.Builder(this, "service_channel")
+                .setContentTitle("Service Running")
+                .setContentText("Tor service is active")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build();
     }
 
     @Override
@@ -44,16 +81,13 @@ public class HostService extends Service {
         super.onCreate();
         log("Service created");
 
-        // Отримуємо WakeLock для запобігання відключення
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        if (powerManager != null) {
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-            wakeLock.acquire(); // Отримуємо WakeLock
-        }
+        server = Server.getInstance(this);
+        torManager = torManager.getInstance(this);
+        chatClient = ChatClient.getInstance(this);
 
         // Ініціалізуємо таймер для періодичних задач
         timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 log("Updating unsent messages and requests");
@@ -63,6 +97,13 @@ public class HostService extends Service {
         }, 0, 1000 * 60 * 60); // Оновлюємо раз на годину
 
         WallBot.getInstance(this); // Ініціалізація WallBot
+
+        // Отримуємо WakeLock для запобігання відключення
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null) {
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+            wakeLock.acquire(); // Отримуємо WakeLock
+        }
     }
 
     @Override
@@ -92,7 +133,7 @@ public class HostService extends Service {
     }
 
     private void log(String message) {
-        Log.i(TAG, message); // Логування з унікальним тегом
+        Log.i(getClass().getName(), message); // Логування з унікальним тегом
     }
 
     public void checkTor() {
@@ -138,23 +179,23 @@ public class HostService extends Service {
     }
 
     public class HttpServer extends NanoHTTPD {
-        private HttpClient httpClient;
 
         public HttpServer(int port) {
             super(port);
-            this.httpClient = new HttpClient(); // Ініціалізація HttpClient
         }
 
         @Override
         public Response serve(NanoHTTPD.IHTTPSession session) {
             String uri = session.getUri(); // Отримуємо URI запиту
             String responseMsg;
-
+            if(uri.equals("/")) {
+                responseMsg = "<html><body><h1>Info: session.getUri() =" + session.getUri() + "</h1></body></html>";
+                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);
+            }
             try {
                 // Використовуємо HttpClient для обробки запиту
-                Uri requestUri = Uri.parse(uri);
-                byte[] content = httpClient.getbin(requestUri, true, false, 0); // Передаємо через Tor
-                responseMsg = new String(content, Utils.utf8); // Конвертуємо в рядок
+                byte[] content = HttpClient.getbin(uri, true, false, 0); // Передаємо через Tor
+                responseMsg = new String(content, Utils.UTF_8); // Конвертуємо в рядок
             } catch (IOException e) {
                 responseMsg = "<html><body><h1>Error: " + e.getMessage() + "</h1></body></html>";
                 return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);

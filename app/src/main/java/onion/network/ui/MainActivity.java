@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.ui;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
@@ -58,12 +58,27 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import onion.network.FriendTool;
+import onion.network.HostService;
+import onion.network.Item;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
+import onion.network.ItemTask;
+import onion.network.Notifier;
+import onion.network.QR;
+import onion.network.R;
+import onion.network.ui.views.RequestTool;
+import onion.network.Site;
+import onion.network.TorManager;
+import onion.network.UpdateScheduler;
+import onion.network.helpers.Utils;
+import onion.network.WallBot;
+import onion.network.databases.ChatDatabase;
+import onion.network.databases.RequestDatabase;
 import onion.network.pages.BasePage;
 import onion.network.pages.ChatPage;
 import onion.network.pages.CloudPage;
@@ -74,7 +89,7 @@ import onion.network.pages.PrivacyPage;
 import onion.network.pages.ProfilePage;
 import onion.network.pages.RequestPage;
 import onion.network.pages.WallPage;
-import onion.network.ui.ArcButtonLayout;
+import onion.network.ui.views.ArcButtonLayout;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -85,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     ItemDatabase db;
     WallPage wallPage;
     FriendPage friendPage;
-    RequestPage requestPage;
+    public RequestPage requestPage;
     BasePage[] pages;
     int REQUEST_QR = 12;
     String TAG = "Activity";
@@ -117,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         return instance;
     }
 
-    static void prefetch(Context context, String address) {
+    public static void prefetch(Context context, String address) {
         new ItemTask(context, address, "name").execute2();
         prefetchExtra(context, address);
     }

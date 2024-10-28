@@ -1,4 +1,4 @@
-package onion.network;
+package onion.network.helpers;
 
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.Security;
 import java.util.Arrays;
 

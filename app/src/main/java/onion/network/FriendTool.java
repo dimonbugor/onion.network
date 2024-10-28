@@ -17,6 +17,13 @@ import android.util.Log;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import onion.network.clients.HttpClient;
+import onion.network.databases.ItemDatabase;
+import onion.network.databases.RequestDatabase;
+import onion.network.helpers.OnionUrlBuilder;
+import onion.network.helpers.Utils;
+import onion.network.models.ItemResult;
+
 public class FriendTool {
 
     private static FriendTool instance;
@@ -56,7 +63,7 @@ public class FriendTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), buildUnfriendMessage(dest, addr))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64Decode(pkey), Utils.base64Decode(sign), buildUnfriendMessage(dest, addr))) {
             log("Invalid signature");
             return false;
         }
@@ -69,8 +76,8 @@ public class FriendTool {
 
     public boolean doSendUnfriend(String dest) {
         String addr = TorManager.getInstance(context).getID();
-        String sign = Utils.base64encode(TorManager.getInstance(context).sign(buildUnfriendMessage(dest, addr)));
-        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
+        String sign = Utils.base64Encode(TorManager.getInstance(context).sign(buildUnfriendMessage(dest, addr)));
+        String pkey = Utils.base64Encode(TorManager.getInstance(context).pubkey());
 
         String uri = "http://" + dest + ".onion/u?";
         uri += "dest=" + Uri.encode(dest) + "&";
@@ -81,7 +88,7 @@ public class FriendTool {
         log(uri);
 
         try {
-            byte[] rs = HttpClient.getbin(Uri.parse(uri));
+            byte[] rs = HttpClient.getbin(uri);
             log("sendUnfriend OK");
             return true;
         } catch (IOException ex) {
@@ -123,7 +130,7 @@ public class FriendTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(Utils.base64decode(pkey), Utils.base64decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.utf8))) {
+        if (!TorManager.getInstance(context).checksig(Utils.base64Decode(pkey), Utils.base64Decode(sign), (dest + " " + addr + " " + time).getBytes(Utils.UTF_8))) {
             log("Invalid signature");
             return false;
         }
@@ -143,8 +150,8 @@ public class FriendTool {
         log("requestUpdate " + dest);
         String addr = TorManager.getInstance(context).getID();
         String time = "" + System.currentTimeMillis();
-        String pkey = Utils.base64encode(TorManager.getInstance(context).pubkey());
-        String sign = Utils.base64encode(TorManager.getInstance(context).sign((dest + " " + addr + " " + time).getBytes(Utils.utf8)));
+        String pkey = Utils.base64Encode(TorManager.getInstance(context).pubkey());
+        String sign = Utils.base64Encode(TorManager.getInstance(context).sign((dest + " " + addr + " " + time).getBytes(Utils.UTF_8)));
         try {
             return "1".equals(
                     HttpClient.get(new OnionUrlBuilder(dest, "r")

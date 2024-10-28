@@ -29,6 +29,11 @@ import java.util.TimerTask;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import onion.network.clients.HttpClient;
+import onion.network.databases.ItemDatabase;
+import onion.network.helpers.Utils;
+import onion.network.settings.Settings;
+
 public class WallBot {
 
     private static WallBot instance;
@@ -97,7 +102,7 @@ public class WallBot {
             byte[] data;
 
             try {
-                data = HttpClient.getbin(Uri.parse(addr));
+                data = HttpClient.getbin(addr);
                 log(new String(data));
             } catch (IOException ex) {
                 log("feed error");
@@ -164,7 +169,7 @@ public class WallBot {
         String[] ids = new String[ss.length];
         String[] delkeys = new String[ss.length];
         for (int i = 0; i < ss.length; i++) {
-            ids[i] = Utils.digest(ss[i]);
+            ids[i] = Utils.sha1Digest(ss[i]);
             delkeys[i] = "bot" + ids[i];
         }
 

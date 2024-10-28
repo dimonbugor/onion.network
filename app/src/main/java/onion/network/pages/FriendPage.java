@@ -28,9 +28,9 @@ import org.json.JSONObject;
 
 import onion.network.FriendTool;
 import onion.network.Item;
-import onion.network.ItemResult;
+import onion.network.models.ItemResult;
 import onion.network.ItemTask;
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
 
 public class FriendPage extends BasePage {

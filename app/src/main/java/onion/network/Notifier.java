@@ -1,15 +1,6 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
-
 package onion.network;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -17,22 +8,25 @@ import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import onion.network.settings.Settings;
+import onion.network.ui.MainActivity;
 
 public class Notifier {
 
     private static Notifier instance;
-    int id = 5;
+    private static final String CHANNEL_ID = "onion_network_channel";
     private Context context;
 
     private Notifier(Context context) {
-        context = context.getApplicationContext();
-        this.context = context;
+        this.context = context.getApplicationContext();
+        createNotificationChannel(); // Create notification channel
     }
 
     synchronized public static Notifier getInstance(Context context) {
-        context = context.getApplicationContext();
         if (instance == null) {
             instance = new Notifier(context);
         }
@@ -45,15 +39,16 @@ public class Notifier {
 
     public void clr() {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(id);
+        notificationManager.cancel(5); // Use a unique ID for each notification
     }
 
     long lastSoundTime = 0;
+
     private void msgSound() {
         boolean sound = Settings.getPrefs(context).getBoolean("sound", false);
-        if(!sound) return;
+        if (!sound) return;
         long soundTime = System.currentTimeMillis();
-        if(lastSoundTime + 700 > soundTime) return;
+        if (lastSoundTime + 700 > soundTime) return;
         lastSoundTime = soundTime;
         try {
             Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -67,23 +62,27 @@ public class Notifier {
     private void msgNotify() {
         boolean sound = Settings.getPrefs(context).getBoolean("sound", false);
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationCompat.Builder b = new NotificationCompat.Builder(context)
+
+        NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setColor(context.getResources().getColor(R.color.accent_dark))
                 .setContentTitle(context.getResources().getString(R.string.app_name))
                 .setContentText("New Message")
-                .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class).putExtra("page", "chat"), PendingIntent.FLAG_UPDATE_CURRENT))
-                .setSmallIcon(R.drawable.ic_notification);
+                .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class).putExtra("page", "chat"), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
+                .setSmallIcon(R.drawable.ic_notification)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT); // Set priority for Android 8.0+
+
         if (sound) {
-            b.setDefaults(NotificationCompat.DEFAULT_SOUND);
+            b.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         }
-        notificationManager.notify(id, b.build());
+
+        notificationManager.notify(5, b.build());
     }
 
     public void msg(String sender) {
         MainActivity mainActivity = MainActivity.getInstance();
         if (mainActivity != null) {
-            if(mainActivity.address.isEmpty() || mainActivity.address.equals(sender)) {
+            if (mainActivity.address.isEmpty() || mainActivity.address.equals(sender)) {
                 msgSound();
                 mainActivity.blink(R.drawable.ic_question_answer_white_36dp);
             } else {
@@ -94,4 +93,11 @@ public class Notifier {
         }
     }
 
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Onion Network Notifications", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+    }
 }

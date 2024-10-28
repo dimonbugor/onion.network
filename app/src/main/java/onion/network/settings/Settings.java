@@ -8,11 +8,13 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.settings;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+
+import onion.network.R;
 
 public class Settings {
 

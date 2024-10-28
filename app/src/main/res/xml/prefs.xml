@@ -17,7 +17,7 @@
         android:summary="Play a sound when a new message is received"
         />
 
-    <onion.network.ListPreferenceEx
+    <onion.network.settings.ListPreferenceEx
         android:key="acceptmessages"
         android:defaultValue="friends"
         android:entryValues="@array/acceptmessagesvalues"
@@ -83,7 +83,7 @@
             />
 
         <!--
-        <onion.network.EditTextPreferenceUrl
+        <onion.network.settings.EditTextPreferenceUrl
             android:key="wallbotfeed"
             android:title="WallBot RSS Feed"
             />

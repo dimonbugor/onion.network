@@ -1,6 +1,5 @@
-package onion.network;
+package onion.network.clients;
 
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -13,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLSocketFactory;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import onion.network.helpers.Utils;
 
 public class HttpClient {
 
@@ -25,32 +23,38 @@ public class HttpClient {
         Log.i("HTTP", str);
     }
 
-    public static String getNoTor(Uri uri) throws IOException {
-        return new String(getbin(uri, false, true, 2), Utils.utf8);
+    public static String getNoTor(String uriString) throws IOException {
+        return new String(getbin(uriString, false, true, 2), Utils.UTF_8);
     }
 
-    public static String get(Uri uri) throws IOException {
-        return new String(getbin(uri), Utils.utf8);
+    public static String get(String uriString) throws IOException {
+        return new String(getbin(uriString), Utils.UTF_8);
     }
 
-    public static String get(String uriStr) throws IOException {
-        return get(Uri.parse(uriStr));
+    public static byte[] getbin(String uriString) throws IOException {
+        return getbin(uriString, true, false, 0);
     }
 
-    public static byte[] getbin(Uri uri) throws IOException {
-        return getbin(uri, true, false, 0);
-    }
+    public static byte[] getbin(String uriString, boolean torified, boolean allowTls, int redirs) throws IOException {
+        // Перевіряємо, чи містить URI схему
+        if (uriString.isEmpty() || uriString.equals("/")) {
+            throw new IllegalArgumentException("Invalid URI: " + uriString);
+        }
 
-    static byte[] getbin(Uri uri, boolean torified, boolean allowTls, int redirs) throws IOException {
-        log("request " + uri + " " + torified + " " + allowTls + " " + redirs);
+        if (uriString.startsWith("/")) {
+            uriString = uriString.substring(1); // Видаляємо перший символ, якщо є
+        }
+        uriString = "http://" + uriString;
+
+        log("request " + uriString + " " + torified + " " + allowTls + " " + redirs);
 
         byte[] content;
         HashMap<String, String> headers = new HashMap<>();
 
         // Налаштування OkHttpClient з тайм-аутами
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
-                .connectTimeout(120, TimeUnit.SECONDS) // Збільшено до 120 секунд
-                .readTimeout(120, TimeUnit.SECONDS);
+                .connectTimeout(240, TimeUnit.SECONDS) // Збільшено до 120 секунд
+                .readTimeout(240, TimeUnit.SECONDS);
 
         // Додавання проксі для Tor, якщо потрібно
         if (torified) {
@@ -64,11 +68,12 @@ public class HttpClient {
 
         // Створення запиту
         Request.Builder requestBuilder = new Request.Builder()
-                .url(uri.toString())
+                .url(uriString)
                 .addHeader("Accept-Encoding", "gzip, deflate");
 
         // Додати заголовки TLS, якщо потрібні
-        if (allowTls && "https".equals(uri.getScheme())) {
+        if (allowTls && uriString.contains("https")) {
+            Uri uri = Uri.parse(uriString);
             requestBuilder.addHeader("Host", uri.getHost());
         }
 
@@ -101,7 +106,7 @@ public class HttpClient {
             String headerLocation = headers.get("Location");
             if (headerLocation != null) {
                 log("redirection to " + headerLocation);
-                content = getbin(Uri.parse(headerLocation), torified, allowTls, redirs - 1);
+                content = getbin(headerLocation, torified, allowTls, redirs - 1);
             }
         }
 

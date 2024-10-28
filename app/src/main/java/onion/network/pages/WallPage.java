@@ -36,13 +36,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import onion.network.Item;
-import onion.network.ItemDatabase;
-import onion.network.ItemResult;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
 import onion.network.ItemTask;
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
 import onion.network.TorManager;
-import onion.network.Utils;
+import onion.network.helpers.Utils;
 
 public class WallPage extends BasePage {
 
@@ -367,7 +367,7 @@ public class WallPage extends BasePage {
                     text.setText(Utils.linkify(context, t));
                     if (t.isEmpty()) text.setVisibility(View.GONE);
 
-                    String datestr = Utils.date(o.optString("date"));
+                    String datestr = Utils.formatDate(o.optString("date"));
                     date.setText(datestr);
 
                     if (!postAddress.equals(wallAddress)) {

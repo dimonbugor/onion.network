@@ -15,6 +15,10 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 
+import onion.network.clients.ChatClient;
+import onion.network.databases.RequestDatabase;
+import onion.network.ui.views.RequestTool;
+
 public class UpdateScheduler {
 
     final static String TAG = "UpdateScheduler";

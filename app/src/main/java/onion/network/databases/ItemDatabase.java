@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.databases;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -19,6 +19,9 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import onion.network.Item;
+import onion.network.models.ItemResult;
 
 public class ItemDatabase extends SQLiteOpenHelper {
 

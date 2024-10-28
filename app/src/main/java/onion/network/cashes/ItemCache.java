@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.cashes;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -16,16 +16,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v4.util.LruCache;
-import android.util.Log;
 
-import org.apache.commons.codec.binary.StringUtils;
-
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
+
+import onion.network.Item;
+import onion.network.models.ItemResult;
+import onion.network.settings.Settings;
+import onion.network.helpers.Utils;
 
 public class ItemCache {
 
@@ -102,9 +100,6 @@ public class ItemCache {
         memCache.clearCache();
     }
 
-
-
-
     private static class ItemCacheMem {
 
         LruCache<String, Item> cache = new LruCache<String, Item>(1024 * 256) {
@@ -118,8 +113,8 @@ public class ItemCache {
             String key = "" + address + "/" + item.type();
             if("".equals(item.key()) &&
                     "".equals(item.index()) &&
-                    Utils.isAlnum(address) &&
-                    Utils.isAlnum(item.type()) &&
+                    Utils.isAlphanumeric(address) &&
+                    Utils.isAlphanumeric(item.type()) &&
                     item.data() != null &&
                     item.data().length < 10000) {
                 log("memcache put " + key);
@@ -131,8 +126,8 @@ public class ItemCache {
         }
 
         public synchronized Item get(String address, String type, String index, int count) {
-            if(!Utils.isAlnum(address)) return null;
-            if(!Utils.isAlnum(type)) return null;
+            if(!Utils.isAlphanumeric(address)) return null;
+            if(!Utils.isAlphanumeric(type)) return null;
             if(!"".equals(index)) return null;
             if(count != 1) return null;
             String key = address + "/" + type;
@@ -146,8 +141,8 @@ public class ItemCache {
         }
 
         public synchronized void delete(String address, String type) {
-            if(!Utils.isAlnum(address)) return;
-            if(!Utils.isAlnum(type)) return;
+            if(!Utils.isAlphanumeric(address)) return;
+            if(!Utils.isAlphanumeric(type)) return;
             String key = address + "/" + type;
             log("memcache delete " + key);
             cache.remove(key);

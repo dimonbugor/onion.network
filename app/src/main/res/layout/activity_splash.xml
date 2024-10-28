@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
-    tools:context=".SplashActivity">
+    tools:context=".ui.SplashActivity">
 
     <ProgressBar
         android:id="@+id/fullscreen_content"

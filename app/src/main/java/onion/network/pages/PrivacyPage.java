@@ -6,7 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
 
 public class PrivacyPage extends BasePage {

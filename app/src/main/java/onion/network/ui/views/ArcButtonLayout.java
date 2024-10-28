@@ -1,4 +1,4 @@
-package onion.network.ui;
+package onion.network.ui.views;
 
 import android.content.Context;
 import android.content.res.TypedArray;

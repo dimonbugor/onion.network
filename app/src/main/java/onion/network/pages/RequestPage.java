@@ -18,9 +18,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
-import onion.network.RequestDatabase;
+import onion.network.databases.RequestDatabase;
 
 public class RequestPage extends BasePage {
 

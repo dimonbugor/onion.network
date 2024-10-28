@@ -22,11 +22,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import onion.network.ChatClient;
-import onion.network.ChatDatabase;
-import onion.network.ChatServer;
-import onion.network.ItemCache;
-import onion.network.MainActivity;
+import onion.network.clients.ChatClient;
+import onion.network.databases.ChatDatabase;
+import onion.network.servers.ChatServer;
+import onion.network.cashes.ItemCache;
+import onion.network.ui.MainActivity;
 import onion.network.R;
 import onion.network.TorManager;
 

@@ -18,6 +18,12 @@ import android.util.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.cashes.ItemCache;
+import onion.network.databases.ItemDatabase;
+import onion.network.helpers.Utils;
+import onion.network.models.ItemResult;
+import onion.network.settings.Settings;
+
 public class Item {
 
     private String _type;
@@ -37,7 +43,7 @@ public class Item {
     }
 
     private Item(String type, String key, String index, String data) {
-        this(type, key, index, data == null ? new byte[0] : data.getBytes(Utils.utf8));
+        this(type, key, index, data == null ? new byte[0] : data.getBytes(Utils.UTF_8));
     }
 
     public Item(String type, String key, String index, JSONObject json) {
@@ -61,7 +67,7 @@ public class Item {
     }
 
     public String text() {
-        return new String(_data, Utils.utf8);
+        return new String(_data, Utils.UTF_8);
     }
 
     public JSONObject json() {
@@ -179,7 +185,7 @@ public class Item {
             }
         }
 
-        _data = json.toString().getBytes(Utils.utf8);
+        _data = json.toString().getBytes(Utils.UTF_8);
 
         return json;
 

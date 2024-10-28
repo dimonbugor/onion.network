@@ -8,13 +8,16 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.ui.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import onion.network.R;
+import onion.network.TorManager;
 
 public class TorStatusView extends LinearLayout {
 

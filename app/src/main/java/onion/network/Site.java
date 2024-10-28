@@ -30,11 +30,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import onion.network.cashes.ItemCache;
+import onion.network.cashes.SiteCache;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
 import onion.network.pages.ProfilePage;
+import onion.network.helpers.Utils;
 
 public class Site {
 
-    static Charset utf8 = Utils.utf8;
+    static Charset utf8 = Utils.UTF_8;
     private static Site instance;
     SiteCache cache;
     String tsrc, tpage, tpost, tmore, tfriend, tempty, tprofile, tprofilerow, tnotfound, tconnect;
@@ -130,7 +135,7 @@ public class Site {
 
     private String rawstr(int id) {
         try {
-            return Utils.str(context.getResources().openRawResource(id));
+            return Utils.readInputStreamToString(context.getResources().openRawResource(id));
         } catch (Exception ex) {
             return "";
         }
@@ -230,9 +235,9 @@ public class Site {
         digest.update(("" + itemResult.size()).getBytes());
         for (int i = 0; i < itemResult.size(); i++) {
             Item item = itemResult.at(i);
-            digest.update(item.type().getBytes(Utils.utf8));
-            digest.update(item.key().getBytes(Utils.utf8));
-            digest.update(item.index().getBytes(Utils.utf8));
+            digest.update(item.type().getBytes(Utils.UTF_8));
+            digest.update(item.key().getBytes(Utils.UTF_8));
+            digest.update(item.index().getBytes(Utils.UTF_8));
             digest.update(item.data());
         }
         return Base64.encodeToString(digest.digest(), Base64.NO_WRAP | Base64.NO_PADDING);
@@ -301,7 +306,7 @@ public class Site {
                 s = treplace(s, "name", htmlname(o.optString("name")));
                 s = treplace(s, "addr", html(o.optString("addr")));
                 s = treplace(s, "text", htmlbrlinkify(o.optString("text")));
-                s = treplace(s, "date", html(Utils.date(o.optString("date"))));
+                s = treplace(s, "date", html(Utils.formatDate(o.optString("date"))));
                 s = treplace(s, "thumb", htmlthumb(o.optString("thumb"), 56, 56));
 
                 String url = "http://" + uri.getHost().replace(addr, o.optString("addr")) + "/network.onion";

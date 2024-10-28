@@ -19,8 +19,8 @@ import android.widget.FrameLayout;
 import java.io.IOException;
 
 import onion.network.Item;
-import onion.network.ItemDatabase;
-import onion.network.MainActivity;
+import onion.network.databases.ItemDatabase;
+import onion.network.ui.MainActivity;
 
 public abstract class BasePage extends FrameLayout {
 

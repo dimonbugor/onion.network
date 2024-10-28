@@ -26,16 +26,16 @@ import android.widget.Toast;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import onion.network.ChatClient;
-import onion.network.ChatDatabase;
-import onion.network.ChatServer;
+import onion.network.clients.ChatClient;
+import onion.network.databases.ChatDatabase;
+import onion.network.servers.ChatServer;
 import onion.network.Item;
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
-import onion.network.Settings;
+import onion.network.settings.Settings;
 import onion.network.TorManager;
 import onion.network.UpdateScheduler;
-import onion.network.Utils;
+import onion.network.helpers.Utils;
 
 public class ChatPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 
@@ -300,7 +300,8 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             final long id = cursor.getLong(cursor.getColumnIndex("_id"));
             String content = cursor.getString(cursor.getColumnIndex("content"));
             String sender = cursor.getString(cursor.getColumnIndex("sender"));
-            String time = Utils.date(cursor.getString(cursor.getColumnIndex("time")));
+            //String time = Utils.date(cursor.getString(cursor.getColumnIndex("time")));
+            String time = cursor.getString(cursor.getColumnIndex("time"));
             boolean pending = cursor.getInt(cursor.getColumnIndex("outgoing")) > 0;
             boolean tx = sender.equals(torManager.getID());
 

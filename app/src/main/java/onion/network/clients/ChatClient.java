@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.clients;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -17,6 +17,11 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.HashSet;
+
+import onion.network.databases.ChatDatabase;
+import onion.network.databases.ItemDatabase;
+import onion.network.TorManager;
+import onion.network.helpers.Utils;
 
 public class ChatClient {
 
@@ -51,11 +56,11 @@ public class ChatClient {
         return sendOne(sender, receiver, content, time);
     }
 
-    public Uri makeUri(String sender, String receiver, String content, long time) {
+    public String makeUri(String sender, String receiver, String content, long time) {
 
-        content = Utils.base64encode(content.getBytes(Utils.utf8));
+        content = Utils.base64Encode(content.getBytes(Utils.UTF_8));
 
-        String sig = Utils.base64encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.utf8)));
+        String sig = Utils.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
 
         String name = ItemDatabase.getInstance(context).getstr("name");
         if (name == null) name = "";
@@ -65,16 +70,16 @@ public class ChatClient {
         uri += "b=" + Uri.encode(receiver) + "&";
         uri += "t=" + Uri.encode("" + time) + "&";
         uri += "m=" + Uri.encode(content) + "&";
-        uri += "p=" + Uri.encode(Utils.base64encode(torManager.pubkey())) + "&";
+        uri += "p=" + Uri.encode(Utils.base64Encode(torManager.pubkey())) + "&";
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);
 
-        return Uri.parse(uri);
+        return uri;
     }
 
     public boolean sendOne(String sender, String receiver, String content, long time) {
 
-        Uri uri = makeUri(sender, receiver, content, time);
+        String uri = makeUri(sender, receiver, content, time);
         log("" + uri);
 
         try {

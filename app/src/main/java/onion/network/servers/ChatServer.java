@@ -8,7 +8,7 @@
  * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
  */
 
-package onion.network;
+package onion.network.servers;
 
 import android.content.Context;
 import android.net.Uri;
@@ -16,6 +16,15 @@ import android.util.Log;
 
 import java.nio.charset.Charset;
 import java.util.HashSet;
+
+import onion.network.ChatBot;
+import onion.network.databases.ChatDatabase;
+import onion.network.databases.ItemDatabase;
+import onion.network.Notifier;
+import onion.network.databases.RequestDatabase;
+import onion.network.helpers.Utils;
+import onion.network.settings.Settings;
+import onion.network.TorManager;
 
 public class ChatServer {
 
@@ -65,15 +74,15 @@ public class ChatServer {
         log("message address ok");
 
         if (!torManager.checksig(
-                Utils.base64decode(pubkey),
-                Utils.base64decode(signature),
+                Utils.base64Decode(pubkey),
+                Utils.base64Decode(signature),
                 (receiver + " " + sender + " " + time + " " + m).getBytes(Charset.forName("UTF-8")))) {
             log("message invalid signature");
             return false;
         }
         log("message signature ok");
 
-        final String content = new String(Utils.base64decode(m), Charset.forName("UTF-8"));
+        final String content = new String(Utils.base64Decode(m), Charset.forName("UTF-8"));
 
         final long ltime;
         try {

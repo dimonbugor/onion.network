@@ -36,12 +36,12 @@ import org.json.JSONObject;
 
 import onion.network.FriendTool;
 import onion.network.Item;
-import onion.network.ItemDatabase;
-import onion.network.ItemResult;
+import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
 import onion.network.ItemTask;
-import onion.network.MainActivity;
+import onion.network.ui.MainActivity;
 import onion.network.R;
-import onion.network.Utils;
+import onion.network.helpers.Utils;
 
 public class ProfilePage extends BasePage {
 
