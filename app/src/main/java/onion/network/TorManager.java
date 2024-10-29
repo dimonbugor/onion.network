@@ -39,7 +39,6 @@ public class TorManager {
     private String status = "";
     private boolean ready = false;
 
-    private Server server;
     private TorService torService;
     private TorControlConnection torControlConnection;
 
@@ -70,7 +69,6 @@ public class TorManager {
     public TorManager(Context c) {
 
         this.context = c;
-        server = Server.getInstance(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.registerReceiver(torStatusReceiver,
                     new IntentFilter(TorService.ACTION_STATUS), Context.RECEIVER_EXPORTED);
@@ -91,16 +89,6 @@ public class TorManager {
             instance = new TorManager(context.getApplicationContext());
         }
         return instance;
-    }
-
-    public static int getHiddenServicePort() {
-        return 80;
-        //return 31512;
-    }
-
-    private String getSocketName() {
-        return "127.0.0.1:8080";
-        //return "127.0.0.1:" + getHiddenServicePort();
     }
 
     public void startTorServer() {
@@ -192,10 +180,6 @@ public class TorManager {
         }, Context.BIND_AUTO_CREATE);
     }
 
-    public TorControlConnection getTorControlConnection() {
-        return torControlConnection;
-    }
-
     public void stopTor() {
         Intent intent = new Intent(context, TorService.class);
         context.stopService(intent);
@@ -256,6 +240,7 @@ public class TorManager {
         try {
             return Ed25519Signature.getEd25519PublicKey(getHiddenServiceDir());
         } catch (IOException e) {
+            log("pubkey error: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -265,6 +250,7 @@ public class TorManager {
         try {
             return Ed25519Signature.signWithEd25519(getHiddenServiceDir(), msg);
         } catch (IOException e) {
+            log("Sign error: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

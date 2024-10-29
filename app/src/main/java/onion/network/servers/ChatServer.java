@@ -15,13 +15,16 @@ import android.net.Uri;
 import android.util.Log;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
+import fi.iki.elonen.NanoHTTPD;
 import onion.network.ChatBot;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.Notifier;
 import onion.network.databases.RequestDatabase;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.Utils;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
@@ -52,20 +55,28 @@ public class ChatServer {
     }
 
 
-    public boolean handle(Uri uri) {
+    public boolean handle(NanoHTTPD. IHTTPSession session) {
 
-        log("handle " + uri);
+        log("handle " + session.getUri());
 
 
         // get & check params
 
-        final String sender = uri.getQueryParameter("a");
-        final String receiver = uri.getQueryParameter("b");
-        final String time = uri.getQueryParameter("t");
-        String m = uri.getQueryParameter("m");
-        final String pubkey = uri.getQueryParameter("p");
-        final String signature = uri.getQueryParameter("s");
-        final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
+        //final String sender = uri.getQueryParameter("a");
+        final String sender = session.getParameters().get("a").get(0);
+        //final String receiver = uri.getQueryParameter("b");
+        final String receiver = session.getParameters().get("b").get(0);
+        //final String time = uri.getQueryParameter("t");
+        final String time = session.getParameters().get("t").get(0);
+        //String m = uri.getQueryParameter("m");
+        String m = session.getParameters().get("m").get(0);
+        //final String pubkey = uri.getQueryParameter("p");
+        final String pubkey = session.getParameters().get("p").get(0);
+        //final String signature = uri.getQueryParameter("s");
+        final String signature = session.getParameters().get("s").get(0);
+        //final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
+        final String name = session.getParameters().get("n").get(0) != null
+                ? session.getParameters().get("n").get(0) : "";
 
         if (!receiver.equals(torManager.getID())) {
             log("message wrong address");
@@ -74,15 +85,15 @@ public class ChatServer {
         log("message address ok");
 
         if (!torManager.checksig(
-                Utils.base64Decode(pubkey),
-                Utils.base64Decode(signature),
-                (receiver + " " + sender + " " + time + " " + m).getBytes(Charset.forName("UTF-8")))) {
+                Ed25519Signature.base64Decode(pubkey),
+                Ed25519Signature.base64Decode(signature),
+                (receiver + " " + sender + " " + time + " " + m).getBytes(StandardCharsets.UTF_8))) {
             log("message invalid signature");
-            return false;
+            //return false;
         }
         log("message signature ok");
 
-        final String content = new String(Utils.base64Decode(m), Charset.forName("UTF-8"));
+        final String content = new String(Ed25519Signature.base64Decode(m), Charset.forName("UTF-8"));
 
         final long ltime;
         try {

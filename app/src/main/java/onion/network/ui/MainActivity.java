@@ -65,20 +65,19 @@ import java.util.TimerTask;
 import onion.network.FriendTool;
 import onion.network.HostService;
 import onion.network.Item;
-import onion.network.databases.ItemDatabase;
-import onion.network.models.ItemResult;
 import onion.network.ItemTask;
 import onion.network.Notifier;
 import onion.network.QR;
 import onion.network.R;
-import onion.network.ui.views.RequestTool;
 import onion.network.Site;
 import onion.network.TorManager;
 import onion.network.UpdateScheduler;
-import onion.network.helpers.Utils;
 import onion.network.WallBot;
 import onion.network.databases.ChatDatabase;
+import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
+import onion.network.helpers.Utils;
+import onion.network.models.ItemResult;
 import onion.network.pages.BasePage;
 import onion.network.pages.ChatPage;
 import onion.network.pages.CloudPage;
@@ -90,6 +89,7 @@ import onion.network.pages.ProfilePage;
 import onion.network.pages.RequestPage;
 import onion.network.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
+import onion.network.ui.views.RequestTool;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -97,10 +97,10 @@ public class MainActivity extends AppCompatActivity {
     public String address = "";
     public String name = "";
     public ItemResult nameItemResult = new ItemResult();
+    public RequestPage requestPage;
     ItemDatabase db;
     WallPage wallPage;
     FriendPage friendPage;
-    public RequestPage requestPage;
     BasePage[] pages;
     int REQUEST_QR = 12;
     String TAG = "Activity";
@@ -145,18 +145,21 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
-                    if (pages[i].getIcon() == id) {
-                        View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
-                        //View v = tabLayout.getTabAt(i).getCustomView();
-                        ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
-                                "backgroundColor",
-                                new ArgbEvaluator(),
-                                0x88ffffff,
-                                0x00ffffff);
-                        backgroundColorAnimator.setDuration(300);
-                        backgroundColorAnimator.start();
+                try {
+                    for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
+                        if (pages[i].getIcon() == id) {
+                            View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
+                            //View v = tabLayout.getTabAt(i).getCustomView();
+                            ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
+                                    "backgroundColor",
+                                    new ArgbEvaluator(),
+                                    0x88ffffff,
+                                    0x00ffffff);
+                            backgroundColorAnimator.setDuration(300);
+                            backgroundColorAnimator.start();
+                        }
                     }
+                } catch (Exception ignore) {
                 }
             }
         });

@@ -34,14 +34,6 @@ public class Utils {
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    public static byte[] signMessage(File hiddenServiceDir, byte[] data) throws Exception {
-        return Ed25519Signature.signWithEd25519(hiddenServiceDir, data);
-    }
-
-    public static boolean verifySignature(byte[] publicKey, byte[] signature, byte[] data) throws Exception {
-        return Ed25519Signature.checkEd25519Signature(publicKey, signature, data);
-    }
-
     public static byte[] readInputStream(InputStream is) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[1024];
@@ -142,13 +134,5 @@ public class Utils {
 
     public static boolean isAlphanumeric(String s) {
         return s != null && s.chars().allMatch(Character::isLetterOrDigit);
-    }
-
-    public static String base64Encode(byte[] pubkey) {
-        return Ed25519Signature.base64Encode(pubkey);
-    }
-
-    public static byte[] base64Decode(String pubkey) {
-        return Ed25519Signature.base64Decode(pubkey);
     }
 }

@@ -70,10 +70,10 @@ public class Ed25519Signature {
     }
 
     public static String base64Encode(byte[] data) {
-        return Base64.encodeToString(data, Base64.NO_WRAP);
+        return Base64.encodeToString(data, Base64.DEFAULT);
     }
 
     public static byte[] base64Decode(String data) {
-        return Base64.decode(data, Base64.NO_WRAP);
+        return Base64.decode(data, Base64.DEFAULT);
     }
 }

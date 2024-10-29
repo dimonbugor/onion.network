@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 
 import onion.network.databases.ItemDatabase;
 import onion.network.R;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
 import onion.network.helpers.Utils;
@@ -64,8 +65,8 @@ public class RequestTool {
 
         String addr = TorManager.getInstance(context).getID();
         String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");
-        String sign = Utils.base64Encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
-        String pkey = Utils.base64Encode(TorManager.getInstance(context).pubkey());
+        String sign = Ed25519Signature.base64Encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
+        String pkey = Ed25519Signature.base64Encode(TorManager.getInstance(context).pubkey());
 
         String uri = "http://" + dest + ".onion/f?";
         uri += "dest=" + Uri.encode(dest) + "&";
@@ -116,7 +117,7 @@ public class RequestTool {
             return false;
         }
 
-        if (!TorManager.getInstance(context).checksig(Utils.base64Decode(pkey), Utils.base64Decode(sign), msg(dest, addr, name))) {
+        if (!TorManager.getInstance(context).checksig(Ed25519Signature.base64Decode(pkey), Ed25519Signature.base64Decode(sign), msg(dest, addr, name))) {
             log("Invalid signature");
             return false;
         }

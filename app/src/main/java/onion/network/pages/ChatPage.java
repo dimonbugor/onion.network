@@ -300,8 +300,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             final long id = cursor.getLong(cursor.getColumnIndex("_id"));
             String content = cursor.getString(cursor.getColumnIndex("content"));
             String sender = cursor.getString(cursor.getColumnIndex("sender"));
-            //String time = Utils.date(cursor.getString(cursor.getColumnIndex("time")));
-            String time = cursor.getString(cursor.getColumnIndex("time"));
+            String time = Utils.formatDate(cursor.getString(cursor.getColumnIndex("time")));
             boolean pending = cursor.getInt(cursor.getColumnIndex("outgoing")) > 0;
             boolean tx = sender.equals(torManager.getID());
 

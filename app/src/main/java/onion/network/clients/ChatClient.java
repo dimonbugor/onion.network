@@ -21,6 +21,7 @@ import java.util.HashSet;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.TorManager;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.Utils;
 
 public class ChatClient {
@@ -58,9 +59,9 @@ public class ChatClient {
 
     public String makeUri(String sender, String receiver, String content, long time) {
 
-        content = Utils.base64Encode(content.getBytes(Utils.UTF_8));
+        content = Ed25519Signature.base64Encode(content.getBytes(Utils.UTF_8));
 
-        String sig = Utils.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
+        String sig = Ed25519Signature.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
 
         String name = ItemDatabase.getInstance(context).getstr("name");
         if (name == null) name = "";
@@ -70,7 +71,7 @@ public class ChatClient {
         uri += "b=" + Uri.encode(receiver) + "&";
         uri += "t=" + Uri.encode("" + time) + "&";
         uri += "m=" + Uri.encode(content) + "&";
-        uri += "p=" + Uri.encode(Utils.base64Encode(torManager.pubkey())) + "&";
+        uri += "p=" + Uri.encode(Ed25519Signature.base64Encode(torManager.pubkey())) + "&";
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);
 

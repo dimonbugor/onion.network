@@ -146,7 +146,7 @@ public class Site {
         int quality = 60;
 
         MessageDigest digest = sha1();
-        String key = Base64.encodeToString(digest.digest(data.getBytes()), Base64.NO_WRAP | Base64.NO_PADDING);
+        String key = Base64.encodeToString(digest.digest(data.getBytes()), Base64.DEFAULT | Base64.DEFAULT);
         key += "-" + width + "-" + height + "-" + quality;
 
         {
@@ -189,7 +189,7 @@ public class Site {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-        data = Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP);
+        data = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
         data = "data:image/jpeg;base64," + data;
         //data = data.replaceAll("\\s+","");
 
@@ -240,7 +240,7 @@ public class Site {
             digest.update(item.index().getBytes(Utils.UTF_8));
             digest.update(item.data());
         }
-        return Base64.encodeToString(digest.digest(), Base64.NO_WRAP | Base64.NO_PADDING);
+        return Base64.encodeToString(digest.digest(), Base64.DEFAULT | Base64.DEFAULT);
     }
 
     public Response get(Uri uri) {
@@ -393,7 +393,7 @@ public class Site {
                 log("QR " + bmp.getWidth() + " " + bmp.getHeight());
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bmp.compress(Bitmap.CompressFormat.PNG, 50, stream);
-                data = Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP);
+                data = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
                 data = "data:image/png;base64," + data;
                 if (addr != null && !addr.isEmpty()) {
                     cache.put(ik, data);
@@ -514,7 +514,7 @@ public class Site {
             MessageDigest digest = sha1();
             digest.update((charset + " " + mimeType + " " + statusCode + " " + statusMessage + " ").getBytes(utf8));
             if (data != null) digest.update(data);
-            //return Base64.encodeToString(digest.digest(), Base64.NO_WRAP | Base64.NO_PADDING);
+            //return Base64.encodeToString(digest.digest(), Base64.DEFAULT | Base64.DEFAULT);
             return org.spongycastle.util.encoders.Hex.toHexString(data);
         }
 
