@@ -33,10 +33,8 @@ public class HostService extends Service {
     private static final String TAG = "onion.network:HostService";
     private Timer timer;
     private TorManager torManager;
-    private ChatClient chatClient;
     private Server server;
     private PowerManager.WakeLock wakeLock;
-    private HttpServer httpServer;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -51,8 +49,7 @@ public class HostService extends Service {
             startForeground(1, createNotification());
         }
         torManager = TorManager.getInstance(this);
-        checkTor();
-        startHttpServer(); // Запускаємо HTTP сервер
+        server = Server.getInstance(this);
         return START_STICKY;
     }
 
@@ -81,9 +78,8 @@ public class HostService extends Service {
         super.onCreate();
         log("Service created");
 
-        server = Server.getInstance(this);
         torManager = torManager.getInstance(this);
-        chatClient = ChatClient.getInstance(this);
+        server = Server.getInstance(this);
 
         // Ініціалізуємо таймер для періодичних задач
         timer = new Timer();
@@ -111,10 +107,7 @@ public class HostService extends Service {
         log("Service destroyed");
 
         // Зупиняємо HTTP сервер
-        if (httpServer != null) {
-            httpServer.stop();
-            httpServer = null;
-        }
+        server.stopHttpServer();
 
         // Скасовуємо таймер
         if (timer != null) {
@@ -134,75 +127,5 @@ public class HostService extends Service {
 
     private void log(String message) {
         Log.i(getClass().getName(), message); // Логування з унікальним тегом
-    }
-
-    public void checkTor() {
-        Handler handler = new Handler(Looper.myLooper());
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                boolean isRunning = isTorRunning();
-                // Повертаємося на основний потік, щоб оновити UI
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isRunning) {
-                            Log.d("TorCheck", "Tor is running");
-                        } else {
-                            Log.d("TorCheck", "Tor is not running");
-                        }
-                    }
-                });
-            }
-        }).start();
-    }
-
-    public boolean isTorRunning() {
-        try {
-            // Підключення до Tor на локальному хості
-            Socket socket = new Socket("127.0.0.1", 9050);
-            socket.close(); // Закриття сокету, якщо з'єднання успішне
-            return true; // Tor працює
-        } catch (IOException e) {
-            return false; // Tor не працює
-        }
-    }
-
-    private void startHttpServer() {
-        httpServer = new HttpServer(8080); // Використовуємо порт 8080
-        try {
-            httpServer.start();
-            log("HTTP Server started on port 8080");
-        } catch (IOException e) {
-            log("Failed to start HTTP server: " + e.getMessage());
-        }
-    }
-
-    public class HttpServer extends NanoHTTPD {
-
-        public HttpServer(int port) {
-            super(port);
-        }
-
-        @Override
-        public Response serve(NanoHTTPD.IHTTPSession session) {
-            String uri = session.getUri(); // Отримуємо URI запиту
-            String responseMsg;
-            if(uri.equals("/")) {
-                responseMsg = "<html><body><h1>hello from tor!</h1></body></html>";
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);
-            }
-            try {
-                // Використовуємо HttpClient для обробки запиту
-                byte[] content = HttpClient.getbin(uri, true, false, 0); // Передаємо через Tor
-                responseMsg = new String(content, Utils.UTF_8); // Конвертуємо в рядок
-            } catch (IOException e) {
-                responseMsg = "<html><body><h1>Error: " + e.getMessage() + "</h1></body></html>";
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);
-            }
-
-            // Повертаємо успішну відповідь
-            return newFixedLengthResponse(Response.Status.OK, "text/html", responseMsg);
-        }
     }
 }

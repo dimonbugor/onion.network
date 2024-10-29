@@ -22,7 +22,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,6 +30,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
+
+import onion.network.models.Request;
+import onion.network.models.Response;
 
 public class HttpServer {
 
@@ -195,97 +197,6 @@ public class HttpServer {
         void close() throws IOException;
 
         Sock accept() throws IOException;
-    }
-
-    public static class Request {
-        private String method = "";
-        private String path = "";
-        private Map<String, String> headers = new TreeMap<>();
-
-        public Request() {
-        }
-
-        public Request(String method, String path, Map<String, String> headers) {
-            this.method = method;
-            this.path = path;
-            this.headers = headers;
-        }
-
-        public String getMethod() {
-            return method;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public String getHeader(String key) {
-            return headers.get(key);
-        }
-
-        public String getHeader(String key, String defaultValue) {
-            String ret = headers.get(key);
-            if (ret == null) ret = defaultValue;
-            return ret;
-        }
-    }
-
-    public static class Response {
-        private static Charset utf8 = Charset.forName("UTF-8");
-        private int statusCode = 200;
-        private String statusString = "OK";
-        private byte[] content = new byte[0];
-        private Map<String, String> headers = new TreeMap<>();
-
-        public int getStatusCode() {
-            return statusCode;
-        }
-
-        public String getStatusString() {
-            return statusString;
-        }
-
-        public byte[] getContent() {
-            return content;
-        }
-
-        public void setContent(byte[] data) {
-            content = data;
-        }
-
-        public Map<String, String> getHeaders() {
-            return headers;
-        }
-
-        public String getHeader(String key) {
-            return headers.get(key);
-        }
-
-        public void putHeader(String key, String val) {
-            headers.put(key, val);
-        }
-
-        public void setContentType(String type) {
-            putHeader("Content-Type", type);
-        }
-
-        public void setStatus(int statusCode, String statusString) {
-            this.statusCode = statusCode;
-            this.statusString = statusString;
-        }
-
-        public void setContent(byte[] data, String contentType) {
-            content = data;
-            setContentType(contentType);
-        }
-
-        public void setContentHtml(String code) {
-            setContent(code.getBytes(utf8), "Content-Type: text/html; charset=utf-8");
-        }
-
-        public void setContentPlain(String text) {
-            setContent(text.getBytes(utf8), "Content-Type: text/plain; charset=utf-8");
-        }
     }
 
     public static class SocketSock implements Sock {

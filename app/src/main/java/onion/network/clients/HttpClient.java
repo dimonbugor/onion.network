@@ -47,7 +47,7 @@ public class HttpClient {
         return getbin(uriString, true, false, 0);
     }
 
-    public static byte[] getbin(String uriString, boolean torified, boolean allowTls, int redirs) throws IOException {
+    public synchronized static byte[] getbin(String uriString, boolean torified, boolean allowTls, int redirs) throws IOException {
         log("request " + uriString + " " + torified + " " + allowTls + " " + redirs);
 
         if (redirs < 0) {
@@ -59,18 +59,28 @@ public class HttpClient {
         OkHttpClient client = buildClient(torified); // Метод для побудови клієнта з або без проксі
 
         Request.Builder requestBuilder = new Request.Builder().url(uriString);
+
+        // Перевірка на HTTPS та додавання заголовка Host
         if (allowTls && uriString.startsWith("https")) {
             requestBuilder.addHeader("Host", Uri.parse(uriString).getHost());
         }
 
         Request request = requestBuilder.build();
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
+        try (Response response = client.newCall(request).execute()) {
+            // Перевірка на успішний статус коду
+            if (!response.isSuccessful()) {
+                // Виводимо статус-код і повідомлення для налагодження
+                log("Unexpected response: " + response.code() + " " + response.message());
+                throw new IOException("Unexpected code " + response);
+            }
+
+            // Збір заголовків
             for (Map.Entry<String, List<String>> entry : response.headers().toMultimap().entrySet()) {
                 headers.put(entry.getKey(), entry.getValue().get(0));
             }
 
+            // Отримання вмісту
             if (response.body() != null) {
                 content = response.body().bytes();
             } else {
@@ -81,7 +91,7 @@ public class HttpClient {
             throw new IOException(e.getMessage());
         }
 
-        // Redirect handling
+        // Обробка перенаправлень
         String location = headers.get("Location");
         if (location != null) {
             return getbin(location, torified, allowTls, redirs - 1);
