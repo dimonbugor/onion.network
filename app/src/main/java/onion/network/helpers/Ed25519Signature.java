@@ -1,5 +1,7 @@
 package onion.network.helpers;
 
+import android.util.Base64;
+
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
@@ -65,5 +67,13 @@ public class Ed25519Signature {
 
         // Перевіряємо підпис
         return verifier.verifySignature(sig);
+    }
+
+    public static String base64Encode(byte[] data) {
+        return Base64.encodeToString(data, Base64.NO_WRAP);
+    }
+
+    public static byte[] base64Decode(String data) {
+        return Base64.decode(data, Base64.NO_WRAP);
     }
 }

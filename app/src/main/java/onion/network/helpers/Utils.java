@@ -11,7 +11,6 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 
@@ -35,12 +34,12 @@ public class Utils {
 
     public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    public static String base64Encode(byte[] data) {
-        return data != null ? Base64.encodeToString(data, Base64.NO_WRAP) : "";
+    public static byte[] signMessage(File hiddenServiceDir, byte[] data) throws Exception {
+        return Ed25519Signature.signWithEd25519(hiddenServiceDir, data);
     }
 
-    public static byte[] base64Decode(String str) {
-        return Base64.decode(str, Base64.NO_WRAP);
+    public static boolean verifySignature(byte[] publicKey, byte[] signature, byte[] data) throws Exception {
+        return Ed25519Signature.checkEd25519Signature(publicKey, signature, data);
     }
 
     public static byte[] readInputStream(InputStream is) throws IOException {
@@ -91,12 +90,12 @@ public class Utils {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.WEBP, 50, stream);
         Log.i("PHOTO SIZE", "" + stream.size());
-        return base64Encode(stream.toByteArray());
+        return Ed25519Signature.base64Encode(stream.toByteArray()); // Залишаємо тут, якщо потрібна кодування в Base64
     }
 
     public static Bitmap decodeImage(String str) {
         if (str != null && !str.trim().isEmpty()) {
-            byte[] photodata = base64Decode(str);
+            byte[] photodata = Ed25519Signature.base64Decode(str); // Залишаємо тут, якщо потрібна декодування в Base64
             return BitmapFactory.decodeByteArray(photodata, 0, photodata.length);
         }
         return null;
@@ -143,5 +142,13 @@ public class Utils {
 
     public static boolean isAlphanumeric(String s) {
         return s != null && s.chars().allMatch(Character::isLetterOrDigit);
+    }
+
+    public static String base64Encode(byte[] pubkey) {
+        return Ed25519Signature.base64Encode(pubkey);
+    }
+
+    public static byte[] base64Decode(String pubkey) {
+        return Ed25519Signature.base64Decode(pubkey);
     }
 }

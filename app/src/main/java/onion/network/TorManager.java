@@ -225,7 +225,7 @@ public class TorManager {
     }
 
     public int getPort() {
-        return TorService.socksPort;
+        return TorService.httpTunnelPort;
     }
 
     public String getOnion() {

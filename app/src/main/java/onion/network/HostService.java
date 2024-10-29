@@ -189,7 +189,7 @@ public class HostService extends Service {
             String uri = session.getUri(); // Отримуємо URI запиту
             String responseMsg;
             if(uri.equals("/")) {
-                responseMsg = "<html><body><h1>Info: session.getUri() =" + session.getUri() + "</h1></body></html>";
+                responseMsg = "<html><body><h1>hello from tor!</h1></body></html>";
                 return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", responseMsg);
             }
             try {
