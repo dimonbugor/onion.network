@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -41,6 +42,9 @@ public class SettingsActivity extends AppCompatActivity {
         Settings.getPrefs(this);
 
         setContentView(R.layout.prefs);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         getFragmentManager().beginTransaction().add(R.id.content, new SettingsFragment()).commit();
 

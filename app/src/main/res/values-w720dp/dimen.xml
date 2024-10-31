@@ -5,6 +5,7 @@
     <dimen name="dp16">22dp</dimen>
     <dimen name="dp24">36dp</dimen>
     <dimen name="dp32">46dp</dimen>
+    <dimen name="dp36">54dp</dimen>
     <dimen name="dp48">68dp</dimen>
     <dimen name="dp64">90dp</dimen>
     <dimen name="dp72">108dp</dimen>

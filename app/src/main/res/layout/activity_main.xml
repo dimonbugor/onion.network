@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/pikaso"
     tools:context="onion.network.ui.MainActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -15,6 +16,7 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
+            android:background="@android:color/transparent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -22,7 +24,7 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?android:windowBackground"
+                android:background="@android:color/transparent"
                 app:layout_scrollFlags="">
 
             </androidx.appcompat.widget.Toolbar>
@@ -100,7 +102,7 @@
                 android:layout_margin="@dimen/dp24"
                 android:src="@drawable/ic_menu"
                 app:tint="@android:color/white"
-                app:backgroundTint="@color/colorAccent"
+                app:backgroundTint="@color/colorPrimaryContainer"
                 app:rippleColor="#fff" />
 
         </onion.network.ui.views.ArcButtonLayout>
@@ -115,7 +117,7 @@
             android:src="@drawable/ic_create_white_48dp"
             android:visibility="visible"
             app:tint="@android:color/white"
-            app:backgroundTint="@color/colorAccent"
+            app:backgroundTint="@color/colorPrimaryContainer"
             app:rippleColor="#fff" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -128,7 +130,7 @@
             android:src="@drawable/ic_person_add_white_48dp"
             android:visibility="gone"
             app:tint="@android:color/white"
-            app:backgroundTint="@color/colorAccent"
+            app:backgroundTint="@color/colorPrimaryContainer"
             app:rippleColor="#fff" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

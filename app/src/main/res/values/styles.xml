@@ -3,7 +3,8 @@
     <!-- Основна тема застосунку -->
     <style name="AppTheme" parent="Theme.Material3.Dark">
         <!-- Фоновий колір -->
-        <item name="android:windowBackground">@drawable/windows_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@drawable/pikaso</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
         <item name="colorSecondary">@color/colorSecondary</item>
@@ -26,7 +27,7 @@
 
     <!-- Стиль панелі дій -->
     <style name="DarkActionBar" parent="Widget.Material3.ActionBar.Solid">
-        <item name="android:background">@color/colorBackground</item>
+        <item name="android:background">@android:color/transparent</item>
         <item name="android:titleTextStyle">@style/DarkActionBarTitleText</item>
     </style>
 
@@ -36,7 +37,7 @@
     </style>
 
     <!-- Тема без панелі дій -->
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
