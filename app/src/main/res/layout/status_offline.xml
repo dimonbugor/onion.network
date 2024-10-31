@@ -3,25 +3,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="32dp">
+    android:padding="@dimen/dp32">
 
     <TextView
-        android:padding="2dp"
-        android:gravity="center_horizontal|top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_gravity="center_horizontal|top"
+        android:gravity="center_horizontal|top"
+        android:padding="@dimen/dp4"
         android:text="Offline"
-        android:layout_gravity="center_horizontal|top" />
+        android:fontFamily="@font/geologica_400"
+         />
 
     <TextView
-        android:gravity="center"
-        android:padding="2dp"
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_gravity="center_horizontal|top"
+        android:gravity="center"
+        android:padding="@dimen/dp4"
+        android:fontFamily="@font/geologica_400"
         android:text="Failed to reach this user's device.\nPlease try again later."
-        android:id="@+id/textView2"
-        android:layout_gravity="center_horizontal|top" />
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </LinearLayout>

@@ -15,12 +15,13 @@ import static onion.network.helpers.BitmapHelper.getCircledBitmap;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;

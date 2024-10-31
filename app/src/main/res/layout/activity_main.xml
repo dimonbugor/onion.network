@@ -4,34 +4,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/pikaso"
     tools:context="onion.network.ui.MainActivity">
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         tools:context="onion.network.ui.MainActivity">
 
-        <android.support.design.widget.AppBarLayout
+        <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="@dimen/appbar_padding_top">
+            android:layout_height="wrap_content">
 
-            <!-- app:layout_scrollFlags="scroll|enterAlways" -->
-
-            <android.support.v7.widget.Toolbar
+            <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:background="?attr/colorPrimary"
+                android:layout_height="wrap_content"
+                android:background="?android:windowBackground"
                 app:layout_scrollFlags="">
 
-            </android.support.v7.widget.Toolbar>
+            </androidx.appcompat.widget.Toolbar>
 
-        </android.support.design.widget.AppBarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -39,7 +35,7 @@
             android:orientation="vertical"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <android.support.v4.view.ViewPager
+            <androidx.viewpager.widget.ViewPager
                 android:id="@+id/container"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -49,32 +45,34 @@
                 android:id="@+id/torStatusView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
+
                     <LinearLayout
-                        android:padding="8dp"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="@dimen/dp8">
+
                         <TextView
-                            android:layout_marginLeft="8dp"
-                            android:singleLine="true"
-                            android:padding="8dp"
-                            android:layout_gravity="center_vertical"
                             android:id="@+id/status"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:padding="@dimen/dp16"
+                            android:singleLine="true" />
                     </LinearLayout>
+
                     <ProgressBar
-                        android:layout_gravity="top"
-                        android:indeterminate="true"
                         android:id="@+id/progressbar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="16dp"
-                        android:layout_marginTop="-6dp"
-                        android:max="100"
-                        />
+                        android:layout_height="@dimen/dp16"
+                        android:layout_gravity="bottom"
+                        android:indeterminate="true"
+                        android:max="100" />
                 </FrameLayout>
             </onion.network.ui.views.TorStatusView>
 
@@ -84,47 +82,56 @@
             android:id="@+id/arcButtonLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:centerMarginTop="16dp"
-            app:centerMarginLeft="16dp"
-            app:centerMarginRight="4dp"
-            app:fabPosition="bottom_left"
-            app:fabMarginLeft="32dp"
-            app:fabMarginTop="16dp"
-            app:fabMarginRight="16dp"
-            app:fabMarginBottom="16dp">
+            app:centerMarginLeft="@dimen/dp16"
+            app:centerMarginRight="@dimen/sp12"
+            app:centerMarginTop="@dimen/dp16"
+            app:fabMarginBottom="@dimen/dp16"
+            app:fabMarginLeft="@dimen/dp32"
+            app:fabMarginRight="@dimen/dp16"
+            app:fabMarginTop="@dimen/dp16"
+            app:fabPosition="bottom_left">
 
-            <android.support.design.widget.FloatingActionButton
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/menuFab"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|bottom"
-                android:layout_margin="@dimen/fab_margin"
+                android:layout_margin="@dimen/dp24"
                 android:src="@drawable/ic_menu"
+                app:tint="@android:color/white"
+                app:backgroundTint="@color/colorAccent"
                 app:rippleColor="#fff" />
 
         </onion.network.ui.views.ArcButtonLayout>
 
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/wallFab"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_margin="@dimen/dp16"
             android:src="@drawable/ic_create_white_48dp"
             android:visibility="visible"
+            app:tint="@android:color/white"
+            app:backgroundTint="@color/colorAccent"
             app:rippleColor="#fff" />
 
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/friendFab"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_margin="@dimen/dp16"
             android:src="@drawable/ic_person_add_white_48dp"
             android:visibility="gone"
+            app:tint="@android:color/white"
+            app:backgroundTint="@color/colorAccent"
             app:rippleColor="#fff" />
 
-    </android.support.design.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <ImageView
         android:id="@+id/lightbox"

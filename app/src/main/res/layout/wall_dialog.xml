@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbarAlwaysDrawVerticalTrack="true">
@@ -12,154 +13,77 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingLeft="16dp"
-            android:paddingTop="16dp"
-            android:paddingRight="16dp"
-            android:paddingBottom="8dp">
+            android:paddingLeft="@dimen/dp16"
+            android:paddingTop="@dimen/dp16"
+            android:paddingRight="@dimen/dp16"
+            android:paddingBottom="@dimen/dp8">
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                app:boxBackgroundMode="none">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Text"
+                    android:background="@drawable/edit_rounded_background"
                     android:imeOptions="flagNoExtractUi"
                     android:inputType="textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine|textLongMessage" />
-            </android.support.design.widget.TextInputLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <ImageView
                 android:id="@+id/image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:maxHeight="84dp"
-                android:padding="16dp" />
-
-            <!--
-            <RadioGroup
-                android:id="@+id/access_group"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <RadioButton
-                    android:layout_margin="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Public"
-                    android:id="@+id/access_public" />
-
-                <RadioButton
-                    android:layout_margin="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Friends"
-                    android:id="@+id/access_friends" />
-
-                <RadioButton
-                    android:layout_margin="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Only Me"
-                    android:id="@+id/access_private" />
-
-            </RadioGroup>
-
-            android:drawableLeft="@drawable/ic_photo_library_black_24dp"
-            android:drawableLeft="@drawable/ic_add_a_photo_black_24dp"
-            android:drawableLeft="@drawable/ic_check_black_36dp"
-            -->
-
-            <!--
-            <LinearLayout
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <Button
-                    android:textColor="?colorPrimary"
-                    android:text="Image"
-                    android:id="@+id/add_image"
-                    android:background="?selectableItemBackground"
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="16dp"
-                    />
-                <Button
-                    android:textColor="?colorPrimary"
-                    android:text="Photo"
-                    android:id="@+id/take_photo"
-                    android:background="?selectableItemBackground"
-
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="16dp"
-                    />
-                <FrameLayout
-                    android:layout_weight="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"></FrameLayout>
-                <Button
-                    android:textColor="?colorPrimary"
-                    android:id="@+id/publish"
-                    android:background="?selectableItemBackground"
-
-                    android:text="Publish"
-                    android:drawablePadding="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-            </LinearLayout>
-            -->
-
+                android:layout_marginTop="@dimen/dp8"
+                android:maxHeight="@dimen/dp96"
+                android:padding="@dimen/dp16" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="@dimen/dp8">
 
                 <ImageButton
                     android:id="@+id/add_image"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
+                    android:layout_marginRight="@dimen/dp8"
                     android:alpha="0.6"
                     android:background="?selectableItemBackground"
-                    android:padding="12dp"
+                    android:padding="@dimen/dp16"
                     android:src="@drawable/ic_photo_black_24dp"
-                    android:tint="@android:color/white" />
+                    app:tint="@android:color/white" />
 
                 <ImageButton
                     android:id="@+id/take_photo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
+                    android:layout_marginRight="@dimen/dp8"
                     android:alpha="0.6"
                     android:background="?selectableItemBackground"
-                    android:padding="12dp"
+                    android:padding="@dimen/dp16"
                     android:src="@drawable/ic_photo_camera_black_24dp"
-                    android:tint="@android:color/white" />
+                    app:tint="@android:color/white" />
 
                 <FrameLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"></FrameLayout>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/publish"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:alpha="0.8"
-                    android:background="?selectableItemBackground"
-                    android:drawableLeft="@drawable/ic_check_black_24dp"
-                    android:drawablePadding="8dp"
+                    android:backgroundTint="@color/colorAccentAlpha"
+                    android:drawableStart="@drawable/ic_check_black_24dp"
+                    android:drawablePadding="@dimen/dp8"
                     android:drawableTint="@android:color/white"
                     android:text="Publish" />
             </LinearLayout>
@@ -167,5 +91,5 @@
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </RelativeLayout>

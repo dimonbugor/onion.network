@@ -20,7 +20,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
-import android.support.design.widget.Snackbar;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -30,6 +29,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -326,10 +327,12 @@ public class ProfilePage extends BasePage {
                         }
 
                         valview.setText("Unknown");
-                        valview.setTextColor(0xffbbbbbb);
+                        //valview.setTextColor(0xffbbbbbb);
+                        valview.setTextColor(getResources().getColor(R.color.colorBackgroundAlpha));
                     } else {
                         valview.setText(val.trim());
-                        valview.setTextColor(0xff000000);
+                        //valview.setTextColor(0xff000000);
+                        valview.setTextColor(getResources().getColor(android.R.color.white));
                     }
 
                     if ((row.type & InputType.TYPE_TEXT_FLAG_MULTI_LINE) != 0) {

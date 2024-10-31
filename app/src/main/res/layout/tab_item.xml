@@ -5,14 +5,17 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/itemFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/appbar_padding_top"
+        android:layout_marginBottom="@dimen/dp24"
         android:src="@drawable/ic_menu"
         android:visibility="visible"
-        app:fabCustomSize="36dp" />
+        app:tint="@android:color/white"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
+        app:backgroundTint="@color/colorAccent"
+        app:fabCustomSize="@dimen/dp48" />
 
     <TextView
         android:id="@+id/badge"

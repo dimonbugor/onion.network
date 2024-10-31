@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--<color name="colorPrimary">#4A90E2</color> &lt;!&ndash; Світло-голубий &ndash;&gt;
-    <color name="colorPrimaryDark">#357ABD</color> &lt;!&ndash; Темно-голубий &ndash;&gt;
-    <color name="colorAccent">#1C6DD0</color> &lt;!&ndash; Яскравий акцент голубого &ndash;&gt;
-    <color name="black">#E3F2FD</color> &lt;!&ndash; Світло-голубий відтінок для білого &ndash;&gt;
-    <color name="foreground_material_light">#0D47A1</color> &lt;!&ndash; Дуже темний голубий &ndash;&gt;
-    &lt;!&ndash;<color name="colorNotification">#5C878A</color>&ndash;&gt;
-    <color name="colorNotification">#81D4FA</color> &lt;!&ndash; Яскравий світло-голубий для сповіщень &ndash;&gt;-->
-
-    <color name="bg_dark">#1F1F1F</color> <!-- Темно-сірий фон -->
-    <color name="primary_dark">#262626</color> <!-- Основний темний колір -->
-    <color name="primary_dark_variant">#202020</color> <!-- Варіант основного кольору -->
-    <color name="dialog_bg">#99494949</color>
-    <color name="card_bg">#33FFFFFF</color>
-    <color name="accent_dark">#0088CC</color> <!-- Акцентний колір (синій) -->
-    <color name="text_primary_dark">#FFFFFF</color> <!-- Білий текст -->
-    <color name="text_secondary_dark">#B0B0B0</color> <!-- Світло-сірий текст -->
-    <color name="actionbar_bg_dark">#333333</color> <!-- Темно-сірий колір для панелі дій -->
-    <color name="actionbar_title_text_dark">#FFFFFF</color>
-    <color name="light_blue_600">#FF039BE5</color>
-    <color name="light_blue_900">#FF01579B</color>
-    <color name="light_blue_A200">#FF40C4FF</color>
-    <color name="light_blue_A400">#FF00B0FF</color>
-    <color name="black_overlay">#66000000</color> <!-- Білий текст у панелі дій -->
+    <color name="colorPrimary">#1A1D2E</color>
+    <color name="colorOnPrimary">#BFC7E6</color>
+    <color name="colorPrimaryContainer">#28304B</color>
+    <color name="colorPrimaryContainerAlpha">#3328304B</color>
+    <color name="colorOnPrimaryContainer">#FFFFFF</color>
+    <color name="colorPrimaryDark">#171C3E</color>
+    <color name="colorSecondary">#3A47A0</color>
+    <color name="colorAccent">#0277BD</color>
+    <color name="colorAccentAlpha">#6603A9F4</color>
+    <color name="colorOnSecondary">#B0C5F0</color>
+    <color name="colorSurface">#1A1D2E</color>
+    <color name="colorOnSurface">#BFC7E6</color>
+    <color name="colorBackground">#101223</color>
+    <color name="colorBackgroundAlpha">#4D436072</color>
+    <color name="colorDialogBackgroundAlpha">#80436072</color>
+    <color name="colorOnBackground">#FFFFFF</color>
 </resources>

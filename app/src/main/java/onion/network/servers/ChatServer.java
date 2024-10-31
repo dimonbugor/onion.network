@@ -84,6 +84,7 @@ public class ChatServer {
         }
         log("message address ok");
 
+        //TODO: torManager.checksig
         if (!torManager.checksig(
                 Ed25519Signature.base64Decode(pubkey),
                 Ed25519Signature.base64Decode(signature),

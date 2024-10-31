@@ -1,96 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <!--
-    <LinearLayout
-        android:id="@+id/loading"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:textColor="#000"
-            android:text="Loading..."
-            android:singleLine="true"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-
-            android:paddingBottom="4dp"
-            android:paddingTop="10dp"
-
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <ProgressBar
-            android:layout_marginBottom="-6dp"
-            android:layout_marginTop="-2dp"
-            android:indeterminate="true"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="16dp"
-            android:max="100"
-            />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/offline"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:text="Offline"
-            android:singleLine="true"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-
-            android:paddingTop="10dp"
-            android:paddingBottom="9dp"
-
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <View
-            android:background="#bbbbbb"
-            android:layout_width="match_parent"
-            android:layout_height="1dp" />
-    </LinearLayout>
-    -->
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <ProgressBar
         android:id="@+id/loading"
-        android:indeterminate="true"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:max="100"
-        />
+        android:layout_height="@dimen/dp16"
+        android:indeterminate="true"
+        android:max="100" />
 
     <LinearLayout
         android:id="@+id/offline"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
         <TextView
-            android:text="Offline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingLeft="@dimen/dp16"
+            android:paddingTop="@dimen/dp8"
+            android:paddingRight="@dimen/dp16"
+            android:paddingBottom="@dimen/dp8"
             android:singleLine="true"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
+            android:fontFamily="@font/geologica_400"
+            android:text="Offline"
+             />
 
-            android:paddingTop="7dp"
-            android:paddingBottom="6dp"
-
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_gravity="center_vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp" />
+            android:layout_height="@dimen/dp4" />
     </LinearLayout>
-
 
 
 </LinearLayout>

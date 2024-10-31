@@ -4,10 +4,10 @@
 
     <TextView
         android:gravity="center_horizontal|top"
-        android:padding="32dp"
+        android:padding="@dimen/dp32"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+
         android:text="No friends yet"
         android:layout_gravity="center_horizontal|top" />
 

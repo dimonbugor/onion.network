@@ -4,7 +4,7 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:padding="16dp"
+        android:padding="@dimen/dp16"
         android:scaleType="centerInside"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

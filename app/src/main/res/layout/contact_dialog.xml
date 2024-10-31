@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="@dimen/dp16">
 
     <TextView
+        android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Anonymous"
-        android:id="@+id/name" />
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
+        android:id="@+id/address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="sofubzehndjfqpyl"
-        android:id="@+id/address" />
+        android:fontFamily="@font/geologica_400"
+        android:text="sofubzehndjfqpyl" />
 
     <TextView
         android:id="@+id/is_friend"
-        android:padding="8dp"
-        android:gravity="center_vertical"
-        android:text="   Friends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:drawableLeft="@drawable/ic_check_black_24dp"
         android:drawableTint="@android:color/white"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:gravity="center_vertical"
+        android:padding="@dimen/dp8"
+        android:text="   Friends" />
 
-    <Button
-        android:text="Add Friend"
+    <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/colorAccentAlpha"
+        android:text="Add Friend" />
 
 </LinearLayout>

@@ -4,34 +4,33 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-
     <LinearLayout
         android:id="@+id/loading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingLeft="@dimen/dp16"
+            android:paddingTop="@dimen/dp4"
+            android:paddingRight="@dimen/dp16"
+            android:paddingBottom="@dimen/dp16"
+            android:singleLine="true"
+            android:fontFamily="@font/geologica_400"
+            android:text="Loading..."
+             />
 
         <ProgressBar
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="16dp"
+            android:layout_height="@dimen/dp16"
             android:layout_marginTop="-6dp"
             android:indeterminate="true"
             android:max="100" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:paddingLeft="16dp"
-
-            android:paddingTop="4dp"
-            android:paddingRight="16dp"
-
-            android:paddingBottom="10dp"
-            android:singleLine="true"
-            android:text="Loading..."
-            android:textAppearance="?android:attr/textAppearanceMedium" />
     </LinearLayout>
 
     <LinearLayout
@@ -42,21 +41,20 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp" />
+            android:layout_height="@dimen/dp4" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:paddingLeft="16dp"
-
-            android:paddingTop="10dp"
-            android:paddingRight="16dp"
-
-            android:paddingBottom="10dp"
+            android:layout_gravity="center"
+            android:paddingLeft="@dimen/dp16"
+            android:paddingTop="@dimen/dp16"
+            android:paddingRight="@dimen/dp16"
+            android:paddingBottom="@dimen/dp16"
             android:singleLine="true"
+            android:fontFamily="@font/geologica_400"
             android:text="Offline"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+             />
     </LinearLayout>
 
 </LinearLayout>

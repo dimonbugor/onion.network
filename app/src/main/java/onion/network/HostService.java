@@ -14,8 +14,10 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.support.v4.app.NotificationCompat;
+
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 import java.io.IOException;
 import java.net.Socket;

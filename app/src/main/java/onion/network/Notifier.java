@@ -9,8 +9,9 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 import onion.network.settings.Settings;
 import onion.network.ui.MainActivity;
@@ -65,7 +66,7 @@ public class Notifier {
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setColor(context.getResources().getColor(R.color.accent_dark))
+                .setColor(context.getResources().getColor(R.color.colorBackground))
                 .setContentTitle(context.getResources().getString(R.string.app_name))
                 .setContentText("New Message")
                 .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class).putExtra("page", "chat"), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))

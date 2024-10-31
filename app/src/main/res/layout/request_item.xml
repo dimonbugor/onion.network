@@ -1,48 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:clickable="true"
     android:background="?selectableItemBackground"
-    >
+    android:clickable="true"
+    android:orientation="horizontal"
+    android:padding="@dimen/dp16">
 
     <LinearLayout
-        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_weight="1"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content">
+        android:orientation="vertical">
+
         <TextView
-            android:singleLine="true"
+            android:id="@+id/name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="aifjnelsdfjpeuvb"
-            android:id="@+id/name" />
-        <TextView
             android:singleLine="true"
+            android:text="aifjnelsdfjpeuvb"
+            android:fontFamily="@font/geologica_600"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:singleLine="true"
             android:text="aifjnelsdfjpeuvb"
-            android:id="@+id/address" />
+            android:fontFamily="@font/geologica_400"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
 
-    <Button
-        android:layout_gravity="center"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/decline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Decline"
-        android:id="@+id/decline" />
+        android:layout_gravity="center"
+        android:layout_marginEnd="@dimen/dp4"
+        android:backgroundTint="@color/colorAccentAlpha"
+        android:text="Decline" />
 
-    <Button
-        android:layout_gravity="center"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Accept"
-        android:id="@+id/accept" />
+        android:layout_gravity="center"
+        android:backgroundTint="@color/colorAccentAlpha"
+        android:text="Accept" />
 
 </LinearLayout>

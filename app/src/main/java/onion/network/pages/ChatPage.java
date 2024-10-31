@@ -11,9 +11,10 @@
 package onion.network.pages;
 
 import android.database.Cursor;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
@@ -22,6 +23,8 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -268,7 +271,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
     class ChatHolder extends RecyclerView.ViewHolder {
         public TextView message, time, status;
         public View left, right;
-        public CardView card;
+        public MaterialCardView card;
         public View abort;
 
         public ChatHolder(View v) {
@@ -278,7 +281,7 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             status = (TextView) v.findViewById(R.id.status);
             left = v.findViewById(R.id.left);
             right = v.findViewById(R.id.right);
-            card = (CardView) v.findViewById(R.id.card);
+            card = (MaterialCardView) v.findViewById(R.id.card);
             abort = v.findViewById(R.id.abort);
         }
     }
@@ -307,9 +310,13 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             if (sender.equals(torManager.getID())) sender = "You";
 
             if (tx) {
+                holder.card.setCardBackgroundColor(
+                        holder.card.getContext().getResources().getColor(R.color.colorAccent));
                 holder.left.setVisibility(View.VISIBLE);
                 holder.right.setVisibility(View.GONE);
             } else {
+                holder.card.setCardBackgroundColor(
+                        holder.card.getContext().getResources().getColor(R.color.colorBackgroundAlpha));
                 holder.left.setVisibility(View.GONE);
                 holder.right.setVisibility(View.VISIBLE);
             }
@@ -351,7 +358,8 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
                 holder.abort.setOnClickListener(null);
             }
 
-            int color = pending ? 0xff000000 : 0xff888888;
+            int color = pending ? getResources().getColor(R.color.colorAccentAlpha)
+                    : getResources().getColor(R.color.colorAccent);
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 

@@ -4,11 +4,6 @@
     tools:context="onion.network.ui.MainActivity">
 
 
-
-
-
-
-
     <item
         android:id="@+id/action_add_friend"
         android:title="Add Friend"
@@ -20,72 +15,45 @@
         app:showAsAction="always|withText" />
 
 
-
     <item
-        android:icon="@drawable/ic_sync_white_36dp"
         android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_sync_white_36dp"
         android:title="Refresh"
         app:showAsAction="always" />
 
 
-
-
-
-
-
     <item
         android:id="@+id/action_menu_scan_qr"
-        android:title="Scan QR"
-        />
+        android:title="Scan QR" />
     <item
         android:id="@+id/action_menu_show_my_qr"
-        android:title="Show QR"
-        />
+        android:title="Show QR" />
 
     <item
         android:id="@+id/action_menu_enter_id"
-        android:title="Enter ID"
-        />
+        android:title="Enter ID" />
     <item
         android:id="@+id/action_menu_show_my_id"
-        android:title="Show ID"
-        />
+        android:title="Show ID" />
 
     <item
         android:id="@+id/action_menu_show_uri"
-        android:title="Address"
-        />
+        android:title="Address" />
 
     <item
         android:id="@+id/action_clear_chat"
-        android:title="Clear chat"
-        />
+        android:title="Clear chat" />
 
     <item
         android:id="@+id/action_menu_invite_friends"
-        android:title="Invite friends"
-        />
+        android:title="Invite friends" />
 
     <item
         android:id="@+id/action_menu_rate"
-        android:title="Rate this app"
-        />
+        android:title="Rate this app" />
 
     <item
         android:id="@+id/action_menu_settings"
-        android:title="Settings"
-        />
-
-
-
-
-<!--
-
-    <item
-        android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
-
-        -->
+        android:title="Settings" />
 
 </menu>

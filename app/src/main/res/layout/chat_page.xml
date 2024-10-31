@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
     <include layout="@layout/status_bar_top" />
-
 
     <LinearLayout
         android:id="@+id/no_msg"
@@ -18,12 +17,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:padding="12sp"
+            android:padding="@dimen/dp8"
             android:text="Messaging disabled on remote device." />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp" />
+            android:layout_height="@dimen/dp4" />
     </LinearLayout>
 
     <LinearLayout
@@ -36,12 +35,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:padding="12sp"
+            android:padding="@dimen/dp8"
             android:text="Add as friend or change settings to receive messages." />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp" />
+            android:layout_height="@dimen/dp4" />
     </LinearLayout>
 
     <LinearLayout
@@ -54,60 +53,69 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:padding="12sp"
+            android:padding="@dimen/dp8"
             android:text="Instant messenger disabled. Change settings to receive messages." />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp" />
+            android:layout_height="@dimen/dp4" />
     </LinearLayout>
 
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/dp16"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
+        android:paddingTop="@dimen/dp8"
+        android:paddingBottom="@dimen/dp16"
         android:scrollbars="vertical" />
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp" />
+        android:layout_height="@dimen/dp4" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingLeft="4dp"
-        android:paddingTop="1dp">
+        android:layout_marginHorizontal="@dimen/dp16"
+        android:layout_marginBottom="@dimen/dp96"
+        android:background="@drawable/rounded_bg"
+        android:gravity="center"
+        android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/editmessage"
-            android:layout_width="wrap_content"
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_margin="@dimen/dp8"
             android:layout_weight="1"
-            android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
-            android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine"
-            android:maxLength="1000" />
+            app:boxBackgroundMode="none">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editmessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="@dimen/dp8"
+                android:background="@drawable/edit_rounded_background"
+                android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
+                android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine"
+                android:maxLength="1000" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <ImageButton
             android:id="@+id/send"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_marginEnd="@dimen/dp4"
             android:background="?selectableItemBackground"
             android:src="@drawable/ic_send_black_24dp"
-            android:text="Send" />
+            android:text="Send"
+            app:tint="@color/colorOnPrimaryContainer" />
 
     </LinearLayout>
-
-    <!--
-    <include layout="@layout/status_bar" />
-    -->
 
 </LinearLayout>

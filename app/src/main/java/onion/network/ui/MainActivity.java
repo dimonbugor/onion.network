@@ -25,14 +25,6 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -49,6 +41,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.ContextCompat;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
 import com.google.zxing.RGBLuminanceSource;
@@ -314,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
 
         //headers = new String[] { "Wall", "Friends", "Profile", "Requests", };
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
@@ -353,16 +355,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         });
-        //viewPager.setOffscreenPageLimit(3)
 
         menuFab = findViewById(R.id.menuFab);
-        /*menuFab.setOnClickListener(v -> {
-            if (tabs.getVisibility() == View.GONE) {
-                tabs.setVisibility(View.VISIBLE);
-            } else {
-                tabs.setVisibility(View.GONE);
-            }
-        });*/
         arcButtonLayout = findViewById(R.id.arcButtonLayout);
         arcButtonLayout.setFab(menuFab);
 
@@ -532,7 +526,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+        super.onActivityResult(requestCode, resultCode, data);
         for (BasePage page : pages) {
             page.onActivityResult(requestCode, resultCode, data);
         }
@@ -918,18 +912,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void showId() {
         final String id = getID();
-        /*new AlertDialog.Builder(this)
-                .setTitle("" + id)
-                .setNegativeButton("Close", null)
-                .setNeutralButton("Copy to clipboard", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        clipboard.setText(id);
-                        snack("ID copied to clipboard.");
-                    }
-                })
-                .show();*/
         new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle("ID: " + id)
                 .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
@@ -950,37 +932,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showUrl() {
-        /*
-        final String uri = "http://" + getID() + ".onion/network.onion";
-        new AlertDialog.Builder(this)
-                .setTitle(uri)
-                .setNeutralButton("Copy", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        clipboard.setText(uri);
-                        snack("URI copied to clipboard.");
-                    }
-                })
-                .setPositiveButton("View", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
-                    }
-                })
-                .setNegativeButton("Send", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, uri).setType("text/plain"));
-                    }
-                })
-                .show();
-                */
+
         final View v = getLayoutInflater().inflate(R.layout.url_dialog, null);
-
-        //((TextView)v.findViewById(R.id.contact_link_text)).setText(String.format("network.onion/%s/%s", getID(), name));
-
-        //((TextView) v.findViewById(R.id.onion_id)).setText("ID: " + getID());
 
         {
             final String onionLink = String.format("%s.onion/network.onion", getID());
@@ -1031,37 +984,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
-
-        /*
-        final RadioGroup link_type = ((RadioGroup)v.findViewById(R.id.link_type));
-        final TextView link_text = (TextView)v.findViewById(R.id.link_text);
-        final Runnable update = new Runnable() {
-            @Override
-            public void run() {
-                switch(link_type.getCheckedRadioButtonId()) {
-                    case R.id.link_type_contact:
-                        link_text.setText(String.format("network.onion/%s/%s", getID(), name));
-                        break;
-                    case R.id.link_type_onion:
-                        link_text.setText(String.format("%s.onion/network.onion", getID()));
-                        break;
-                    case R.id.link_type_clearnet:
-                        link_text.setText(String.format("%s.onion.to/network.onion", getID()));
-                        break;
-                }
-            }
-        };
-        link_type.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                update.run();
-            }
-        });
-        update.run();
-        ((RadioButton)v.findViewById(R.id.link_type_clearnet)).setChecked(true);
-        */
 
         new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setView(v)

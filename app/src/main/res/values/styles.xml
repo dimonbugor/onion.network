@@ -1,60 +1,93 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <!-- Основна тема застосунку -->
+    <style name="AppTheme" parent="Theme.Material3.Dark">
         <!-- Фоновий колір -->
-        <item name="android:windowBackground">@color/bg_dark</item>
-        <item name="colorPrimary">@color/primary_dark</item>
-        <item name="colorPrimaryDark">@color/primary_dark_variant</item>
-        <item name="colorAccent">@color/accent_dark</item>
+        <item name="android:windowBackground">@drawable/windows_bg</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="fontFamily">@font/geologica_500</item>
 
-        <!-- Колір тексту -->
-        <item name="android:textColorPrimary">@color/text_primary_dark</item>
-        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
+        <!-- Текстові кольори -->
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
 
-        <!-- Колір панелі дій -->
+        <!-- Стиль панелі дій -->
         <item name="android:actionBarStyle">@style/DarkActionBar</item>
+
+        <item name="android:popupBackground">@color/colorPrimaryContainer</item>
+        <item name="popupMenuBackground">@color/colorPrimaryContainer</item>
     </style>
 
-    <!-- Стиль для панелі дій -->
-    <style name="DarkActionBar" parent="Widget.AppCompat.ActionBar">
-        <item name="android:background">@color/actionbar_bg_dark</item>
+    <!-- Стиль панелі дій -->
+    <style name="DarkActionBar" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@color/colorBackground</item>
         <item name="android:titleTextStyle">@style/DarkActionBarTitleText</item>
     </style>
 
+    <!-- Стиль тексту заголовку панелі дій -->
     <style name="DarkActionBarTitleText" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
-        <item name="android:textColor">@color/actionbar_title_text_dark</item>
+        <item name="android:textColor">@color/colorOnPrimaryContainer</item>
     </style>
 
+    <!-- Тема без панелі дій -->
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
+    <!-- Тема для повноекранного режиму -->
     <style name="AppTheme.Fullscreen" parent="AppTheme">
         <item name="android:actionBarStyle">@style/Widget.AppTheme.ActionBar.Fullscreen</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@null</item>
     </style>
 
-    <!-- Стиль для діалогу з заокругленими кутами для теми AppCompat -->
-    <style name="RoundedAlertDialog" parent="Theme.AppCompat.Dialog">
-        <!-- Прозорий фон діалогу -->
+    <!-- Круглий діалоговий стиль -->
+    <style name="RoundedAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
-        <!-- Використання кастомного фону з заокругленими кутами -->
         <item name="android:background">@drawable/rounded_dialog</item>
-        <!-- Відключення стандартних полів діалогу -->
         <item name="android:windowFrame">@null</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">true</item>
+        <item name="buttonStyle">@style/WhiteButtonText</item> <!-- Стиль кнопок -->
     </style>
 
-    <style name="Widget.AppTheme.ActionBar.Fullscreen" parent="Widget.AppCompat.ActionBar">
-        <item name="android:background">@color/black_overlay</item>
+    <!-- Стиль для білих кнопок -->
+    <style name="WhiteButtonText" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
+    <!-- Стиль для повноекранної панелі дій -->
+    <style name="Widget.AppTheme.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@color/colorBackground</item>
+    </style>
+
+    <!-- Стиль для кнопкової панелі в повноекранному режимі -->
     <style name="Widget.AppTheme.ButtonBar.Fullscreen" parent="">
-        <item name="android:background">@color/black_overlay</item>
+        <item name="android:background">@color/colorBackground</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
+    </style>
+
+    <style name="CustomEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <!-- Фонова заливка -->
+        <item name="android:backgroundTint">@color/colorPrimaryContainer</item>
+        <!-- Колір тексту -->
+        <item name="android:textColor">@color/colorOnPrimaryContainer</item>
+        <!-- Колір підказки (hint) -->
+        <item name="android:textColorHint">@color/colorOnSurface</item>
+        <!-- Стиль рамки -->
+        <item name="boxStrokeColor">@color/colorAccent</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.App.rounded</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App.rounded" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/dp32</item>
     </style>
 </resources>
