@@ -48,7 +48,6 @@ import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.BinaryBitmap;
@@ -789,6 +788,12 @@ public class MainActivity extends AppCompatActivity {
                         fab.hide();
                         fab.setOnClickListener(null);
                     }
+                }
+            } else {
+                if (page instanceof ChatPage) {
+                    fab = (FloatingActionButton) findViewById(R.id.wallFab);
+                    fab.hide();
+                    fab = null;
                 }
             }
         }

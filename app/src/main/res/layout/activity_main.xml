@@ -88,7 +88,7 @@
             app:centerMarginRight="@dimen/sp12"
             app:centerMarginTop="@dimen/dp16"
             app:fabMarginBottom="@dimen/dp16"
-            app:fabMarginLeft="@dimen/dp32"
+            app:fabMarginLeft="@dimen/dp16"
             app:fabMarginRight="@dimen/dp16"
             app:fabMarginTop="@dimen/dp16"
             app:fabPosition="bottom_left">

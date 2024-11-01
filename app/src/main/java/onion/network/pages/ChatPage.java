@@ -310,13 +310,13 @@ public class ChatPage extends BasePage implements ChatClient.OnMessageSentListen
             if (sender.equals(torManager.getID())) sender = "You";
 
             if (tx) {
-                holder.card.setCardBackgroundColor(
-                        holder.card.getContext().getResources().getColor(R.color.colorAccent));
+                holder.card.setBackground(
+                        holder.card.getContext().getResources().getDrawable(R.drawable.chat_item_background));
                 holder.left.setVisibility(View.VISIBLE);
                 holder.right.setVisibility(View.GONE);
             } else {
-                holder.card.setCardBackgroundColor(
-                        holder.card.getContext().getResources().getColor(R.color.colorBackgroundAlpha));
+                holder.card.setBackground(
+                        holder.card.getContext().getResources().getDrawable(R.drawable.chat_my_item_background));
                 holder.left.setVisibility(View.GONE);
                 holder.right.setVisibility(View.VISIBLE);
             }
