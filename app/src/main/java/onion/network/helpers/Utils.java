@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.text.SpannableStringBuilder;
 import android.text.style.ClickableSpan;
@@ -114,13 +115,18 @@ public class Utils {
             ClickableSpan clickableSpan = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    new AlertDialog.Builder(context)
+                    AlertDialog dialogOpenLink = new AlertDialog.Builder(context)
                             .setTitle(url.getURL())
                             .setMessage("Open link in external app?")
                             .setNegativeButton("No", null)
                             .setPositiveButton("Yes", (dialog, which) ->
                                     context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url.getURL()))))
-                            .show();
+                            .create();
+                    dialogOpenLink.setOnShowListener(d -> {
+                        dialogOpenLink.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                        dialogOpenLink.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                    });
+                    dialogOpenLink.show();
                 }
             };
             spannable.setSpan(clickableSpan, start, end, spannable.getSpanFlags(url));

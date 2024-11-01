@@ -3,18 +3,16 @@
     <string name="app_name">T.Tor</string>
 
     <string name="invitation_text">
-        %1$s\n
+        Let\'s connect via %3$s, a fully decentralized peer-to-peer social network!\n
         \n
-        Let\'s connect via %4$s, a fully decentralized peer-to-peer social network!\n
-        \n
-        contact: network.onion/%2$s/%3$s\n
+        contact: network.onion/%1$s/%2$s\n
         (click after installation to connect)\n
         \n
-        onion: http://%2$s.onion/network.onion\n
+        onion: http://%1$s.onion/network.onion\n
         \n
-        clearnet: http://%2$s.onion.to/network.onion\n
+        clearnet: http://%1$s.onion.to/network.onion\n
         \n
-        ID: %2$s\n
+        ID: %1$s\n
         (copy manually if the links are not displayed correctly)\n
     </string>
 

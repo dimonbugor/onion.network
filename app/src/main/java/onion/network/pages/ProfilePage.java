@@ -1,12 +1,4 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network.pages;
 
@@ -18,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.text.InputType;
@@ -37,12 +30,12 @@ import org.json.JSONObject;
 
 import onion.network.FriendTool;
 import onion.network.Item;
-import onion.network.databases.ItemDatabase;
-import onion.network.models.ItemResult;
 import onion.network.ItemTask;
-import onion.network.ui.MainActivity;
 import onion.network.R;
+import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
+import onion.network.models.ItemResult;
+import onion.network.ui.MainActivity;
 
 public class ProfilePage extends BasePage {
 
@@ -81,7 +74,7 @@ public class ProfilePage extends BasePage {
         findViewById(R.id.delete_photo).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+                AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                         .setTitle("Delete Photo")
                         .setMessage("Do you really want to delete this photo?")
                         .setNegativeButton("No", null)
@@ -94,7 +87,12 @@ public class ProfilePage extends BasePage {
                                 FriendTool.getInstance(context).requestUpdates();
                             }
                         })
-                        .show();
+                        .create();
+                dialogDeletePhoto.setOnShowListener(d -> {
+                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialogDeletePhoto.show();
             }
         });
         findViewById(R.id.delete_photo).setVisibility(View.GONE);
@@ -130,56 +128,61 @@ public class ProfilePage extends BasePage {
         if (requestCode == REQUEST_PHOTO || requestCode == REQUEST_TAKE_PHOTO) {
             //try {
 
-                //Uri uri = data.getData();
+            //Uri uri = data.getData();
 
-                Bitmap bmp;
+            Bitmap bmp;
 
-                if (requestCode == REQUEST_PHOTO) {
-                    //bmp = ThumbnailUtils.extractThumbnail(MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri), 320, 320);
-                    bmp = getActivityResultBitmap(data);
-                } else { // REQUEST_TAKE_PHOTO
-                    //bmp = ThumbnailUtils.extractThumbnail((Bitmap) data.getExtras().get("data"), 320, 320);
-                    bmp = (Bitmap) data.getExtras().get("data");
-                }
+            if (requestCode == REQUEST_PHOTO) {
+                //bmp = ThumbnailUtils.extractThumbnail(MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri), 320, 320);
+                bmp = getActivityResultBitmap(data);
+            } else { // REQUEST_TAKE_PHOTO
+                //bmp = ThumbnailUtils.extractThumbnail((Bitmap) data.getExtras().get("data"), 320, 320);
+                bmp = (Bitmap) data.getExtras().get("data");
+            }
 
-                if(bmp == null) {
-                    return;
-                }
+            if (bmp == null) {
+                return;
+            }
 
-                bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
+            bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
 
-                View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
-                ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(bmp);
+            View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
+            ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(bmp);
 
-                final Bitmap fbmp = bmp;
+            final Bitmap fbmp = bmp;
 
-                new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
-                        .setTitle("Set Photo")
-                        .setView(view)
-                        .setNegativeButton("Cancel", null)
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+            AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+                    .setTitle("Set Photo")
+                    .setView(view)
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-                                {
-                                    String v = Utils.encodeImage(fbmp);
-                                    ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").put("photo", v).build());
-                                }
-
-                                {
-                                    String v = Utils.encodeImage(ThumbnailUtils.extractThumbnail(fbmp, 84, 84));
-                                    ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").put("thumb", v).build());
-                                }
-
-                                Snackbar.make(contentView, "Photo changed", Snackbar.LENGTH_SHORT).show();
-
-                                activity.load();
-
-                                FriendTool.getInstance(context).requestUpdates();
-
+                            {
+                                String v = Utils.encodeImage(fbmp);
+                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").put("photo", v).build());
                             }
-                        })
-                        .show();
+
+                            {
+                                String v = Utils.encodeImage(ThumbnailUtils.extractThumbnail(fbmp, 84, 84));
+                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").put("thumb", v).build());
+                            }
+
+                            Snackbar.make(contentView, "Photo changed", Snackbar.LENGTH_SHORT).show();
+
+                            activity.load();
+
+                            FriendTool.getInstance(context).requestUpdates();
+
+                        }
+                    })
+                    .create();
+            dialogSetPhoto.setOnShowListener(d -> {
+                dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialogSetPhoto.show();
 
             /*} catch (IOException ex) {
                 Snackbar.make(this, "Error", Snackbar.LENGTH_SHORT).show();

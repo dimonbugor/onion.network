@@ -1,12 +1,4 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network.pages;
 
@@ -19,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.provider.MediaStore;
@@ -36,13 +29,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import onion.network.Item;
-import onion.network.databases.ItemDatabase;
-import onion.network.models.ItemResult;
 import onion.network.ItemTask;
-import onion.network.ui.MainActivity;
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
+import onion.network.models.ItemResult;
+import onion.network.ui.MainActivity;
 
 public class WallPage extends BasePage {
 
@@ -394,7 +387,7 @@ public class WallPage extends BasePage {
                         delete.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
+                                AlertDialog dialogDeletePost = new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
                                         .setTitle("Delete Post?")
                                         .setMessage("Do you really want to delete this post?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -409,7 +402,12 @@ public class WallPage extends BasePage {
                                             public void onClick(DialogInterface dialog, int which) {
                                             }
                                         })
-                                        .show();
+                                        .create();
+                                dialogDeletePost.setOnShowListener(d -> {
+                                    dialogDeletePost.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                                    dialogDeletePost.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                });
+                                dialogDeletePost.show();
                             }
                         });
                         delete.setVisibility(View.VISIBLE);

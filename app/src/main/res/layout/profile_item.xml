@@ -3,45 +3,56 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:paddingHorizontal="@dimen/dp24"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/key"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:layout_weight="1.75"
-        android:gravity="right|top"
-        android:paddingTop="@dimen/dp16"
-        android:paddingRight="@dimen/dp8"
-        android:paddingBottom="@dimen/dp16"
-        android:singleLine="true"
-        android:text="Key"
-         />
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/val"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:layout_weight="2"
-        android:gravity="left|top"
-        android:paddingTop="@dimen/dp16"
-        android:paddingRight="@dimen/dp8"
-        android:paddingBottom="@dimen/dp16"
-        android:fontFamily="@font/geologica_600"
-        android:singleLine="true"
-        android:text="Value"
-         />
+        <TextView
+            android:id="@+id/key"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/dp8"
+            android:layout_weight="1.75"
+            android:paddingTop="@dimen/dp16"
+            android:paddingRight="@dimen/dp8"
+            android:paddingBottom="@dimen/dp16"
+            android:singleLine="true"
+            android:text="Key" />
 
-    <ImageView
-        android:id="@+id/edit"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:alpha="0.25"
-        android:padding="@dimen/dp16"
-        android:src="@drawable/ic_edit_black_24dp"
-        app:tint="@android:color/white" />
+        <TextView
+            android:id="@+id/val"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/dp8"
+            android:layout_weight="2"
+            android:fontFamily="@font/geologica_600"
+            android:gravity="left|top"
+            android:paddingTop="@dimen/dp16"
+            android:paddingRight="@dimen/dp8"
+            android:paddingBottom="@dimen/dp16"
+            android:singleLine="true"
+            android:text="Value" />
 
+        <ImageView
+            android:id="@+id/edit"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:alpha="0.25"
+            android:padding="@dimen/dp16"
+            android:src="@drawable/ic_edit_black_24dp"
+            app:tint="@android:color/white" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorBackgroundAlpha"/>
 </LinearLayout>

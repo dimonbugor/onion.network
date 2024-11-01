@@ -1,12 +1,4 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network.pages;
 
@@ -16,6 +8,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -159,7 +152,7 @@ public class FriendPage extends BasePage {
                             @Override
                             public boolean onLongClick(View v) {
 
-                                new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
+                                AlertDialog dialogDeleteFriend = new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
                                         .setTitle("Delete Friend?")
                                         .setMessage("Do you really want to delete this friend?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -174,7 +167,12 @@ public class FriendPage extends BasePage {
                                             public void onClick(DialogInterface dialog, int which) {
                                             }
                                         })
-                                        .show();
+                                        .create();
+                                dialogDeleteFriend.setOnShowListener(d -> {
+                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                });
+                                dialogDeleteFriend.show();
 
                                 return true;
                             }

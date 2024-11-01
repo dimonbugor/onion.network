@@ -1,12 +1,4 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network.ui;
 
@@ -21,6 +13,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -203,17 +196,6 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.i(TAG, uri.toString());
 
-            /*if("onionnet".equals(uri.getScheme()) || "onionet".equals(uri.getScheme()) || "onnet".equals(uri.getScheme())) {
-                address = uri.getHost();
-                if(address == null) {
-                    try {
-                        address = uri.get
-                    }
-                }
-                Log.i(TAG, "ONION NETWORK ONIONET URI " + address);
-                return;
-            }*/
-
                 {
                     try {
                         String ur = intent.getDataString();
@@ -279,11 +261,7 @@ public class MainActivity extends AppCompatActivity {
         address = address.trim().toLowerCase();
         if (address.equals(TorManager.getInstance(this).getID())) address = "";
 
-
         db = ItemDatabase.getInstance(this);
-
-        //String[] headers;
-
 
         wallPage = new WallPage(this);
         friendPage = new FriendPage(this);
@@ -313,11 +291,8 @@ public class MainActivity extends AppCompatActivity {
             };
         }
 
-        //headers = new String[] { "Wall", "Friends", "Profile", "Requests", };
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         if (!address.isEmpty()) {
 
@@ -325,7 +300,6 @@ public class MainActivity extends AppCompatActivity {
 
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
 
         // Set up the ViewPager with the sections adapter.
         viewPager = (ViewPager) findViewById(R.id.container);
@@ -447,12 +421,12 @@ public class MainActivity extends AppCompatActivity {
     void showEnterId() {
         View dialogView = getLayoutInflater().inflate(R.layout.friend_dialog, null);
         final EditText addressEdit = (EditText) dialogView.findViewById(R.id.address);
-        new AlertDialog.Builder(MainActivity.this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this, R.style.RoundedAlertDialog)
                 .setTitle("Enter ID")
                 .setView(dialogView)
-                .setNegativeButton("Cancel", (dialog, which) -> {
+                .setNegativeButton("Cancel", (d, which) -> {
                 })
-                .setPositiveButton("Open", (dialog, which) -> {
+                .setPositiveButton("Open", (d, which) -> {
                     final String address = addressEdit.getText().toString().trim().toLowerCase();
                     if (address.length() > 56) {
                         snack("Invalid ID");
@@ -461,7 +435,12 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, MainActivity.class).putExtra("address", address));
 
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+        });
+        dialog.show();
     }
 
     public void initTabs() {
@@ -490,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAddFriend() {
-        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle("Add Friend")
                 .setItems(new String[]{
                         "Scan QR",
@@ -513,7 +492,12 @@ public class MainActivity extends AppCompatActivity {
                         if (which == 5) inviteFriend();
                     }
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+        });
+        dialog.show();
     }
 
     void scanQR() {
@@ -658,9 +642,14 @@ public class MainActivity extends AppCompatActivity {
         int s = (int) (Math.min(displayRectangle.width(), displayRectangle.height()) * 0.9);
         view.setMinimumWidth(s);
         view.setMinimumHeight(s);
-        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setView(view)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+        });
+        dialog.show();
     }
 
     public void addFriend(final String address, String name) {
@@ -819,7 +808,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_friends) {
-            new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                     .setTitle("Friends")
                     .setMessage("You are friends with this user")
                     .setNeutralButton("Remove friend", new DialogInterface.OnClickListener() {
@@ -830,7 +819,12 @@ public class MainActivity extends AppCompatActivity {
                             snack("Contact removed.");
                         }
                     })
-                    .show();
+                    .create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
             return true;
         }
 
@@ -883,7 +877,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_clear_chat) {
-            new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                     .setTitle("Clear chat")
                     .setMessage("Do you really want to delete all messages exchanged with this contact?")
                     .setNegativeButton("No", null)
@@ -895,7 +889,12 @@ public class MainActivity extends AppCompatActivity {
                             chatPage.load();
                         }
                     })
-                    .show();
+                    .create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
         }
 
         return super.onOptionsItemSelected(item);
@@ -917,7 +916,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void showId() {
         final String id = getID();
-        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setTitle("ID: " + id)
                 .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
                     @Override
@@ -933,7 +932,12 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, id).setType("text/plain"));
                     }
                 })
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+        });
+        dialog.show();
     }
 
     void showUrl() {
@@ -990,9 +994,14 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                 .setView(v)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+        });
+        dialog.show();
 
     }
 
@@ -1122,12 +1131,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
 
-        String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
-
-        intent.putExtra(Intent.EXTRA_REFERRER, url);
-        intent.putExtra("customAppUri", url);
-
-        intent.putExtra(Intent.EXTRA_TEXT, String.format(getString(R.string.invitation_text), url, TorManager.getInstance(this).getID(), Uri.encode(getName()), getAppName()));
+        intent.putExtra(Intent.EXTRA_TEXT, String.format(getString(R.string.invitation_text), TorManager.getInstance(this).getID(), Uri.encode(getName()), getAppName()));
         intent.setType("text/plain");
 
         startActivity(intent);

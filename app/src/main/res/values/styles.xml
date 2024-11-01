@@ -21,8 +21,8 @@
         <!-- Стиль панелі дій -->
         <item name="android:actionBarStyle">@style/DarkActionBar</item>
 
-        <item name="android:popupBackground">@color/colorPrimaryContainer</item>
-        <item name="popupMenuBackground">@color/colorPrimaryContainer</item>
+        <item name="android:popupBackground">@color/colorBackgroundAlpha</item>
+        <item name="popupMenuBackground">@color/colorBackgroundAlpha</item>
     </style>
 
     <!-- Стиль панелі дій -->
@@ -51,12 +51,11 @@
 
     <!-- Круглий діалоговий стиль -->
     <style name="RoundedAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:background">@drawable/rounded_dialog</item>
-        <item name="android:windowFrame">@null</item>
+        <item name="android:windowBackground">@drawable/rounded_dialog</item> <!-- Тільки фон діалогу -->
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">true</item>
-        <item name="buttonStyle">@style/WhiteButtonText</item> <!-- Стиль кнопок -->
+        <item name="buttonBarPositiveButtonStyle">@style/WhiteButtonText</item>
+        <item name="buttonBarNegativeButtonStyle">@style/WhiteButtonText</item>
     </style>
 
     <!-- Стиль для білих кнопок -->

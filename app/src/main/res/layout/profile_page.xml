@@ -17,21 +17,33 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <FrameLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/rounded_bg"
-                >
+                android:layout_height="wrap_content">
 
-                <ImageView
-                    android:id="@+id/profilephoto"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:background="?selectableItemBackground"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/photo_container"
+                    android:layout_width="@dimen/dp132"
+                    android:layout_height="@dimen/dp132"
+                    android:layout_marginHorizontal="@dimen/dp16"
                     android:paddingTop="@dimen/dp16"
-                    android:paddingBottom="9dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/nophoto" />
+                    android:paddingBottom="@dimen/dp8"
+                    app:cardCornerRadius="@dimen/dp72"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:strokeColor="@color/colorAccent"
+                    app:strokeWidth="2dp">
+
+                    <ImageView
+                        android:id="@+id/profilephoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp132"
+                        android:background="?selectableItemBackground"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/nophoto" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <FrameLayout
                     android:id="@+id/delete_photo"
@@ -39,6 +51,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="top|right"
                     android:background="?selectableItemBackground"
+                    app:layout_constraintBottom_toTopOf="@+id/photo_container"
+                    app:layout_constraintTop_toTopOf="@+id/photo_container"
+                    app:layout_constraintStart_toEndOf="@+id/photo_container"
+                    app:layout_constraintEnd_toEndOf="@+id/photo_container"
                     android:clickable="true"
                     android:padding="@dimen/dp16">
 
@@ -55,6 +71,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|left"
                     android:background="?selectableItemBackground"
+                    app:layout_constraintBottom_toBottomOf="@+id/photo_container"
+                    app:layout_constraintStart_toStartOf="@+id/photo_container"
+                    app:layout_constraintEnd_toStartOf="@+id/photo_container"
+                    app:layout_constraintTop_toBottomOf="@+id/photo_container"
                     android:clickable="true"
                     android:padding="@dimen/dp16">
 
@@ -71,6 +91,10 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|right"
                     android:background="?selectableItemBackground"
+                    app:layout_constraintBottom_toBottomOf="@+id/photo_container"
+                    app:layout_constraintStart_toEndOf="@+id/photo_container"
+                    app:layout_constraintEnd_toEndOf="@+id/photo_container"
+                    app:layout_constraintTop_toBottomOf="@+id/photo_container"
                     android:clickable="true"
                     android:padding="@dimen/dp16">
 
@@ -81,7 +105,7 @@
                         android:src="@drawable/ic_folder_white_36dp" />
                 </FrameLayout>
 
-            </FrameLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -91,10 +115,10 @@
                 android:id="@+id/is_friend_bot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/geologica_600"
                 android:gravity="center"
                 android:padding="@dimen/dp8"
                 android:text="FRIEND BOT"
-                android:fontFamily="@font/geologica_600"
                 android:textSize="18sp" />
 
             <FrameLayout

@@ -1,18 +1,11 @@
-/*
- * Network.onion - fully distributed p2p social network using onion routing
- *
- * http://play.google.com/store/apps/details?id=onion.network
- * http://onionapps.github.io/Network.onion/
- * http://github.com/onionApps/Network.onion
- *
- * Author: http://github.com/onionApps - http://jkrnk73uid7p5thz.onion - bitcoin:1kGXfWx8PHZEVriCNkbP5hzD15HS4AyKf
- */
+
 
 package onion.network.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -26,12 +19,12 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
 
-import onion.network.cashes.ItemCache;
 import onion.network.R;
-import onion.network.settings.Settings;
+import onion.network.WallBot;
+import onion.network.cashes.ItemCache;
 import onion.network.cashes.SiteCache;
 import onion.network.helpers.Utils;
-import onion.network.WallBot;
+import onion.network.settings.Settings;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -98,7 +91,7 @@ public class SettingsActivity extends AppCompatActivity {
             getPreferenceManager().findPreference("clearcache").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
+                    AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                             .setTitle("Clear Cache")
                             .setMessage("Remove all cache data?")
                             .setNegativeButton("No", null)
@@ -110,7 +103,12 @@ public class SettingsActivity extends AppCompatActivity {
                                     Snackbar.make(getView(), "Cache cleared.", Snackbar.LENGTH_SHORT).show();
                                 }
                             })
-                            .show();
+                            .create();
+                    dialog.setOnShowListener(d -> {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                    });
+                    dialog.show();
                     return true;
                 }
             });
@@ -132,7 +130,7 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                     .setTitle("Third party software used by this app (click to view license)")
                     .setItems(items, new DialogInterface.OnClickListener() {
                         @Override
@@ -140,7 +138,12 @@ public class SettingsActivity extends AppCompatActivity {
                             showLicense(items[which]);
                         }
                     })
-                    .show();
+                    .create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
         }
 
         void showLicense(String name) {
@@ -150,10 +153,15 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
                     .setTitle(name)
                     .setMessage(text)
-                    .show();
+                    .create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
         }
 
     }
