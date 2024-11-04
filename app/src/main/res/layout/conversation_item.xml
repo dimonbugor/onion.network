@@ -2,9 +2,10 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:card_view="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:padding="@dimen/dp4"
+    android:layout_marginVertical="@dimen/dp8"
     android:layout_marginHorizontal="@dimen/dp16"
     android:background="@drawable/rounded_card"
     android:clickable="true"
