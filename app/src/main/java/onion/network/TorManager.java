@@ -1,6 +1,6 @@
-
-
 package onion.network;
+
+import static info.pluggabletransports.dispatch.transports.Obfs4Transport.setPropertiesFromBridgeString;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -21,9 +21,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.Properties;
 
+import info.pluggabletransports.dispatch.Connection;
+import info.pluggabletransports.dispatch.Dispatcher;
+import info.pluggabletransports.dispatch.Transport;
+import info.pluggabletransports.dispatch.transports.MeekTransport;
+import info.pluggabletransports.dispatch.transports.Obfs4Transport;
 import onion.network.helpers.Ed25519Signature;
-import onion.network.servers.Server;
+
+import onion.network.helpers.TorBridgeParser;
 import onion.network.helpers.Utils;
 import onion.network.ui.MainActivity;
 
@@ -51,7 +59,6 @@ public class TorManager {
                     Object value = extras.get(key);
                     if (value instanceof String) {
                         String stringValue = (String) value;
-                        // Використовуйте stringValue, як вам потрібно
                         log("Tor status: " + stringValue);
                         if(stringValue.equals("ON")) {
                             MainActivity mainActivity = MainActivity.getInstance();
@@ -67,7 +74,6 @@ public class TorManager {
     };
 
     public TorManager(Context c) {
-
         this.context = c;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.registerReceiver(torStatusReceiver,
@@ -93,7 +99,6 @@ public class TorManager {
 
     public void startTorServer() {
         Intent intent = new Intent(context, TorService.class);
-
         context.bindService(intent, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
@@ -110,54 +115,37 @@ public class TorManager {
                 if (torControlConnection != null) {
                     new Thread(() -> {
                         try {
-                            // Аутентифікація
+                            // Аутентифікація Tor
                             torControlConnection.authenticate(new byte[0]);
 
-                            // Перевіряємо і створюємо директорію для прихованого сервісу
+                            // Створення і налаштування прихованого сервісу
                             File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
                             if (!appTorServiceDir.exists()) {
-                                appTorServiceDir.mkdirs();  // Створюємо директорію, якщо її немає
+                                appTorServiceDir.mkdirs();
                             }
 
                             hiddenServiceDir = new File(appTorServiceDir, "app_TorHiddenService");
                             if (!hiddenServiceDir.exists()) {
-                                hiddenServiceDir.mkdirs();  // Створюємо директорію, якщо її немає
+                                hiddenServiceDir.mkdirs();
                             }
 
-                            if (!hiddenServiceDir.canWrite()) {
-                                log("Directory is not writable: " + hiddenServiceDir.getAbsolutePath());
-                                return;  // Зупиняємо, якщо немає прав на запис
-                            }
+                            // Налаштування Tor як прихований сервіс
+                            File torcc = new File(appTorServiceDir, "torrc-defaults");
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("Log notice stdout\n");
+                            sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath()).append("\n");
+                            sb.append("HiddenServicePort 80 127.0.0.1:8080\n");
 
-                            // Налаштовуємо Tor як прихований сервіс
-                            log("configure");
-                            try {
-                                    File torcc = new File(appTorServiceDir, "torrc-defaults");
-                                if (!torcc.canWrite()) {
-                                    log("Cannot write to directory: " + appTorServiceDir.getAbsolutePath());
-                                    return;
-                                }
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("Log notice stdout");
-                                sb.append("\n");
-                                sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath());
-                                sb.append("\n");
-                                //sb.append("HiddenServicePort ").append(getHiddenServicePort()).append(" ").append(getSocketName());
-                                sb.append("HiddenServicePort ").append("80 127.0.0.1:8080");
-                                sb.append("\n");
+                            // Запис конфігурації для Tor
+                            FileWriter fileWriter = new FileWriter(torcc, true);
+                            PrintWriter printWriter = new PrintWriter(fileWriter);
+                            printWriter.print(sb);
+                            printWriter.close();
 
-                                FileWriter fileWriter = new FileWriter(torcc, true);
-                                PrintWriter printWriter = new PrintWriter(fileWriter);
-                                printWriter.print(sb);
-                                printWriter.close();
-                                // Оновлюємо конфігурацію Tor
-                                torControlConnection.signal("RELOAD");
-                            } catch (IOException e) {
-                                log("Error setting hidden service config: " + e.getMessage());
-                                e.printStackTrace();
-                            }
+                            // Оновлення конфігурації Tor
+                            torControlConnection.signal("RELOAD");
 
-                            // Перевіряємо статус Tor
+                            // Перевірка статусу
                             String torStatus = torControlConnection.getInfo("status/circuit-established");
                             log("Tor Circuit Status: " + torStatus);
 
@@ -166,7 +154,6 @@ public class TorManager {
 
                         } catch (IOException e) {
                             log("Error in configuring hidden service: " + e.getMessage());
-                            e.printStackTrace();
                         }
                     }).start();
                 }
@@ -267,6 +254,4 @@ public class TorManager {
     public interface LogListener {
         void onLog();
     }
-
-
 }
