@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/pikaso"
+    android:background="@drawable/win_bg"
     tools:context="onion.network.ui.MainActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -79,6 +79,13 @@
             </onion.network.ui.views.TorStatusView>
 
         </LinearLayout>
+
+        <View
+            android:id="@+id/dimOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#CC000000"
+            android:visibility="gone" />
 
         <onion.network.ui.views.ArcButtonLayout
             android:id="@+id/arcButtonLayout"

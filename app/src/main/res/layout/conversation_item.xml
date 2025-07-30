@@ -4,9 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/dp4"
     android:layout_marginVertical="@dimen/dp8"
-    android:layout_marginHorizontal="@dimen/dp16"
     android:background="@drawable/rounded_card"
     android:clickable="true"
     android:orientation="vertical">
@@ -20,26 +18,22 @@
             android:id="@+id/item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingLeft="@dimen/dp16"
-            android:paddingTop="@dimen/dp16"
-            android:paddingRight="@dimen/dp16"
-            android:paddingBottom="@dimen/dp16">
+            android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="@dimen/dp64"
-                android:layout_height="@dimen/dp64"
-                app:strokeColor="@color/colorAccent"
-                app:strokeWidth="2dp"
-                android:layout_marginRight="@dimen/dp16"
-                app:cardCornerRadius="@dimen/dp32">
+                android:layout_width="@dimen/dp72"
+                android:layout_height="@dimen/dp72"
+                app:strokeColor="@color/colorAccentAlpha"
+                app:strokeWidth="1dp"
+                android:layout_margin="@dimen/dp16"
+                app:cardCornerRadius="@dimen/dp48">
 
                 <ImageView
                     android:id="@+id/thumb"
-                    android:layout_width="@dimen/dp64"
-                    android:layout_height="@dimen/dp64"
+                    android:layout_width="@dimen/dp72"
+                    android:layout_height="@dimen/dp72"
                     android:layout_gravity="center"
-                    android:background="@color/colorAccentAlpha"
+                    android:background="@color/colorBackgroundAlpha"
                     android:src="@drawable/nothumb" />
             </com.google.android.material.card.MaterialCardView>
 
@@ -49,15 +43,13 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingStart="@dimen/dp4"
-                android:paddingTop="@dimen/dp4"
-                android:paddingBottom="@dimen/dp4">
+                android:orientation="vertical">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="@dimen/dp16"
+                    android:paddingEnd="@dimen/dp16"
                     android:orientation="horizontal">
 
                     <TextView
@@ -65,31 +57,34 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
                         android:layout_weight="1"
                         android:ellipsize="none"
                         android:singleLine="true"
                         android:fontFamily="@font/geologica_400"
                         android:text="fuehwuajskdifuvh"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textColor="@color/white_80" />
 
                     <TextView
                         android:id="@+id/name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"
-                        android:layout_centerVertical="true"
                         android:layout_toLeftOf="@id/address"
                         android:ellipsize="end"
                         android:singleLine="true"
                         android:fontFamily="@font/geologica_600"
+                        android:textFontWeight="600"
+                        android:textSize="@dimen/sp16"
                         android:text="Anonymous"
                          />
                 </RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="@dimen/dp16"
+                    android:paddingVertical="@dimen/dp8"
+                    >
 
                     <TextView
                         android:id="@+id/message"
@@ -99,6 +94,7 @@
                         android:gravity="center_vertical"
                         android:singleLine="true"
                         android:text="aifjnelsdfjpeuvb"
+                        android:textSize="@dimen/sp14"
                          />
 
                     <ImageView

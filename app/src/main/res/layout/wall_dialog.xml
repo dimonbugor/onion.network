@@ -53,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="@dimen/dp8"
-                    android:alpha="0.6"
+                    android:alpha="0.8"
                     android:background="?selectableItemBackground"
                     android:padding="@dimen/dp16"
                     android:src="@drawable/ic_photo_black_24dp"
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginRight="@dimen/dp8"
-                    android:alpha="0.6"
+                    android:alpha="0.8"
                     android:background="?selectableItemBackground"
                     android:padding="@dimen/dp16"
                     android:src="@drawable/ic_photo_camera_black_24dp"
@@ -81,11 +81,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:alpha="0.8"
-                    android:backgroundTint="@color/colorAccentAlpha"
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/colorAccent"
                     android:drawableStart="@drawable/ic_check_black_24dp"
                     android:drawablePadding="@dimen/dp8"
-                    android:drawableTint="@android:color/white"
                     android:text="Publish" />
             </LinearLayout>
 

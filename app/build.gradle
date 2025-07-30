@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'onion.network'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "onion.network"
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode 1400
         versionName "14"
         minSdkVersion 21
@@ -39,20 +39,11 @@ android {
     }
 
     packagingOptions {
-        exclude("META-INF/DEPENDENCIES")
-        exclude("META-INF/LICENSE")
-        exclude("META-INF/LICENSE.txt")
-        exclude("META-INF/license.txt")
-        exclude("META-INF/NOTICE")
-        exclude("META-INF/NOTICE.txt")
-        exclude("META-INF/notice.txt")
-        exclude("META-INF/ASL2.0")
-        exclude("META-INF/*.kotlin_module")
         resources {
             exclude 'META-INF/androidx.interpolator_interpolator.version'
             exclude 'META-INF/androidx.customview_customview.version'
             exclude 'META-INF/androidx.drawerlayout_drawerlayout.version'
-            excludes += 'META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version'
+            excludes += ['META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/*.kotlin_module', 'info/pluggabletransports/dispatch/Connection.class']
         }
     }
     compileOptions {
@@ -70,11 +61,16 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
     // https://mvnrepository.com/artifact/org.jsoup/jsoup
-    implementation group: 'org.jsoup', name: 'jsoup', version: '1.18.3'
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.19.1'
 
     implementation project(':APTDispatchLibrary')
-    implementation project(':APTDispatchLibrary-MeekObfs4-Full')
+    implementation(project(':APTDispatchLibrary-MeekObfs4-Full')) {
+        exclude group: 'info.pluggabletransports.aptds', module: 'apt-dispatch-library'
+        exclude group: 'info.pluggabletransports.aptds', module: 'jsocksAndroid'
+        exclude group: 'info.pluggabletransports.aptds', module: 'goptbundle'
+    }
 
     implementation 'com.google.android.play:integrity:1.4.0'
 
@@ -90,7 +86,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'com.google.zxing:core:3.5.3'
     implementation 'org.apache.commons:commons-compress:1.27.1'
     implementation 'org.tukaani:xz:1.10'

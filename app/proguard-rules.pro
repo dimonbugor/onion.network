@@ -28,3 +28,6 @@
 
 -keep public class javax.**
 -dontwarn javax.**
+
+-keep class info.pluggabletransports.dispatch.** { *; }
+-dontwarn info.pluggabletransports.dispatch.**

@@ -21,7 +21,8 @@
             android:singleLine="true"
             android:text="aifjnelsdfjpeuvb"
             android:fontFamily="@font/geologica_600"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:textFontWeight="600"
+            android:textSize="@dimen/sp16" />
 
         <TextView
             android:id="@+id/address"
@@ -40,7 +41,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginEnd="@dimen/dp4"
-        android:backgroundTint="@color/colorAccentAlpha"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/colorAccent"
         android:text="Decline" />
 
     <com.google.android.material.button.MaterialButton
@@ -48,7 +50,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:backgroundTint="@color/colorAccentAlpha"
+        android:backgroundTint="@color/colorAccent"
+        android:textColor="@color/white"
         android:text="Accept" />
 
 </LinearLayout>

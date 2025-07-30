@@ -2,6 +2,7 @@ package onion.network.ui;
 
 import android.content.Intent;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -13,12 +14,29 @@ import onion.network.helpers.PermissionHelper;
 
 public class SplashActivity extends AppCompatActivity {
 
+    private static final int MAX_LAUNCH_COUNT = 10;
+    private static final String PREF_NAME = "app_prefs";
+    private static final String LAUNCH_COUNT_KEY = "launch_count";
+
     private ActivitySplashBinding binding;
     private PermissionHelper permissionHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Перевірка ліміту запусків
+//        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+//        int launchCount = prefs.getInt(LAUNCH_COUNT_KEY, 0);
+//
+//        if (launchCount >= MAX_LAUNCH_COUNT) {
+//            Toast.makeText(this, "Тестовий період завершено. Дякуємо!", Toast.LENGTH_LONG).show();
+//            finish(); // Закриваємо додаток
+//            return;
+//        }
+//
+//        // Збільшуємо лічильник і зберігаємо
+//        prefs.edit().putInt(LAUNCH_COUNT_KEY, launchCount + 1).apply();
 
         binding = ActivitySplashBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

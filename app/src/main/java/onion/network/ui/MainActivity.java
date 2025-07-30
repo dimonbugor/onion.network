@@ -143,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
                     for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
                         if (pages[i].getIcon() == id) {
                             View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
-                            //View v = tabLayout.getTabAt(i).getCustomView();
                             ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
                                     "backgroundColor",
                                     new ArgbEvaluator(),
@@ -330,8 +329,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         menuFab = findViewById(R.id.menuFab);
+        View dimOverlay = findViewById(R.id.dimOverlay);
         arcButtonLayout = findViewById(R.id.arcButtonLayout);
         arcButtonLayout.setFab(menuFab);
+        arcButtonLayout.setOnExpansionChangedListener(expanded -> {
+            fadeOverlay(dimOverlay, expanded);
+        });
+        dimOverlay.setOnClickListener(v -> {
+            arcButtonLayout.toggleMenu();
+        });
 
         for (int i = 0; i < pages.length; i++) {
             int icon = pages[i].getIcon();
@@ -412,6 +418,19 @@ public class MainActivity extends AppCompatActivity {
 
         WallBot.getInstance(this);
 
+    }
+
+    private void fadeOverlay(View overlay, boolean show) {
+        overlay.animate()
+                .alpha(show ? 1f : 0f)
+                .setDuration(300)
+                .withStartAction(() -> {
+                    if (show) overlay.setVisibility(View.VISIBLE);
+                })
+                .withEndAction(() -> {
+                    if (!show) overlay.setVisibility(View.GONE);
+                })
+                .start();
     }
 
     public void startHostService() {
