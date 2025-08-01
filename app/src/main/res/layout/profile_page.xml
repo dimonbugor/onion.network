@@ -34,7 +34,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:strokeColor="@color/colorAccent"
-                    app:strokeWidth="2dp">
+                    app:strokeWidth="1dp">
 
                     <ImageView
                         android:id="@+id/profilephoto"
@@ -116,10 +116,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_600"
+                android:textFontWeight="600"
+                android:textSize="@dimen/sp16"
                 android:gravity="center"
                 android:padding="@dimen/dp8"
-                android:text="FRIEND BOT"
-                android:textSize="18sp" />
+                android:text="FRIEND BOT" />
 
             <FrameLayout
                 android:layout_width="match_parent"

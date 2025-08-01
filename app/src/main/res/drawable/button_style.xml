@@ -6,13 +6,13 @@
         android:endColor="@color/colorOnPrimary"
         android:centerColor="@color/colorPrimary"
         android:startColor="@color/colorPrimary" />
-    <corners android:radius="16dp" />
+    <corners android:radius="@dimen/dp16" />
     <stroke
         android:width="1dp"
         android:color="#3A47A0" />
     <padding
-        android:bottom="8dp"
-        android:left="16dp"
-        android:right="16dp"
-        android:top="8dp" />
+        android:bottom="@dimen/dp8"
+        android:left="@dimen/dp16"
+        android:right="@dimen/dp16"
+        android:top="@dimen/dp8" />
 </shape>

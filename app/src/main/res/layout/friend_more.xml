@@ -14,15 +14,15 @@
         app:cardElevation="@dimen/dp4"
         app:cardUseCompatPadding="true"
         app:strokeWidth="0dp"
-        app:cardCornerRadius="@dimen/dp32"
+        app:cardCornerRadius="@dimen/dp48"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <TextView
-            android:background="@color/colorAccentAlpha"
+            android:background="@color/colorAccent"
             android:clickable="true"
             android:gravity="center"
-            android:padding="@dimen/dp16"
+            android:paddingVertical="@dimen/dp8"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Load More"

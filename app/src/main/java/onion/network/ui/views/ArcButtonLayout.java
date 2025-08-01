@@ -75,6 +75,9 @@ public class ArcButtonLayout extends ViewGroup {
 
     public void toggleMenu() {
         isExpanded = !isExpanded;
+        if (expansionListener != null) {
+            expansionListener.onExpansionChanged(isExpanded);
+        }
         animateButtons();
     }
 
@@ -180,4 +183,15 @@ public class ArcButtonLayout extends ViewGroup {
             measureChild(fab, widthMeasureSpec, heightMeasureSpec);
         }
     }
+
+    public interface OnExpansionChangedListener {
+        void onExpansionChanged(boolean expanded);
+    }
+
+    private OnExpansionChangedListener expansionListener;
+
+    public void setOnExpansionChangedListener(OnExpansionChangedListener listener) {
+        this.expansionListener = listener;
+    }
+
 }

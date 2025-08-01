@@ -385,7 +385,7 @@ public class ProfilePage extends BasePage {
                                 final EditText textEdit = (EditText) dialogView.findViewById(R.id.text);
                                 textEdit.setText(val);
                                 textEdit.setInputType(row.type);
-                                AlertDialog.Builder dlg = new AlertDialog.Builder(getContext(), R.style.RoundedAlertDialog)
+                                AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.RoundedAlertDialog)
                                         .setView(dialogView)
                                         .setTitle("Change " + label)
                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -411,8 +411,14 @@ public class ProfilePage extends BasePage {
                                                 ItemDatabase.getInstance(getContext()).put(new Item("info", "", "", o));*/
                                                 activity.load();
                                             }
-                                        });
-                                dlg.show();
+                                        })
+                                        .create();
+                                dialog.setOnShowListener(d -> {
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(Color.WHITE);
+                                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                });
+                                dialog.show();
 
                             }
                         });

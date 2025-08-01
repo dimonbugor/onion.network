@@ -16,6 +16,7 @@
         android:id="@+id/address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingVertical="@dimen/dp8"
         android:fontFamily="@font/geologica_400"
         android:text="sofubzehndjfqpyl" />
 
@@ -32,7 +33,8 @@
     <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/colorAccentAlpha"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/colorAccent"
         android:text="Add Friend" />
 
 </LinearLayout>

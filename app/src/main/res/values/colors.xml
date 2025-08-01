@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1A1D2E</color>
+    <color name="colorPrimary">#23262A</color>
     <color name="colorOnPrimary">#BFC7E6</color>
     <color name="colorPrimaryContainer">#28304B</color>
     <color name="colorPrimaryContainerAlpha">#3328304B</color>
@@ -10,10 +10,13 @@
     <color name="colorAccent">#0277BD</color>
     <color name="colorAccentAlpha">#6603A9F4</color>
     <color name="colorOnSecondary">#B0C5F0</color>
-    <color name="colorSurface">#1A1D2E</color>
+    <color name="colorSurface">#23262A</color>
     <color name="colorOnSurface">#BFC7E6</color>
-    <color name="colorBackground">#101223</color>
+    <color name="colorBackground">#23262A</color>
+    <color name="colorBackgroundAlpha_80">#CC23262A</color>
     <color name="colorBackgroundAlpha">#4D436072</color>
     <color name="colorDialogBackgroundAlpha">#CC436072</color>
     <color name="colorOnBackground">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_80">#CCFFFFFF</color>
 </resources>

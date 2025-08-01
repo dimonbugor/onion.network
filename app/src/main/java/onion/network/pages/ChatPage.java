@@ -32,7 +32,8 @@ import onion.network.TorManager;
 import onion.network.UpdateScheduler;
 import onion.network.helpers.Utils;
 
-public class ChatPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
+public class ChatPage extends BasePage
+        implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 
     String TAG = "chat";
     ChatAdapter adapter;

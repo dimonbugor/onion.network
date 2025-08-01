@@ -4,45 +4,41 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="@dimen/dp4">
+    android:paddingVertical="@dimen/dp8">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:backgroundTint="@color/colorBackgroundAlpha"
         app:cardCornerRadius="@dimen/dp16"
         app:cardElevation="0dp"
-        app:cardUseCompatPadding="true"
+        app:cardUseCompatPadding="false"
         app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="@dimen/dp96">
+            android:layout_height="wrap_content">
 
             <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="@dimen/dp64"
-                    android:layout_height="@dimen/dp64"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginTop="@dimen/dp16"
-                    android:layout_marginEnd="@dimen/dp4"
-                    android:layout_marginBottom="@dimen/dp16"
-                    app:cardCornerRadius="@dimen/dp32"
+                    android:layout_width="@dimen/dp72"
+                    android:layout_height="@dimen/dp72"
+                    android:layout_marginStart="@dimen/dp16"
+                    android:layout_marginVertical="@dimen/dp16"
+                    app:cardCornerRadius="@dimen/dp48"
                     app:cardBackgroundColor="@android:color/transparent"
-                    app:strokeColor="@color/colorAccent"
-                    app:strokeWidth="2dp">
+                    app:strokeColor="@color/colorAccentAlpha"
+                    app:strokeWidth="1dp">
 
                     <ImageView
                         android:id="@+id/thumb"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@color/colorAccentAlpha"
+                        android:background="@color/colorBackgroundAlpha"
                         android:scaleType="centerCrop"
                         android:src="@drawable/nothumb" />
                 </com.google.android.material.card.MaterialCardView>
@@ -72,9 +68,8 @@
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
                         android:paddingLeft="@dimen/dp16"
-                        android:paddingTop="14dp"
-                        android:paddingRight="@dimen/dp16"
-                        android:paddingBottom="0dp">
+                        android:paddingTop="@dimen/dp16"
+                        android:paddingRight="@dimen/dp16">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -89,11 +84,11 @@
                                 android:layout_alignParentRight="true"
                                 android:layout_centerVertical="true"
                                 android:layout_marginLeft="@dimen/dp8"
-                                android:layout_weight="1"
                                 android:ellipsize="none"
                                 android:singleLine="true"
+                                android:textColor="@color/white_80"
                                 android:text="fuehwuajskdifuvh"
-                                android:textAppearance="?android:attr/textAppearanceSmall" />
+                                android:textSize="@dimen/sp14"/>
 
                             <TextView
                                 android:id="@+id/name"
@@ -105,6 +100,8 @@
                                 android:ellipsize="end"
                                 android:singleLine="true"
                                 android:fontFamily="@font/geologica_600"
+                                android:textFontWeight="600"
+                                android:textSize="@dimen/sp16"
                                 android:text="Anonymous" />
 
                         </RelativeLayout>
@@ -119,21 +116,20 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:paddingLeft="@dimen/dp16"
-                    android:paddingTop="@dimen/dp4"
+                    android:paddingTop="@dimen/dp8"
                     android:paddingRight="@dimen/dp16"
                     android:paddingBottom="0dp"
+                    android:textSize="@dimen/sp14"
                     android:text="Medium Text" />
 
                 <ImageView
                     android:id="@+id/image"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="11dp"
+                    android:layout_marginHorizontal="@dimen/dp16"
                     android:layout_marginTop="@dimen/dp8"
-                    android:layout_marginRight="15dp"
-                    android:layout_marginBottom="@dimen/dp4"
                     android:adjustViewBounds="true"
-                    android:maxHeight="160dp"
+                    android:maxHeight="@dimen/dp148"
                     android:scaleType="fitCenter" />
 
                 <LinearLayout
@@ -148,19 +144,22 @@
                         android:fontFamily="@font/geologica_400"
                         android:layout_gravity="left|bottom"
                         android:layout_weight="1"
-                        android:paddingLeft="14dp"
+                        android:textColor="@color/white_80"
+                        android:paddingLeft="@dimen/dp16"
                         android:paddingTop="@dimen/dp8"
                         android:paddingBottom="@dimen/dp16"
                         android:singleLine="true"
                         android:text="1234-12-12 12:12"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textSize="13sp" />
+                        android:textSize="@dimen/sp12" />
 
                     <TextView
                         android:id="@+id/edit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/geologica_400"
+                        android:fontFamily="@font/geologica_600"
+                        android:textFontWeight="600"
+                        android:textSize="@dimen/sp14"
                         android:layout_gravity="right|bottom"
                         android:background="?selectableItemBackground"
                         android:paddingLeft="@dimen/dp8"
@@ -176,7 +175,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|bottom"
-                        android:fontFamily="@font/geologica_400"
+                        android:fontFamily="@font/geologica_600"
+                        android:textFontWeight="600"
+                        android:textSize="@dimen/sp14"
                         android:background="?selectableItemBackground"
                         android:paddingLeft="@dimen/dp8"
                         android:paddingTop="@dimen/dp8"
@@ -191,7 +192,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|bottom"
-                        android:fontFamily="@font/geologica_400"
+                        android:fontFamily="@font/geologica_600"
+                        android:textFontWeight="600"
+                        android:textSize="@dimen/sp14"
                         android:background="?selectableItemBackground"
                         android:paddingLeft="@dimen/dp8"
                         android:paddingTop="@dimen/dp8"
