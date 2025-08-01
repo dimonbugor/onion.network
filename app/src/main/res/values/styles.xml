@@ -54,7 +54,7 @@
         <item name="android:windowBackground">@drawable/rounded_dialog</item> <!-- Тільки фон діалогу -->
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.8</item> <!-- 80% затемнення -->
+        <item name="android:backgroundDimAmount">0.8</item>
         <item name="buttonBarPositiveButtonStyle">@style/WhiteButtonText</item>
         <item name="buttonBarNegativeButtonStyle">@style/WhiteButtonText</item>
     </style>
