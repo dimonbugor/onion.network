@@ -21,8 +21,8 @@
             android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="@dimen/dp72"
-                android:layout_height="@dimen/dp72"
+                android:layout_width="@dimen/dp64"
+                android:layout_height="@dimen/dp64"
                 app:strokeColor="@color/colorAccentAlpha"
                 app:strokeWidth="1dp"
                 android:layout_margin="@dimen/dp16"
@@ -31,8 +31,8 @@
 
                 <ImageView
                     android:id="@+id/thumb"
-                    android:layout_width="@dimen/dp72"
-                    android:layout_height="@dimen/dp72"
+                    android:layout_width="@dimen/dp64"
+                    android:layout_height="@dimen/dp64"
                     android:layout_gravity="center"
                     android:background="@color/colorBackgroundAlpha_80"
                     android:src="@drawable/nothumb" />

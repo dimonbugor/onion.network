@@ -331,7 +331,7 @@ public class ProfilePage extends BasePage {
 
                         valview.setText("Unknown");
                         //valview.setTextColor(0xffbbbbbb);
-                        valview.setTextColor(getResources().getColor(R.color.colorBackgroundAlpha));
+                        valview.setTextColor(getResources().getColor(R.color.white_50));
                     } else {
                         valview.setText(val.trim());
                         //valview.setTextColor(0xff000000);

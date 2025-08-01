@@ -17,7 +17,7 @@
             android:paddingTop="@dimen/dp16"
             android:paddingLeft="@dimen/dp16"
             android:paddingRight="@dimen/dp16"
-            android:paddingBottom="@dimen/dp72"
+            android:paddingBottom="@dimen/dp64"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">

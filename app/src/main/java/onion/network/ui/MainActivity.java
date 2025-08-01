@@ -53,6 +53,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -325,7 +326,28 @@ public class MainActivity extends AppCompatActivity {
                 container.removeView((View) object);
             }
 
+        });
 
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // Це викликається під час свайпу (між сторінками), якщо треба "в процесі"
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                // 🔹 Тут ти отримаєш swipe (перехід на сторінку)
+                Log.d("ViewPager", "Page selected: " + position);
+
+                fabvis();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                // 0 = idle, 1 = dragging, 2 = settling
+                // Якщо треба відстежити момент початку свайпу — тут
+                Log.d("ViewPager", "Scroll state changed: " + state);
+            }
         });
 
         menuFab = findViewById(R.id.menuFab);
@@ -335,8 +357,9 @@ public class MainActivity extends AppCompatActivity {
         arcButtonLayout.setOnExpansionChangedListener(expanded -> {
             fadeOverlay(dimOverlay, expanded);
         });
-        dimOverlay.setOnClickListener(v -> {
-            arcButtonLayout.toggleMenu();
+
+        Objects.requireNonNull(getSupportActionBar()).addOnMenuVisibilityListener(isVisible -> {
+            fadeOverlay(dimOverlay, isVisible);
         });
 
         for (int i = 0; i < pages.length; i++) {
@@ -425,10 +448,16 @@ public class MainActivity extends AppCompatActivity {
                 .alpha(show ? 1f : 0f)
                 .setDuration(300)
                 .withStartAction(() -> {
-                    if (show) overlay.setVisibility(View.VISIBLE);
+                    if (show) {
+                        overlay.setVisibility(View.VISIBLE);
+                        overlay.setOnClickListener(v -> arcButtonLayout.toggleMenu());
+                    }
                 })
                 .withEndAction(() -> {
-                    if (!show) overlay.setVisibility(View.GONE);
+                    if (!show) {
+                        overlay.setVisibility(View.GONE);
+                        overlay.setOnClickListener(null);
+                    }
                 })
                 .start();
     }

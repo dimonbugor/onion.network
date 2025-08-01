@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingVertical="@dimen/dp8">
+    android:paddingVertical="@dimen/dp16">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card"
@@ -17,98 +17,93 @@
         app:strokeWidth="0dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="@dimen/dp72"
-                    android:layout_height="@dimen/dp72"
-                    android:layout_marginStart="@dimen/dp16"
-                    android:layout_marginVertical="@dimen/dp16"
-                    app:cardCornerRadius="@dimen/dp48"
-                    app:cardBackgroundColor="@android:color/transparent"
-                    app:strokeColor="@color/colorAccentAlpha"
-                    app:strokeWidth="1dp">
-
-                    <ImageView
-                        android:id="@+id/thumb"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/colorBackgroundAlpha"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/nothumb" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <FrameLayout
-                    android:id="@+id/thumblink"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="?selectableItemBackground" />
-
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+            android:paddingVertical="@dimen/dp8"
                 android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="@dimen/dp48"
+                        android:layout_height="@dimen/dp48"
+                        android:layout_marginStart="@dimen/dp16"
+                        android:layout_marginTop="@dimen/dp8"
+                        app:cardCornerRadius="@dimen/dp48"
+                        app:cardBackgroundColor="@android:color/transparent"
+                        app:strokeColor="@color/colorAccentAlpha"
+                        app:strokeWidth="1dp">
+
+                        <ImageView
+                            android:id="@+id/thumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@color/colorBackgroundAlpha"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/nothumb" />
+                    </com.google.android.material.card.MaterialCardView>
 
                     <FrameLayout
-                        android:id="@+id/link"
+                        android:id="@+id/thumblink"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="?selectableItemBackground" />
+
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/link"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?selectableItemBackground"
+                    android:paddingLeft="@dimen/dp16"
+                    android:paddingRight="@dimen/dp16">
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:paddingLeft="@dimen/dp16"
-                        android:paddingTop="@dimen/dp16"
-                        android:paddingRight="@dimen/dp16">
+                        android:orientation="vertical">
 
-                        <RelativeLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/name"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_toLeftOf="@id/address"
+                            android:layout_marginLeft="@dimen/dp8"
+                            android:layout_marginTop="@dimen/dp8"
+                            android:ellipsize="end"
+                            android:singleLine="true"
+                            android:fontFamily="@font/geologica_600"
+                            android:textFontWeight="600"
+                            android:textSize="@dimen/sp16"
+                            android:text="Anonymous" />
 
-                            <TextView
-                                android:id="@+id/address"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/geologica_400"
-                                android:layout_alignParentRight="true"
-                                android:layout_centerVertical="true"
-                                android:layout_marginLeft="@dimen/dp8"
-                                android:ellipsize="none"
-                                android:singleLine="true"
-                                android:textColor="@color/white_80"
-                                android:text="fuehwuajskdifuvh"
-                                android:textSize="@dimen/sp14"/>
+                        <TextView
+                            android:id="@+id/address"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/geologica_400"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/dp8"
+                            android:ellipsize="none"
+                            android:singleLine="true"
+                            android:textColor="@color/white_80"
+                            android:text="fuehwuajskdifuvh"
+                            android:textSize="@dimen/sp14"/>
 
-                            <TextView
-                                android:id="@+id/name"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentLeft="true"
-                                android:layout_centerVertical="true"
-                                android:layout_toLeftOf="@id/address"
-                                android:ellipsize="end"
-                                android:singleLine="true"
-                                android:fontFamily="@font/geologica_600"
-                                android:textFontWeight="600"
-                                android:textSize="@dimen/sp16"
-                                android:text="Anonymous" />
+                    </LinearLayout>
 
-                        </RelativeLayout>
-
-                    </FrameLayout>
-
-                </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
 
                 <TextView
                     android:id="@+id/text"
@@ -116,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:paddingLeft="@dimen/dp16"
-                    android:paddingTop="@dimen/dp8"
+                    android:paddingTop="@dimen/dp16"
                     android:paddingRight="@dimen/dp16"
                     android:paddingBottom="0dp"
                     android:textSize="@dimen/sp14"
@@ -126,11 +121,10 @@
                     android:id="@+id/image"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/dp16"
                     android:layout_marginTop="@dimen/dp8"
                     android:adjustViewBounds="true"
                     android:maxHeight="@dimen/dp148"
-                    android:scaleType="fitCenter" />
+                    android:scaleType="centerCrop" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -211,8 +205,6 @@
                 </LinearLayout>
 
             </LinearLayout>
-
-        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 </FrameLayout>
