@@ -33,7 +33,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:strokeColor="@color/colorAccent"
+                    app:strokeColor="@color/white"
                     app:strokeWidth="1dp">
 
                     <ImageView
@@ -45,65 +45,68 @@
                         android:src="@drawable/nophoto" />
                 </com.google.android.material.card.MaterialCardView>
 
-                <FrameLayout
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/delete_photo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top|right"
+                    android:layout_width="@dimen/dp36"
+                    android:layout_height="@dimen/dp36"
+                    app:cardCornerRadius="@dimen/dp24"
+                    app:strokeColor="@color/white"
+                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
                     app:layout_constraintBottom_toTopOf="@+id/photo_container"
                     app:layout_constraintTop_toTopOf="@+id/photo_container"
                     app:layout_constraintStart_toEndOf="@+id/photo_container"
                     app:layout_constraintEnd_toEndOf="@+id/photo_container"
-                    android:clickable="true"
-                    android:padding="@dimen/dp16">
+                    android:clickable="true">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.333"
+                        android:layout_width="@dimen/dp24"
+                        android:layout_height="@dimen/dp24"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_delete_white_36dp" />
-                </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                <FrameLayout
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/take_photo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|left"
+                    android:layout_width="@dimen/dp36"
+                    android:layout_height="@dimen/dp36"
+                    app:cardCornerRadius="@dimen/dp24"
+                    app:strokeColor="@color/white"
+                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
                     app:layout_constraintBottom_toBottomOf="@+id/photo_container"
                     app:layout_constraintStart_toStartOf="@+id/photo_container"
                     app:layout_constraintEnd_toStartOf="@+id/photo_container"
                     app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                    android:clickable="true"
-                    android:padding="@dimen/dp16">
+                    android:clickable="true">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.333"
+                        android:layout_width="@dimen/dp24"
+                        android:layout_height="@dimen/dp24"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_photo_camera_white_36dp" />
-                </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                <FrameLayout
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/choose_photo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|right"
+                    android:layout_width="@dimen/dp36"
+                    android:layout_height="@dimen/dp36"
+                    app:cardCornerRadius="@dimen/dp24"
+                    app:strokeColor="@color/white"
+                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
                     app:layout_constraintBottom_toBottomOf="@+id/photo_container"
                     app:layout_constraintStart_toEndOf="@+id/photo_container"
                     app:layout_constraintEnd_toEndOf="@+id/photo_container"
                     app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                    android:clickable="true"
-                    android:padding="@dimen/dp16">
+                    android:clickable="true">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.333"
+                        android:layout_width="@dimen/dp24"
+                        android:layout_height="@dimen/dp24"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_folder_white_36dp" />
-                </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -117,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_600"
                 android:textFontWeight="600"
-                android:textSize="@dimen/sp16"
+                android:textSize="@dimen/sp18"
                 android:gravity="center"
                 android:padding="@dimen/dp8"
                 android:text="FRIEND BOT" />
