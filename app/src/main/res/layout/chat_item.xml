@@ -9,7 +9,7 @@
 
     <FrameLayout
         android:id="@+id/left"
-        android:layout_width="@dimen/dp72"
+        android:layout_width="@dimen/dp64"
         android:layout_height="match_parent">
 
         <ImageView
@@ -88,7 +88,7 @@
 
     <FrameLayout
         android:id="@+id/right"
-        android:layout_width="@dimen/dp72"
+        android:layout_width="@dimen/dp64"
         android:layout_height="match_parent"></FrameLayout>
 
 </LinearLayout>

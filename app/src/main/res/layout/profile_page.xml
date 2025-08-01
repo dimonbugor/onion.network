@@ -28,7 +28,7 @@
                     android:layout_marginHorizontal="@dimen/dp16"
                     android:paddingTop="@dimen/dp16"
                     android:paddingBottom="@dimen/dp8"
-                    app:cardCornerRadius="@dimen/dp72"
+                    app:cardCornerRadius="@dimen/dp64"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -131,7 +131,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="@dimen/dp72">
+                android:paddingBottom="@dimen/dp64">
 
             </LinearLayout>
 
