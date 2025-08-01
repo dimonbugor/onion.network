@@ -53,6 +53,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -335,8 +336,9 @@ public class MainActivity extends AppCompatActivity {
         arcButtonLayout.setOnExpansionChangedListener(expanded -> {
             fadeOverlay(dimOverlay, expanded);
         });
-        dimOverlay.setOnClickListener(v -> {
-            arcButtonLayout.toggleMenu();
+
+        Objects.requireNonNull(getSupportActionBar()).addOnMenuVisibilityListener(isVisible -> {
+            fadeOverlay(dimOverlay, isVisible);
         });
 
         for (int i = 0; i < pages.length; i++) {
@@ -425,10 +427,16 @@ public class MainActivity extends AppCompatActivity {
                 .alpha(show ? 1f : 0f)
                 .setDuration(300)
                 .withStartAction(() -> {
-                    if (show) overlay.setVisibility(View.VISIBLE);
+                    if (show) {
+                        overlay.setVisibility(View.VISIBLE);
+                        overlay.setOnClickListener(v -> arcButtonLayout.toggleMenu());
+                    }
                 })
                 .withEndAction(() -> {
-                    if (!show) overlay.setVisibility(View.GONE);
+                    if (!show) {
+                        overlay.setVisibility(View.GONE);
+                        overlay.setOnClickListener(null);
+                    }
                 })
                 .start();
     }
