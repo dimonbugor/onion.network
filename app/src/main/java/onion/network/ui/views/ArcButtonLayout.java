@@ -78,7 +78,7 @@ public class ArcButtonLayout extends ViewGroup {
         if (expansionListener != null) {
             expansionListener.onExpansionChanged(isExpanded);
         }
-        animateButtons();
+        post(() -> animateButtons());
     }
 
     private void animateButtons() {
@@ -86,7 +86,7 @@ public class ArcButtonLayout extends ViewGroup {
 
         int width = getWidth();
         int height = getHeight();
-        //int radius = Math.min(width, height) / 2; // Set radius to half the width/height of the layout
+        //int radius = (int) (maxButtonSize / Math.sin(Math.toRadians(angleStep / 2))); // щоб дуга автоматично зменшувалась, якщо екран менший
         int radius = Math.min(width, height) - fab.getWidth() * 2; // Set radius to half the width/height of the layout
 
         //int cx = width - fab.getWidth() / 2 + centerMarginLeft - centerMarginRight; // Center of the layout
@@ -175,8 +175,20 @@ public class ArcButtonLayout extends ViewGroup {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+        int radius = Math.min(width, height) - fab.getMeasuredWidth() * 2;
+
+        // кутовий крок
+        float angleStep = (buttons.size() > 1) ? (93 - 180) / (buttons.size() - 1) : 1;
+
+        // мінімальна відстань між кнопками на дузі
+        float minArcLength = (float) (radius * Math.toRadians(angleStep));
+        int maxButtonSize = (int) Math.min(minArcLength * 0.8f, width * 0.15f); // не більше ніж 15% ширини
+
         for (RelativeLayout button : buttons) {
-            measureChild(button, widthMeasureSpec, heightMeasureSpec);
+            int childSpec = MeasureSpec.makeMeasureSpec(maxButtonSize, MeasureSpec.AT_MOST);
+            button.measure(childSpec, childSpec);
         }
 
         if (fab != null) {
