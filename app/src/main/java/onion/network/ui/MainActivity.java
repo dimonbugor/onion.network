@@ -326,7 +326,28 @@ public class MainActivity extends AppCompatActivity {
                 container.removeView((View) object);
             }
 
+        });
 
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // Це викликається під час свайпу (між сторінками), якщо треба "в процесі"
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                // 🔹 Тут ти отримаєш swipe (перехід на сторінку)
+                Log.d("ViewPager", "Page selected: " + position);
+
+                fabvis();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                // 0 = idle, 1 = dragging, 2 = settling
+                // Якщо треба відстежити момент початку свайпу — тут
+                Log.d("ViewPager", "Scroll state changed: " + state);
+            }
         });
 
         menuFab = findViewById(R.id.menuFab);
