@@ -205,9 +205,6 @@ public class WallPage extends BasePage {
             });
             dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
-                //Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                //intent.setType("image/*");
-                //activity.startActivityForResult(intent, REQUEST_PHOTO);
                 startImageChooser(REQUEST_PHOTO);
                 d.cancel();
             });
@@ -234,18 +231,12 @@ public class WallPage extends BasePage {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         if (resultCode != Activity.RESULT_OK)
             return;
 
         Bitmap bmp = null;
 
         if (requestCode == REQUEST_PHOTO) {
-            /*try {
-                bmp = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), data.getData());
-            } catch (IOException ex) {
-                Snackbar.make(this, "Error", Snackbar.LENGTH_SHORT).show();
-            }*/
             bmp = getActivityResultBitmap(data);
         }
 
@@ -257,17 +248,27 @@ public class WallPage extends BasePage {
             return;
         }
 
-        int maxdim = 640;
+        int maxdim = 1080; // 🔼 Підвищено до 1080 для кращої якості
 
         if (bmp.getWidth() >= bmp.getHeight() && bmp.getWidth() > maxdim) {
-            bmp = Bitmap.createScaledBitmap(bmp, maxdim, (int) ((double) bmp.getHeight() * maxdim / bmp.getWidth()), true);
-        } else if (bmp.getHeight() >= bmp.getWidth() && bmp.getHeight() > maxdim) {
-            bmp = Bitmap.createScaledBitmap(bmp, (int) ((double) bmp.getWidth() * maxdim / bmp.getHeight()), maxdim, true);
+            bmp = Bitmap.createScaledBitmap(
+                    bmp,
+                    maxdim,
+                    (int) ((double) bmp.getHeight() * maxdim / bmp.getWidth()),
+                    true
+            );
+        } else if (bmp.getHeight() > maxdim) {
+            bmp = Bitmap.createScaledBitmap(
+                    bmp,
+                    (int) ((double) bmp.getWidth() * maxdim / bmp.getHeight()),
+                    maxdim,
+                    true
+            );
         }
 
         writePost(postEditText, bmp);
-
     }
+
 
     void load(final int i, String s) {
 
@@ -302,9 +303,9 @@ public class WallPage extends BasePage {
                     TextView name = ((TextView) v.findViewById(R.id.name));
                     TextView date = ((TextView) v.findViewById(R.id.date));
                     TextView text = ((TextView) v.findViewById(R.id.text));
-                    TextView share = ((TextView) v.findViewById(R.id.share));
-                    TextView delete = ((TextView) v.findViewById(R.id.delete));
-                    TextView edit = ((TextView) v.findViewById(R.id.edit));
+                    ImageView share = ((ImageView) v.findViewById(R.id.share));
+                    ImageView delete = ((ImageView) v.findViewById(R.id.delete));
+                    ImageView edit = ((ImageView) v.findViewById(R.id.edit));
                     ImageView thumb = ((ImageView) v.findViewById(R.id.thumb));
                     ImageView image = ((ImageView) v.findViewById(R.id.image));
 
@@ -382,7 +383,6 @@ public class WallPage extends BasePage {
                     }
 
                     if (wallAddress.equals(myAddress)) {
-                        delete.setPaintFlags(delete.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
                         delete.setClickable(true);
                         delete.setOnClickListener(new OnClickListener() {
                             @Override
@@ -416,7 +416,6 @@ public class WallPage extends BasePage {
                     }
 
                     if (wallAddress.equals(myAddress) && postAddress.equals(myAddress)) {
-                        edit.setPaintFlags(delete.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
                         edit.setClickable(true);
                         edit.setOnClickListener(new OnClickListener() {
                             @Override
@@ -432,7 +431,6 @@ public class WallPage extends BasePage {
                     if (!wallAddress.equals(myAddress) && !postAddress.equals(myAddress) && "".equals(o.optString("access"))) {
                         share.setVisibility(View.VISIBLE);
                         share.setClickable(true);
-                        share.setPaintFlags(share.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
                         share.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {

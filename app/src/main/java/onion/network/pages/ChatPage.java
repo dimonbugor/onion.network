@@ -327,9 +327,9 @@ public class ChatPage extends BasePage
                     status = activity.name;
             } else {
                 if (pending) {
-                    status = "Pending...";
+                    status = "\u2714";
                 } else {
-                    status = "Sent";
+                    status = "\u2714\u2714";
                 }
             }
 
@@ -351,8 +351,8 @@ public class ChatPage extends BasePage
                 holder.abort.setOnClickListener(null);
             }
 
-            int color = pending ? getResources().getColor(R.color.colorAccentAlpha)
-                    : getResources().getColor(R.color.colorAccent);
+            int color = pending ? getResources().getColor(R.color.white_50)
+                    : getResources().getColor(R.color.white_80);
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 

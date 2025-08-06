@@ -8,72 +8,63 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:id="@+id/item"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:clickable="true"
-            android:orientation="horizontal">
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="@dimen/dp64"
-                android:layout_height="@dimen/dp64"
-                app:strokeColor="@color/colorAccentAlpha"
-                app:strokeWidth="1dp"
-                android:layout_margin="@dimen/dp16"
-                app:cardCornerRadius="@dimen/dp48">
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="@dimen/dp48"
+            android:layout_height="@dimen/dp48"
+            app:strokeColor="@color/colorAccentAlpha"
+            app:strokeWidth="1dp"
+            android:layout_marginStart="@dimen/dp16"
+            android:layout_marginVertical="@dimen/dp8"
+            app:cardCornerRadius="@dimen/dp48">
 
 
-                <ImageView
-                    android:id="@+id/thumb"
-                    android:layout_width="@dimen/dp64"
-                    android:layout_height="@dimen/dp64"
-                    android:layout_gravity="center"
-                    android:background="@color/colorBackgroundAlpha_80"
-                    android:src="@drawable/nothumb" />
-            </com.google.android.material.card.MaterialCardView>
-
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/thumb"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingEnd="@dimen/dp16">
+                android:background="@color/colorBackgroundAlpha_80"
+                android:src="@drawable/nothumb" />
+        </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/dp16"
-                    android:gravity="center_vertical"
-                    android:singleLine="true"
-                    android:fontFamily="@font/geologica_600"
-                    android:textFontWeight="600"
-                    android:textSize="@dimen/sp16"
-                    android:text="aifjnelsdfjpeuvb" />
 
-                <TextView
-                    android:id="@+id/address"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:paddingTop="@dimen/dp8"
-                    android:singleLine="true"
-                    android:text="aifjnelsdfjpeuvb" />
-            </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginVertical="@dimen/dp8"
+            android:layout_marginHorizontal="@dimen/dp16">
 
+            <TextView
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:fontFamily="@font/geologica_600"
+                android:textFontWeight="600"
+                android:textColor="@color/white"
+                android:textSize="@dimen/sp16"
+                android:text="aifjnelsdfjpeuvb" />
+
+            <TextView
+                android:id="@+id/address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:textColor="@color/white_80"
+                android:singleLine="true"
+                android:text="aifjnelsdfjpeuvb" />
         </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp4"></FrameLayout>
 
     </LinearLayout>
 

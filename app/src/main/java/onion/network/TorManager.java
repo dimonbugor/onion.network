@@ -1,7 +1,5 @@
 package onion.network;
 
-import static info.pluggabletransports.dispatch.transports.Obfs4Transport.setPropertiesFromBridgeString;
-
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +11,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 import net.freehaven.tor.control.TorControlConnection;
 
 import org.torproject.jni.TorService;
@@ -21,17 +21,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
-import java.util.Properties;
 
-import info.pluggabletransports.dispatch.Connection;
-import info.pluggabletransports.dispatch.Dispatcher;
-import info.pluggabletransports.dispatch.Transport;
-import info.pluggabletransports.dispatch.transports.MeekTransport;
-import info.pluggabletransports.dispatch.transports.Obfs4Transport;
 import onion.network.helpers.Ed25519Signature;
 
-import onion.network.helpers.TorBridgeParser;
 import onion.network.helpers.Utils;
 import onion.network.ui.MainActivity;
 
@@ -60,9 +52,9 @@ public class TorManager {
                     if (value instanceof String) {
                         String stringValue = (String) value;
                         log("Tor status: " + stringValue);
-                        if(stringValue.equals("ON")) {
+                        if (stringValue.equals("ON")) {
                             MainActivity mainActivity = MainActivity.getInstance();
-                            if(mainActivity != null) {
+                            if (mainActivity != null) {
                                 mainActivity.startHostService();
                             }
                         }
@@ -79,13 +71,8 @@ public class TorManager {
             context.registerReceiver(torStatusReceiver,
                     new IntentFilter(TorService.ACTION_STATUS), Context.RECEIVER_EXPORTED);
         } else {
-            context.registerReceiver(torStatusReceiver,
-                    new IntentFilter(TorService.ACTION_STATUS));
+            ContextCompat.registerReceiver(context, torStatusReceiver, new IntentFilter(TorService.ACTION_STATUS), ContextCompat.RECEIVER_NOT_EXPORTED);
         }
-
-        domain = Utils.readFileAsString(new File(getHiddenServiceDir(), "hostname")).trim();
-        log(domain);
-
         stopTor();
         startTorServer();
     }
@@ -111,49 +98,63 @@ public class TorManager {
                         e.printStackTrace();
                     }
                 }
+
                 torControlConnection = torService.getTorControlConnection();
                 if (torControlConnection != null) {
                     new Thread(() -> {
                         try {
-                            // Аутентифікація Tor
                             torControlConnection.authenticate(new byte[0]);
 
-                            // Створення і налаштування прихованого сервісу
+                            // Створення директорій
                             File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
-                            if (!appTorServiceDir.exists()) {
-                                appTorServiceDir.mkdirs();
-                            }
+                            if (!appTorServiceDir.exists()) appTorServiceDir.mkdirs();
 
                             hiddenServiceDir = new File(appTorServiceDir, "app_TorHiddenService");
-                            if (!hiddenServiceDir.exists()) {
-                                hiddenServiceDir.mkdirs();
-                            }
+                            if (!hiddenServiceDir.exists()) hiddenServiceDir.mkdirs();
 
-                            // Налаштування Tor як прихований сервіс
+                            // Запис конфігу
                             File torcc = new File(appTorServiceDir, "torrc-defaults");
                             StringBuilder sb = new StringBuilder();
                             sb.append("Log notice stdout\n");
                             sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath()).append("\n");
                             sb.append("HiddenServicePort 80 127.0.0.1:8080\n");
 
-                            // Запис конфігурації для Tor
                             FileWriter fileWriter = new FileWriter(torcc, true);
                             PrintWriter printWriter = new PrintWriter(fileWriter);
                             printWriter.print(sb);
                             printWriter.close();
 
-                            // Оновлення конфігурації Tor
+                            // Оновлюємо Tor
                             torControlConnection.signal("RELOAD");
 
-                            // Перевірка статусу
+                            // Чекаємо генерацію ключів
+                            File hostnameFile = new File(hiddenServiceDir, "hostname");
+                            File secretKeyFile = new File(hiddenServiceDir, "hs_ed25519_secret_key");
+
+                            int retries = 0;
+                            while ((!hostnameFile.exists() || !secretKeyFile.exists()) && retries < 20) { // максимум 10 сек
+                                Thread.sleep(500);
+                                retries++;
+                            }
+
+                            if (hostnameFile.exists()) {
+                                domain = Utils.readFileAsString(hostnameFile).trim();
+                                log("Onion domain ready: " + domain);
+                                ready = true;
+                            } else {
+                                log("ERROR: hostname file not generated by Tor");
+                            }
+
+                            if (!secretKeyFile.exists()) {
+                                log("ERROR: hs_ed25519_secret_key not generated by Tor");
+                            }
+
                             String torStatus = torControlConnection.getInfo("status/circuit-established");
                             log("Tor Circuit Status: " + torStatus);
 
-                            // Отримуємо адресу .onion
-                            domain = Utils.readFileAsString(new File(getHiddenServiceDir(), "hostname")).trim();
-
-                        } catch (IOException e) {
+                        } catch (IOException | InterruptedException e) {
                             log("Error in configuring hidden service: " + e.getMessage());
+                            e.printStackTrace();
                         }
                     }).start();
                 }
@@ -175,7 +176,7 @@ public class TorManager {
     public void stopReceiver() {
         try {
             context.unregisterReceiver(torStatusReceiver);
-        } catch (IllegalArgumentException ignore){}
+        } catch (IllegalArgumentException ignore) {}
     }
 
     void stat(String s) {
@@ -189,9 +190,7 @@ public class TorManager {
     }
 
     private void log(String s) {
-        if (s == null) {
-            s = "";
-        }
+        if (s == null) s = "";
         Log.i("TorManager", s);
     }
 
@@ -225,6 +224,11 @@ public class TorManager {
 
     public byte[] pubkey() {
         try {
+            File secret = new File(getHiddenServiceDir(), "hs_ed25519_public_key");
+            if (!secret.exists()) {
+                log("Public key file missing!");
+                return null;
+            }
             return Ed25519Signature.getEd25519PublicKey(getHiddenServiceDir());
         } catch (IOException e) {
             log("pubkey error: " + e.getMessage());
@@ -235,6 +239,11 @@ public class TorManager {
 
     public byte[] sign(byte[] msg) {
         try {
+            File secret = new File(getHiddenServiceDir(), "hs_ed25519_secret_key");
+            if (!secret.exists()) {
+                log("Private key file missing!");
+                return null;
+            }
             return Ed25519Signature.signWithEd25519(getHiddenServiceDir(), msg);
         } catch (IOException e) {
             log("Sign error: " + e.getMessage());

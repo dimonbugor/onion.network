@@ -54,18 +54,28 @@ public class RequestTool {
     }
 
     public boolean sendRequest(String dest) {
-
         String addr = TorManager.getInstance(context).getID();
         String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");
-        String sign = Ed25519Signature.base64Encode(TorManager.getInstance(context).sign(msg(dest, addr, name)));
-        String pkey = Ed25519Signature.base64Encode(TorManager.getInstance(context).pubkey());
 
-        String uri = "http://" + dest + ".onion/f?";
-        uri += "dest=" + Uri.encode(dest) + "&";
-        uri += "addr=" + Uri.encode(addr) + "&";
-        uri += "name=" + Uri.encode(name) + "&";
-        uri += "sign=" + Uri.encode(sign) + "&";
-        uri += "pkey=" + Uri.encode(pkey);
+        byte[] sigBytes = TorManager.getInstance(context).sign(msg(dest, addr, name));
+        byte[] pubKeyBytes = TorManager.getInstance(context).pubkey();
+
+        // Перевірка на відсутність ключів
+        if (sigBytes == null || pubKeyBytes == null) {
+            log("❌ Cannot send request — Tor keys not ready yet");
+            return false; // або відкласти в чергу
+        }
+
+        String sign = Ed25519Signature.base64Encode(sigBytes);
+        String pkey = Ed25519Signature.base64Encode(pubKeyBytes);
+
+        String uri = "http://" + dest + ".onion/f?"
+                + "dest=" + Uri.encode(dest) + "&"
+                + "addr=" + Uri.encode(addr) + "&"
+                + "name=" + Uri.encode(name) + "&"
+                + "sign=" + Uri.encode(sign) + "&"
+                + "pkey=" + Uri.encode(pkey);
+
         log(uri);
 
         try {
@@ -75,7 +85,6 @@ public class RequestTool {
         } catch (IOException ex) {
             return false;
         }
-
     }
 
     public void sendAllRequests() {

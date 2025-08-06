@@ -134,9 +134,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingBottom="@dimen/dp64">
+                android:minHeight="@dimen/dp148"
+                android:padding="@dimen/dp8"
+                android:layout_marginHorizontal="@dimen/dp16"
+                android:background="@drawable/rounded_card">
 
             </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp72"></FrameLayout>
 
         </LinearLayout>
 

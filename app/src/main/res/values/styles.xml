@@ -21,8 +21,8 @@
         <!-- Стиль панелі дій -->
         <item name="android:actionBarStyle">@style/DarkActionBar</item>
 
-        <item name="android:popupBackground">@color/colorBackgroundAlpha_80</item>
-        <item name="popupMenuBackground">@color/colorBackgroundAlpha_80</item>
+        <item name="android:popupBackground">@drawable/rounded_dialog</item>
+        <item name="popupMenuBackground">@drawable/rounded_dialog</item>
     </style>
 
     <!-- Стиль панелі дій -->

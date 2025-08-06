@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="@dimen/dp8"
+    android:layout_marginHorizontal="@dimen/dp16"
     android:background="@drawable/rounded_card"
     android:clickable="true"
     android:orientation="vertical">
@@ -21,17 +22,18 @@
             android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="@dimen/dp64"
-                android:layout_height="@dimen/dp64"
+                android:layout_width="@dimen/dp48"
+                android:layout_height="@dimen/dp48"
                 app:strokeColor="@color/colorAccentAlpha"
                 app:strokeWidth="1dp"
-                android:layout_margin="@dimen/dp16"
+                android:layout_marginVertical="@dimen/dp8"
+                android:layout_marginStart="@dimen/dp16"
                 app:cardCornerRadius="@dimen/dp48">
 
                 <ImageView
                     android:id="@+id/thumb"
-                    android:layout_width="@dimen/dp64"
-                    android:layout_height="@dimen/dp64"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:background="@color/colorBackgroundAlpha"
                     android:src="@drawable/nothumb" />
@@ -43,13 +45,13 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:layout_weight="1"
+                android:layout_marginVertical="@dimen/dp8"
+                android:layout_marginHorizontal="@dimen/dp16"
                 android:orientation="vertical">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/dp16"
-                    android:paddingEnd="@dimen/dp16"
                     android:orientation="horizontal">
 
                     <TextView
@@ -58,11 +60,12 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_weight="1"
-                        android:ellipsize="none"
                         android:singleLine="true"
                         android:fontFamily="@font/geologica_400"
                         android:text="fuehwuajskdifuvh"
-                        android:textColor="@color/white_80" />
+                        android:ellipsize="end"
+                        android:textSize="@dimen/sp14"
+                        android:textColor="@color/white" />
 
                     <TextView
                         android:id="@+id/name"
@@ -74,7 +77,8 @@
                         android:singleLine="true"
                         android:fontFamily="@font/geologica_600"
                         android:textFontWeight="600"
-                        android:textSize="@dimen/sp16"
+                        android:textSize="@dimen/sp14"
+                        android:textColor="@color/white"
                         android:text="Anonymous"
                          />
                 </RelativeLayout>
@@ -82,8 +86,6 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingEnd="@dimen/dp16"
-                    android:paddingVertical="@dimen/dp8"
                     >
 
                     <TextView
@@ -93,8 +95,9 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:singleLine="true"
+                        android:textColor="@color/white"
                         android:text="aifjnelsdfjpeuvb"
-                        android:textSize="@dimen/sp14"
+                        android:textSize="@dimen/sp12"
                          />
 
                     <ImageView
@@ -102,6 +105,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        app:tint="@color/white_80"
                         android:src="@drawable/ic_call_received_black_18dp" />
 
                 </LinearLayout>
@@ -115,6 +119,5 @@
             android:layout_height="@dimen/dp4"></FrameLayout>
 
     </LinearLayout>
-
 
 </LinearLayout>

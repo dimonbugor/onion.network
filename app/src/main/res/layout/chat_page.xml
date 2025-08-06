@@ -79,17 +79,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/dp8"
-        android:layout_marginStart="@dimen/dp64"
-        android:layout_marginBottom="@dimen/dp8"
+        android:layout_marginStart="@dimen/dp96"
+        android:layout_marginBottom="@dimen/dp24"
         android:gravity="center"
         android:orientation="horizontal">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/text_input_layout"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/dp8"
+            android:layout_height="@dimen/dp32"
             android:layout_weight="1"
             app:hintEnabled="false"
             app:boxBackgroundMode="none">
@@ -97,9 +95,8 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editmessage"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_marginHorizontal="@dimen/dp8"
                 android:background="@drawable/edit_rounded_background"
                 android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
                 android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine"

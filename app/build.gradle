@@ -63,13 +63,13 @@ android {
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     // https://mvnrepository.com/artifact/org.jsoup/jsoup
-    implementation group: 'org.jsoup', name: 'jsoup', version: '1.19.1'
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.21.1'
 
     implementation project(':APTDispatchLibrary')
     implementation(project(':APTDispatchLibrary-MeekObfs4-Full')) {
-        exclude group: 'info.pluggabletransports.aptds', module: 'apt-dispatch-library'
-        exclude group: 'info.pluggabletransports.aptds', module: 'jsocksAndroid'
-        exclude group: 'info.pluggabletransports.aptds', module: 'goptbundle'
+        //exclude group: 'info.pluggabletransports.aptds', module: 'apt-dispatch-library'
+        //exclude group: 'info.pluggabletransports.aptds', module: 'jsocksAndroid'
+        //exclude group: 'info.pluggabletransports.aptds', module: 'goptbundle'
     }
 
     implementation 'com.google.android.play:integrity:1.4.0'
