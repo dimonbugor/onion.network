@@ -18,12 +18,17 @@
             android:id="@+id/appbar"
             android:background="@android:color/transparent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:paddingVertical="0dp"
+            android:layout_height="@dimen/dp32">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingVertical="0dp"
+                android:gravity="center_vertical"
+                app:titleMarginTop="0dp"
+                app:titleTextAppearance="@style/ToolbarTitleStyle"
                 android:background="@android:color/transparent"
                 app:layout_scrollFlags="">
 

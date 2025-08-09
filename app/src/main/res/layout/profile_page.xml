@@ -10,7 +10,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,15 +50,15 @@
                     android:id="@+id/delete_photo"
                     android:layout_width="@dimen/dp36"
                     android:layout_height="@dimen/dp36"
-                    app:cardCornerRadius="@dimen/dp24"
-                    app:strokeColor="@color/white"
-                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
+                    android:backgroundTint="@color/colorBackgroundAlpha"
+                    android:clickable="true"
+                    app:cardCornerRadius="@dimen/dp24"
                     app:layout_constraintBottom_toTopOf="@+id/photo_container"
-                    app:layout_constraintTop_toTopOf="@+id/photo_container"
-                    app:layout_constraintStart_toEndOf="@+id/photo_container"
                     app:layout_constraintEnd_toEndOf="@+id/photo_container"
-                    android:clickable="true">
+                    app:layout_constraintStart_toEndOf="@+id/photo_container"
+                    app:layout_constraintTop_toTopOf="@+id/photo_container"
+                    app:strokeColor="@color/white">
 
                     <ImageView
                         android:layout_width="@dimen/dp24"
@@ -70,15 +71,15 @@
                     android:id="@+id/take_photo"
                     android:layout_width="@dimen/dp36"
                     android:layout_height="@dimen/dp36"
-                    app:cardCornerRadius="@dimen/dp24"
-                    app:strokeColor="@color/white"
-                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
+                    android:backgroundTint="@color/colorBackgroundAlpha"
+                    android:clickable="true"
+                    app:cardCornerRadius="@dimen/dp24"
                     app:layout_constraintBottom_toBottomOf="@+id/photo_container"
-                    app:layout_constraintStart_toStartOf="@+id/photo_container"
                     app:layout_constraintEnd_toStartOf="@+id/photo_container"
+                    app:layout_constraintStart_toStartOf="@+id/photo_container"
                     app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                    android:clickable="true">
+                    app:strokeColor="@color/white">
 
                     <ImageView
                         android:layout_width="@dimen/dp24"
@@ -91,15 +92,15 @@
                     android:id="@+id/choose_photo"
                     android:layout_width="@dimen/dp36"
                     android:layout_height="@dimen/dp36"
-                    app:cardCornerRadius="@dimen/dp24"
-                    app:strokeColor="@color/white"
-                    android:backgroundTint="@color/colorAccentAlpha"
                     android:background="?selectableItemBackground"
+                    android:backgroundTint="@color/colorBackgroundAlpha"
+                    android:clickable="true"
+                    app:cardCornerRadius="@dimen/dp24"
                     app:layout_constraintBottom_toBottomOf="@+id/photo_container"
-                    app:layout_constraintStart_toEndOf="@+id/photo_container"
                     app:layout_constraintEnd_toEndOf="@+id/photo_container"
+                    app:layout_constraintStart_toEndOf="@+id/photo_container"
                     app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                    android:clickable="true">
+                    app:strokeColor="@color/white">
 
                     <ImageView
                         android:layout_width="@dimen/dp24"
@@ -110,45 +111,48 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <FrameLayout
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/dp16"></FrameLayout>
+                android:layout_height="@dimen/dp16"></View>
 
             <TextView
                 android:id="@+id/is_friend_bot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_600"
-                android:textFontWeight="600"
-                android:textSize="@dimen/sp18"
                 android:gravity="center"
                 android:padding="@dimen/dp8"
-                android:text="FRIEND BOT" />
+                android:text="FRIEND BOT"
+                android:textFontWeight="600"
+                android:textSize="@dimen/sp18" />
 
-            <FrameLayout
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/dp16"></FrameLayout>
+                android:layout_height="@dimen/dp16"></View>
 
             <LinearLayout
                 android:id="@+id/contentView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:minHeight="@dimen/dp148"
-                android:padding="@dimen/dp8"
+                android:layout_height="0dp"
                 android:layout_marginHorizontal="@dimen/dp16"
-                android:background="@drawable/rounded_card">
+                android:layout_weight="1"
+                android:background="@drawable/rounded_card"
+                android:orientation="vertical"
+                android:padding="@dimen/dp8">
 
             </LinearLayout>
 
-            <FrameLayout
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/dp72"></FrameLayout>
+                android:layout_height="@dimen/dp72"></View>
 
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <include layout="@layout/status_bar" />
+    <include
+        layout="@layout/status_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

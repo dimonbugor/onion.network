@@ -6,7 +6,7 @@
             <gradient
                 android:angle="90"
                 android:endColor="@color/colorBackgroundAlpha"
-                android:startColor="@color/colorPrimaryContainerAlpha" />
+                android:startColor="@color/colorBackgroundAlpha" />
             <!-- Радіус заокруглення кутів -->
             <corners android:radius="@dimen/dp16" />
         </shape>
@@ -19,7 +19,7 @@
         >
         <shape android:shape="rectangle">
             <!-- Колір фону діалогу -->
-            <solid android:color="@color/colorPrimaryContainerAlpha" />
+            <solid android:color="@color/colorBackgroundAlpha" />
             <!-- Радіус заокруглення кутів -->
             <corners android:radius="@dimen/dp16" />
         </shape>

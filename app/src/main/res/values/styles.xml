@@ -36,6 +36,11 @@
         <item name="android:textColor">@color/colorOnPrimaryContainer</item>
     </style>
 
+    <style name="ToolbarTitleStyle" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">@dimen/sp16</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <!-- Тема без панелі дій -->
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
