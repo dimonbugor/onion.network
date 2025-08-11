@@ -1,28 +1,19 @@
 package onion.network.clients;
 
-import static info.pluggabletransports.dispatch.transports.Obfs4Transport.setPropertiesFromBridgeString;
-
 import android.net.Uri;
 import android.util.Log;
 
-import org.torproject.jni.TorService;
-
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import info.pluggabletransports.dispatch.transports.Obfs4Transport;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import onion.network.helpers.TorBridgeParser;
 import onion.network.helpers.Utils;
 
 public class HttpClient {
@@ -96,31 +87,48 @@ public class HttpClient {
         return content;
     }
 
-    private static OkHttpClient buildClient(boolean torified) throws IOException {
+//    private static OkHttpClient buildClient(boolean torified) throws IOException {
+//        OkHttpClient.Builder builder = new OkHttpClient.Builder()
+//                .connectTimeout(240, TimeUnit.SECONDS)
+//                .readTimeout(240, TimeUnit.SECONDS);
+//
+//        if (torified) {
+//            // Отримуємо параметри моста
+//            List<String> bridgeLines = TorBridgeParser.parseBridges();
+//            Properties options = new Properties(); // Режим обфускації
+//            for (String bridgeLine: bridgeLines) {
+//                setPropertiesFromBridgeString(options, bridgeLine);
+//                break;
+//            }
+//
+//            // Створюємо з'єднання Obfs4
+//            String remoteAddress = options.getProperty(Obfs4Transport.OPTION_ADDRESS);
+//            String remotePort = options.getProperty(Obfs4Transport.OPTION_PORT);
+//            Obfs4Transport.Obfs4Connection connection = new Obfs4Transport.Obfs4Connection(
+//                    remoteAddress, remotePort, InetAddress.getLocalHost(), 9050); // 9050 — стандартний порт SOCKS5 для Tor
+//
+//            // Створюємо сокет через Obfs4Connection
+//            Socket socket = connection.getSocket(remoteAddress, 443);
+//
+//            // Налаштовуємо проксі для OkHttp
+//            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(socket.getLocalAddress(), 9050));
+//            builder.proxy(proxy);
+//        }
+//
+//        return builder.build();
+//    }
+
+    private static OkHttpClient buildClient(boolean torified) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(240, TimeUnit.SECONDS)
                 .readTimeout(240, TimeUnit.SECONDS);
 
         if (torified) {
-            // Отримуємо параметри моста
-            List<String> bridgeLines = TorBridgeParser.parseBridges();
-            Properties options = new Properties(); // Режим обфускації
-            for (String bridgeLine: bridgeLines) {
-                setPropertiesFromBridgeString(options, bridgeLine);
-                break;
-            }
-
-            // Створюємо з'єднання Obfs4
-            String remoteAddress = options.getProperty(Obfs4Transport.OPTION_ADDRESS);
-            String remotePort = options.getProperty(Obfs4Transport.OPTION_PORT);
-            Obfs4Transport.Obfs4Connection connection = new Obfs4Transport.Obfs4Connection(
-                    remoteAddress, remotePort, InetAddress.getLocalHost(), 9050); // 9050 — стандартний порт SOCKS5 для Tor
-
-            // Створюємо сокет через Obfs4Connection
-            Socket socket = connection.getSocket(remoteAddress, 443);
-
-            // Налаштовуємо проксі для OkHttp
-            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(socket.getLocalAddress(), 9050));
+            // Проксі на Tor (SOCKS5)
+            Proxy proxy = new Proxy(
+                    Proxy.Type.SOCKS,
+                    new InetSocketAddress("127.0.0.1", 9050)
+            );
             builder.proxy(proxy);
         }
 

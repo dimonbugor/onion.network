@@ -52,6 +52,7 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -1129,7 +1130,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         TorManager.getInstance(this).stopReceiver();
-        TorManager.getInstance(this).stopTor();
+        try {
+            TorManager.getInstance(this).stopTor();
+        } catch (IOException e) {
+            //ignore
+        }
     }
 
     public void lightbox(Bitmap bitmap) {
