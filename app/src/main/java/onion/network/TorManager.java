@@ -128,17 +128,33 @@ public class TorManager {
                         try (FileWriter fileWriter = new FileWriter(torcc, false);
                              PrintWriter printWriter = new PrintWriter(fileWriter)) {
                             StringBuilder sb = new StringBuilder();
+
+                            // Загальні налаштування
                             sb.append("Log notice stdout\n");
+                            sb.append("DataDirectory ").append(appTorServiceDir.getAbsolutePath()).append("/data\n"); // Окремий каталог для даних Tor
+                            sb.append("SocksPort auto\n");
+                            sb.append("ClientOnly 1\n"); // Працюємо тільки як клієнт
+                            sb.append("NumCPUs 2\n"); // Дозволяємо використовувати 2 ядра CPU
+
+                            // Налаштування прихованого сервісу
                             sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath()).append("\n");
+                            sb.append("HiddenServiceVersion 3\n"); // Явно вказуємо версію
                             sb.append("HiddenServicePort 80 127.0.0.1:8080\n");
+
+                            // Налаштування мостів (якщо є)
                             log("Bridge configs to set: " + bridgeConfigs);
-                            // Передаємо всі мости одним викликом (якщо список не пустий)
                             if (!bridgeConfigs.isEmpty()) {
                                 sb.append("UseBridges 1\n");
                                 for (String b : bridgeConfigs) {
-                                    sb.append(b + "\n");
+                                    // Якщо в рядку вже є "Bridge" — додаємо без дублювання
+                                    if (b.trim().startsWith("Bridge ")) {
+                                        sb.append(b).append("\n");
+                                    } else {
+                                        sb.append("Bridge ").append(b).append("\n");
+                                    }
                                 }
                             }
+
                             printWriter.print(sb.toString());
                         } catch (IOException e) {
                             log("Failed to write torrc-defaults: " + e.getMessage());
@@ -191,6 +207,11 @@ public class TorManager {
                             log("Warning: BOOTSTRAP=100 not reached within timeout — continuing but operations may fail");
                         }
 
+                        if (!bootDone) {
+                            log("ERROR: Tor bootstrap not completed, aborting hidden service setup.");
+                            return;
+                        }
+
                         // Запускаємо підключення (NEWNYM) і просимо RELOAD (безпечніше після bootstrap)
                         try {
                             torControlConnection.signal("NEWNYM");
@@ -201,11 +222,6 @@ public class TorManager {
                             torControlConnection.signal("RELOAD");
                         } catch (IOException ioe) {
                             log("RELOAD failed: " + ioe.getMessage());
-                        }
-
-                        if (!bootDone) {
-                            log("ERROR: Tor bootstrap not completed, aborting hidden service setup.");
-                            return;
                         }
 
                         // Чекаємо генерацію ключів hidden service (даємо трохи більше часу)
