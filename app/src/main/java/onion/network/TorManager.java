@@ -94,14 +94,7 @@ public class TorManager {
         return instance;
     }
 
-    /**
-     * Оновлений startTorServer — мінімальні правки:
-     *  - створює каталоги + torrc-defaults тільки якщо його немає (щоб не дублювати записи)
-     *  - не блокує UI: все очікування робиться в бекграунд-потоці
-     *  - чекає BOOTSTRAP=100 перед setConf / signal / читанням hostname
-     */
     public void startTorServer() {
-        // Підготуємо каталоги і (опціонально) torrc-defaults до старту Tor, але тільки якщо їх нема.
         File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
         if (!appTorServiceDir.exists()) appTorServiceDir.mkdirs();
 
@@ -116,11 +109,9 @@ public class TorManager {
                 TorService.LocalBinder binder = (TorService.LocalBinder) service;
                 torService = binder.getService();
 
-                // Все подальше робимо в бекграунд-потоці — щоб НЕ блокувати onServiceConnected/UI thread.
                 new Thread(() -> {
                     try {
 
-                        // Збираємо мости (TorBridgeParser може повертати рядки як "obfs4 ...", або вже з "Bridge ...")
                         List<String> bridgeLines = TorBridgeParser.parseBridges();
                         List<String> bridgeConfigs = getBridgeConfigs(bridgeLines);
 
@@ -133,7 +124,6 @@ public class TorManager {
                             sb.append("Log notice stdout\n");
                             sb.append("DataDirectory ").append(appTorServiceDir.getAbsolutePath()).append("/data\n"); // Окремий каталог для даних Tor
                             sb.append("SocksPort auto\n");
-                            sb.append("ClientOnly 1\n"); // Працюємо тільки як клієнт
                             sb.append("NumCPUs 2\n"); // Дозволяємо використовувати 2 ядра CPU
 
                             // Налаштування прихованого сервісу
@@ -190,6 +180,25 @@ public class TorManager {
                                 log("Bootstrap-phase: " + phase);
                                 if (phase != null && phase.contains("PROGRESS=100")) {
                                     bootDone = true;
+
+                                    try {
+                                        List<ConfigEntry> bridges = torControlConnection.getConf("Bridge");
+                                        if (bridges.isEmpty()) {
+                                            log("No bridges configured in Tor runtime!");
+                                        } else {
+                                            for (ConfigEntry entry : bridges) {
+                                                log("Bridge in use: " + entry.value);
+                                            }
+                                        }
+
+                                        List<ConfigEntry> useBridges = torControlConnection.getConf("UseBridges");
+                                        for (ConfigEntry entry : useBridges) {
+                                            log("UseBridges=" + entry.value);
+                                        }
+                                    } catch (IOException e) {
+                                        log("Error reading bridges from Tor: " + e.getMessage());
+                                    }
+
                                     break;
                                 }
                             } catch (IOException ioe) {
