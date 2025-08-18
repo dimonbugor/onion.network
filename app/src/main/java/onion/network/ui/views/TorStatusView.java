@@ -29,7 +29,11 @@ public class TorStatusView extends LinearLayout implements TorManager.LogListene
 
         if (!isInEditMode()) {
             TorManager torManager = TorManager.getInstance(getContext());
-            torManager.addLogListener(this);
+            if(torManager.isReady()) {
+                setVisibility(View.GONE);
+            } else {
+                torManager.addLogListener(this);
+            }
         }
 
     }

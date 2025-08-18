@@ -16,7 +16,7 @@ import onion.network.TorManager;
 
 public class TorSocket extends Socket {
 
-    private static final int TIMEOUT = 30000;
+    private static final int TIMEOUT = 15000;
 
     public TorSocket(Context context, String host, int port) throws IOException {
         TorManager tor = TorManager.getInstance(context);
@@ -31,66 +31,49 @@ public class TorSocket extends Socket {
         OutputStream os = getOutputStream();
 
         // SOCKS5 handshake
-        os.write(new byte[]{0x05, 0x01, 0x00}); // version 5, 1 method, no auth
+        os.write(new byte[]{0x05, 0x01, 0x00});
         os.flush();
-        if (is.read() != 0x05 || is.read() != 0x00) {
-            throw new IOException("SOCKS5 handshake failed");
+
+        byte[] resp = new byte[2];
+        readFully(is, resp, 0, 2);
+        if (resp[0] != 0x05 || resp[1] != 0x00) {
+            throw new IOException("SOCKS5 handshake failed: " + Arrays.toString(resp));
         }
 
-        // SOCKS5 connect request
-        byte[] hostBytes = host.getBytes("UTF-8");
-        Log.d("TorSocket", "SOCKS5 request -> host=" + host +
-                " (len=" + hostBytes.length + "), port=" + port);
-        os.write(0x05); // version
-        os.write(0x01); // connect
-        os.write(0x00); // reserved
-        os.write(0x03); // address type: domain
-        os.write(hostBytes.length); // domain length
-        os.write(hostBytes); // domain
-        os.write((port >> 8) & 0xFF); // port high byte
-        os.write(port & 0xFF); // port low byte
+        // CONNECT request
+        byte[] hostBytes = host.getBytes(StandardCharsets.UTF_8);
+        os.write(0x05);
+        os.write(0x01);
+        os.write(0x00);
+        os.write(0x03);
+        os.write(hostBytes.length);
+        os.write(hostBytes);
+        os.write((port >> 8) & 0xFF);
+        os.write(port & 0xFF);
         os.flush();
 
-        // ---- читаємо SOCKS5 response ----
+        // Response
         byte[] header = new byte[4];
         readFully(is, header, 0, 4);
 
-        if (header[0] != 0x05) {
-            throw new IOException("Invalid SOCKS version: " + header[0]);
-        }
+        if (header[0] != 0x05) throw new IOException("Invalid SOCKS version: " + header[0]);
 
         int rep = header[1] & 0xFF;
-        if (rep != 0x00) {
-            throw new IOException("SOCKS5 connection failed, code: 0x" + Integer.toHexString(rep));
-        }
+        if (rep != 0x00) throw new IOException("SOCKS5 connection failed, code=0x" + Integer.toHexString(rep));
 
         int atyp = header[3] & 0xFF;
         int addrLen;
-
         switch (atyp) {
-            case 0x01: // IPv4
-                addrLen = 4;
-                break;
-            case 0x03: // domain
-                addrLen = is.read(); // ще 1 байт = довжина домену
-                break;
-            case 0x04: // IPv6
-                addrLen = 16;
-                break;
-            default:
-                throw new IOException("Unknown ATYP: " + atyp);
+            case 0x01: addrLen = 4; break;
+            case 0x03: addrLen = is.read(); break;
+            case 0x04: addrLen = 16; break;
+            default: throw new IOException("Unknown ATYP: " + atyp);
         }
 
-        byte[] addr = new byte[addrLen];
-        readFully(is, addr, 0, addrLen);
+        skipFully(is, addrLen); // не зберігаємо
+        skipFully(is, 2);       // пропускаємо порт
 
-        byte[] portBuf = new byte[2];
-        readFully(is, portBuf, 0, 2);
-        int bndPort = ((portBuf[0] & 0xFF) << 8) | (portBuf[1] & 0xFF);
-
-        // Лог для діагностики
-        Log.d("TorSocket", "SOCKS5 response OK -> rep=0x" + Integer.toHexString(rep)
-                + " atyp=" + atyp + " bndPort=" + bndPort);
+        Log.d("TorSocket", "SOCKS5 connected to " + host + ":" + port + " via Tor");
     }
 
     /**

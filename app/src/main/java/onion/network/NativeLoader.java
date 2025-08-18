@@ -14,10 +14,10 @@ public class NativeLoader {
             System.loadLibrary("dnscrypt-proxy");
             System.loadLibrary("i2pd");
             System.loadLibrary("nflog");
+            System.loadLibrary("zmq");
             System.loadLibrary("obfs4proxy");
             System.loadLibrary("snowflake");
             System.loadLibrary("webtunnel");
-            System.loadLibrary("zmq");
 
             Log.i(TAG, "Loading tor-native...");
             System.loadLibrary("tor-native");

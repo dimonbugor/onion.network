@@ -26,14 +26,12 @@ public class TorManager {
     private volatile boolean ready = false;
 
     private native boolean nativeStartTor(String torrcPath, String dataDir);
-
-    private native boolean nativeIsBootstrapped();
+    private final Object portLock = new Object();
+    private volatile int socksPort = -1;
 
     private native String nativeGetHiddenServiceDomain(String hsDir);
 
     private native void nativeStopTor();
-
-    private native int nativeGetSocksPort();
 
     synchronized public static TorManager getInstance(Context context) {
         if (instance == null) {
@@ -71,14 +69,13 @@ public class TorManager {
                 }
 
                 // Чекаємо поки Tor буде готовий
-                while (!nativeIsBootstrapped()) {
-                    Thread.sleep(1000);
+                while (!ready) {
+                    Thread.sleep(500);
                 }
 
                 // Отримуємо onion адресу
                 domain = nativeGetHiddenServiceDomain(hiddenServiceDir.getAbsolutePath());
                 if (!domain.isEmpty()) {
-                    ready = true;
                     log("Onion domain ready: " + domain);
                 } else {
                     log("Failed to get onion domain");
@@ -97,10 +94,12 @@ public class TorManager {
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
             writer.println("Log notice stdout");
+//            writer.println("Log debug stdout");
             writer.println("DataDirectory " + appTorServiceDir.getAbsolutePath() + "/data");
             writer.println("SocksPort auto");
+//            writer.println("SocksPort 9050");
             writer.println("ExitPolicy accept *:*");
-            writer.println("NumCPUs 2");
+            writer.println("NumCPUs 4");
 
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
@@ -155,7 +154,7 @@ public class TorManager {
                 }
                 writer.println();
 
-                writer.println("ClientUseIPv4 1");
+//                writer.println("ClientUseIPv4 1");
 //                writer.println("ClientUseIPv6 1");
 //                writer.println("ClientPreferIPv6ORPort 1");
             }
@@ -173,6 +172,10 @@ public class TorManager {
     private void onLog(String line) {
         if (line == null) return;
         log(line);
+        onPortInLogListener(line);
+        if(line.contains("Bootstrapped 100%")) {
+            ready = true;
+        }
         synchronized (logListeners) {
             for (LogListener l : logListeners) {
                 l.onTorLog(line); // розсилка всім слухачам
@@ -185,8 +188,35 @@ public class TorManager {
         Log.i("TorManager", s);
     }
 
-    public int getPort() {
-        return nativeGetSocksPort();
+    private void onPortInLogListener(String line) {
+        int i = line.indexOf("Socks listener listening on port ");
+        if (i >= 0) {
+            try {
+                String num = line.substring(i).replaceAll("\\D+", "");
+                int p = Integer.parseInt(num);
+                socksPort = p;
+                synchronized (portLock) { portLock.notifyAll(); }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    public int waitSocksPort(long timeoutMs) throws IOException {
+        long end = System.currentTimeMillis() + timeoutMs;
+        synchronized (portLock) {
+            while (socksPort <= 0) {
+                long left = end - System.currentTimeMillis();
+                if (left <= 0) throw new IOException("SOCKS port not ready");
+                try { portLock.wait(left); } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException(e);
+                }
+            }
+            return socksPort;
+        }
+    }
+
+    public int getPort() throws IOException {
+        return waitSocksPort(30_000);
     }
 
     public String getOnion() {
