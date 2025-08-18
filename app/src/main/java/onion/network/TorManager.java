@@ -15,6 +15,7 @@ import java.util.Set;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.TorBridgeParser;
 import onion.network.helpers.Utils;
+import onion.network.servers.Server;
 
 public class TorManager {
     private static TorManager instance = null;
@@ -104,7 +105,9 @@ public class TorManager {
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
             writer.println("HiddenServiceVersion 3");
-            writer.println("HiddenServicePort 80 127.0.0.1:8080");
+//            writer.println("HiddenServicePort 80 127.0.0.1:8080");
+            Server server = Server.getInstance(context);
+            writer.println("HiddenServicePort 80 " + server.getSocketName());
             writer.println();
 
             if (!bridgeConfigs.isEmpty()) {

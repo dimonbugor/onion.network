@@ -40,8 +40,8 @@ public class HostService extends Service {
         } else {
             startForeground(1, createNotification());
         }
-        torManager = TorManager.getInstance(this);
         server = Server.getInstance(this);
+        torManager = TorManager.getInstance(this);
         return START_STICKY;
     }
 
@@ -70,8 +70,8 @@ public class HostService extends Service {
         super.onCreate();
         log("Service created");
 
-        torManager = TorManager.getInstance(this);
         server = Server.getInstance(this);
+        torManager = TorManager.getInstance(this);
 
         // Ініціалізуємо таймер для періодичних задач
         timer = new Timer();
@@ -116,21 +116,5 @@ public class HostService extends Service {
 
     private void log(String message) {
         Log.i(getClass().getName(), message); // Логування з унікальним тегом
-    }
-
-    public TorManager getTorManager() {
-        return torManager;
-    }
-
-    public void setTorManager(TorManager torManager) {
-        this.torManager = torManager;
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    public void setServer(Server server) {
-        this.server = server;
     }
 }
