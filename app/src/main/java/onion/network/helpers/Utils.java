@@ -19,9 +19,11 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -140,5 +142,16 @@ public class Utils {
 
     public static boolean isAlphanumeric(String s) {
         return s != null && s.chars().allMatch(Character::isLetterOrDigit);
+    }
+
+    public static void copyAssetFile(Context context, String assetName, File outFile) throws IOException {
+        try (InputStream in = context.getAssets().open(assetName);
+             OutputStream out = new FileOutputStream(outFile)) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        }
     }
 }

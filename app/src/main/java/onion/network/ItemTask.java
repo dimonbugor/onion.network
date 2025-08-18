@@ -131,7 +131,7 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
             boolean loadOk = false;
             try {
                 String url = getUrl();
-                byte[] data = HttpClient.getbin(url);
+                byte[] data = HttpClient.getbin(Uri.parse(url));
                 ItemResult itemResult = process(data, true, false);
                 if (itemResult != null) {
                     itemCache.delete(address, type, index, itemResult.more());

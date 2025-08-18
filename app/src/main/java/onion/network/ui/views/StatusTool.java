@@ -3,6 +3,7 @@
 package onion.network.ui.views;
 
 import android.content.Context;
+import android.net.Uri;
 
 import java.io.IOException;
 
@@ -26,7 +27,7 @@ public class StatusTool {
 
     public boolean isOnline(String address) {
         try {
-            String rs = HttpClient.get(new ItemTask(context, address, "name").getUrl());
+            String rs = HttpClient.get(Uri.parse(new ItemTask(context, address, "name").getUrl()));
             if (rs.isEmpty()) {
                 return false;
             }

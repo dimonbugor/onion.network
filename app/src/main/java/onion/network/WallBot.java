@@ -92,9 +92,9 @@ public class WallBot {
 
         try {
             byte[] data;
-
+            Uri a = Uri.parse(addr);
             try {
-                data = HttpClient.getbin(addr);
+                data = HttpClient.getbin(a);
                 log(new String(data));
             } catch (IOException ex) {
                 log("feed error");

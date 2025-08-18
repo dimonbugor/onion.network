@@ -1129,12 +1129,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        TorManager.getInstance(this).stopReceiver();
-        try {
-            TorManager.getInstance(this).stopTor();
-        } catch (IOException e) {
-            //ignore
-        }
+        TorManager.getInstance(this).stopTor();
     }
 
     public void lightbox(Bitmap bitmap) {

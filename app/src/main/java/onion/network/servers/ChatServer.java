@@ -27,12 +27,12 @@ public class ChatServer {
     String TAG = "chatserver";
     ChatDatabase chatDatabase;
     private Context context;
-    private TorManager torManager;
+    private TorManager tor;
     private HashSet<OnMessageReceivedListener> listeners = new HashSet<OnMessageReceivedListener>();
 
     public ChatServer(Context context) {
         this.context = context;
-        this.torManager = TorManager.getInstance(context);
+        this.tor = TorManager.getInstance(context);
         this.chatDatabase = ChatDatabase.getInstance(context);
     }
 
@@ -47,42 +47,33 @@ public class ChatServer {
     }
 
 
-    public boolean handle(NanoHTTPD. IHTTPSession session) {
+    public boolean handle(Uri uri) {
 
-        log("handle " + session.getUri());
+        log("handle " + uri);
 
 
         // get & check params
 
-        //final String sender = uri.getQueryParameter("a");
-        final String sender = session.getParameters().get("a").get(0);
-        //final String receiver = uri.getQueryParameter("b");
-        final String receiver = session.getParameters().get("b").get(0);
-        //final String time = uri.getQueryParameter("t");
-        final String time = session.getParameters().get("t").get(0);
-        //String m = uri.getQueryParameter("m");
-        String m = session.getParameters().get("m").get(0);
-        //final String pubkey = uri.getQueryParameter("p");
-        final String pubkey = session.getParameters().get("p").get(0);
-        //final String signature = uri.getQueryParameter("s");
-        final String signature = session.getParameters().get("s").get(0);
-        //final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
-        final String name = session.getParameters().get("n").get(0) != null
-                ? session.getParameters().get("n").get(0) : "";
+        final String sender = uri.getQueryParameter("a");
+        final String receiver = uri.getQueryParameter("b");
+        final String time = uri.getQueryParameter("t");
+        String m = uri.getQueryParameter("m");
+        final String pubkey = uri.getQueryParameter("p");
+        final String signature = uri.getQueryParameter("s");
+        final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
 
-        if (!receiver.equals(torManager.getID())) {
+        if (!receiver.equals(tor.getID())) {
             log("message wrong address");
             return false;
         }
         log("message address ok");
 
-        //TODO: torManager.checksig
-        if (!torManager.checksig(
+        if (!tor.checksig(
                 Ed25519Signature.base64Decode(pubkey),
                 Ed25519Signature.base64Decode(signature),
                 (receiver + " " + sender + " " + time + " " + m).getBytes(StandardCharsets.UTF_8))) {
             log("message invalid signature");
-            //return false;
+            return false;
         }
         log("message signature ok");
 

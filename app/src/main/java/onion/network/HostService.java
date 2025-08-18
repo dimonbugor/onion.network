@@ -70,7 +70,7 @@ public class HostService extends Service {
         super.onCreate();
         log("Service created");
 
-        torManager = torManager.getInstance(this);
+        torManager = TorManager.getInstance(this);
         server = Server.getInstance(this);
 
         // Ініціалізуємо таймер для періодичних задач
@@ -98,9 +98,6 @@ public class HostService extends Service {
     public void onDestroy() {
         log("Service destroyed");
 
-        // Зупиняємо HTTP сервер
-        server.stopHttpServer();
-
         // Скасовуємо таймер
         if (timer != null) {
             timer.cancel();
@@ -119,5 +116,21 @@ public class HostService extends Service {
 
     private void log(String message) {
         Log.i(getClass().getName(), message); // Логування з унікальним тегом
+    }
+
+    public TorManager getTorManager() {
+        return torManager;
+    }
+
+    public void setTorManager(TorManager torManager) {
+        this.torManager = torManager;
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public void setServer(Server server) {
+        this.server = server;
     }
 }

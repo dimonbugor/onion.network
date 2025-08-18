@@ -49,7 +49,7 @@ public class ChatClient {
         return sendOne(sender, receiver, content, time);
     }
 
-    public String makeUri(String sender, String receiver, String content, long time) {
+    public Uri makeUri(String sender, String receiver, String content, long time) {
 
         content = Ed25519Signature.base64Encode(content.getBytes(Utils.UTF_8));
 
@@ -67,12 +67,12 @@ public class ChatClient {
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);
 
-        return uri;
+        return Uri.parse(uri);
     }
 
     public boolean sendOne(String sender, String receiver, String content, long time) {
 
-        String uri = makeUri(sender, receiver, content, time);
+        Uri uri = makeUri(sender, receiver, content, time);
         log("" + uri);
 
         try {

@@ -1,22 +1,7 @@
 package onion.network;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
-
-import androidx.core.content.ContextCompat;
-
-import net.freehaven.tor.control.ConfigEntry;
-import net.freehaven.tor.control.TorControlConnection;
-
-import org.torproject.jni.TorService;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,65 +12,25 @@ import java.util.List;
 
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.TorBridgeParser;
-import onion.network.helpers.Utils;
-import onion.network.ui.MainActivity;
 
 public class TorManager {
-
     private static TorManager instance = null;
     private Context context;
 
     private volatile File hiddenServiceDir;
     private volatile String domain = "";
-    private Listener listener = null;
-    private LogListener logListener;
     private String status = "";
     private volatile boolean ready = false;
 
-    private TorService torService;
-    private TorControlConnection torControlConnection;
+    private native boolean nativeStartTor(String torrcPath, String dataDir);
 
-    private BroadcastReceiver torStatusReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle extras = intent.getExtras();
-            if (extras != null) {
-                for (String key : extras.keySet()) {
-                    Object value = extras.get(key);
-                    if (value instanceof String) {
-                        String stringValue = (String) value;
-                        log("Tor status: " + stringValue);
-                        if (stringValue.toLowerCase().contains("bridge")) {
-                            log("Tor is connecting via a bridge: " + stringValue);
-                        }
-                        if (stringValue.equals("ON")) {
-                            MainActivity mainActivity = MainActivity.getInstance();
-                            if (mainActivity != null) {
-                                mainActivity.startHostService();
-                            }
-                        }
-                        stat(stringValue);
-                    }
-                }
-            }
-        }
-    };
+    private native boolean nativeIsBootstrapped();
 
-    public TorManager(Context c) {
-        this.context = c;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.registerReceiver(torStatusReceiver,
-                    new IntentFilter(TorService.ACTION_STATUS), Context.RECEIVER_EXPORTED);
-        } else {
-            ContextCompat.registerReceiver(context, torStatusReceiver, new IntentFilter(TorService.ACTION_STATUS), ContextCompat.RECEIVER_NOT_EXPORTED);
-        }
-        try {
-            stopTor();
-        } catch (IOException e) {
-            //ignore
-        }
-        startTorServer();
-    }
+    private native String nativeGetHiddenServiceDomain(String hsDir);
+
+    private native void nativeStopTor();
+
+    private native int nativeGetSocksPort();
 
     synchronized public static TorManager getInstance(Context context) {
         if (instance == null) {
@@ -94,201 +39,83 @@ public class TorManager {
         return instance;
     }
 
-    public void startTorServer() {
+    public TorManager(Context c) {
+        this.context = c;
+
+        // Ініціалізація каталогів
         File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
         if (!appTorServiceDir.exists()) appTorServiceDir.mkdirs();
 
         hiddenServiceDir = new File(appTorServiceDir, "app_TorHiddenService");
         if (!hiddenServiceDir.exists()) hiddenServiceDir.mkdirs();
 
-        // Тепер биндимся до сервісу (це не буде блокувати UI).
-        Intent intent = new Intent(context, TorService.class);
-        context.bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                TorService.LocalBinder binder = (TorService.LocalBinder) service;
-                torService = binder.getService();
+        startTorServer();
+    }
 
-                new Thread(() -> {
-                    try {
+    public void startTorServer() {
+        new Thread(() -> {
+            try {
+                // Підготовка torrc файлу
+                File torrc = prepareTorrc();
 
-                        List<String> bridgeLines = TorBridgeParser.parseBridges();
-                        List<String> bridgeConfigs = getBridgeConfigs(bridgeLines);
+                // Запуск Tor
+                boolean started = nativeStartTor(torrc.getAbsolutePath(),
+                        context.getFilesDir().getAbsolutePath());
 
-                        File torcc = new File(appTorServiceDir, "torrc-defaults");
-                        try (FileWriter fileWriter = new FileWriter(torcc, false);
-                             PrintWriter printWriter = new PrintWriter(fileWriter)) {
-                            StringBuilder sb = new StringBuilder();
+                if (!started) {
+                    log("Failed to start Tor");
+                    return;
+                }
 
-                            // Загальні налаштування
-                            sb.append("Log notice stdout\n");
-                            sb.append("DataDirectory ").append(appTorServiceDir.getAbsolutePath()).append("/data\n"); // Окремий каталог для даних Tor
-                            sb.append("SocksPort auto\n");
-                            sb.append("NumCPUs 2\n"); // Дозволяємо використовувати 2 ядра CPU
+                // Чекаємо поки Tor буде готовий
+                while (!nativeIsBootstrapped()) {
+                    Thread.sleep(1000);
+                }
 
-                            // Налаштування прихованого сервісу
-                            sb.append("HiddenServiceDir ").append(hiddenServiceDir.getAbsolutePath()).append("\n");
-                            sb.append("HiddenServiceVersion 3\n"); // Явно вказуємо версію
-                            sb.append("HiddenServicePort 80 127.0.0.1:8080\n");
-
-                            // Налаштування мостів (якщо є)
-                            log("Bridge configs to set: " + bridgeConfigs);
-                            if (!bridgeConfigs.isEmpty()) {
-                                sb.append("UseBridges 1\n");
-                                for (String b : bridgeConfigs) {
-                                    // Якщо в рядку вже є "Bridge" — додаємо без дублювання
-                                    if (b.trim().startsWith("Bridge ")) {
-                                        sb.append(b).append("\n");
-                                    } else {
-                                        sb.append("Bridge ").append(b).append("\n");
-                                    }
-                                }
-                            }
-
-                            printWriter.print(sb.toString());
-                        } catch (IOException e) {
-                            log("Failed to write torrc-defaults: " + e.getMessage());
-                        }
-
-                        // Чекаємо поки TorService створить control connection (обережно, таймаут).
-                        int waitForControl = 0;
-                        while (torService.getTorControlConnection() == null && waitForControl < 120) { // max ~60s
-                            try {
-                                Thread.sleep(500);
-                            } catch (InterruptedException ie) {
-                                log("Interrupted while waiting for TorControlConnection");
-                                return;
-                            }
-                            waitForControl++;
-                        }
-
-                        torControlConnection = torService.getTorControlConnection();
-                        if (torControlConnection == null) {
-                            log("Tor control connection not available after wait");
-                            return;
-                        }
-
-                        // Аутентифікація
-                        torControlConnection.authenticate(new byte[0]);
-
-                        // Чекаємо BOOTSTRAP=100 (Tor повністю ініціалізувався)
-                        int bootstrapRetries = 0;
-                        boolean bootDone = false;
-                        while (bootstrapRetries < 240) {
-                            try {
-                                String phase = torControlConnection.getInfo("status/bootstrap-phase");
-                                log("Bootstrap-phase: " + phase);
-                                if (phase != null && phase.contains("PROGRESS=100")) {
-                                    bootDone = true;
-
-                                    try {
-                                        List<ConfigEntry> bridges = torControlConnection.getConf("Bridge");
-                                        if (bridges.isEmpty()) {
-                                            log("No bridges configured in Tor runtime!");
-                                        } else {
-                                            for (ConfigEntry entry : bridges) {
-                                                log("Bridge in use: " + entry.value);
-                                            }
-                                        }
-
-                                        List<ConfigEntry> useBridges = torControlConnection.getConf("UseBridges");
-                                        for (ConfigEntry entry : useBridges) {
-                                            log("UseBridges=" + entry.value);
-                                        }
-                                    } catch (IOException e) {
-                                        log("Error reading bridges from Tor: " + e.getMessage());
-                                    }
-
-                                    break;
-                                }
-                            } catch (IOException ioe) {
-                                // іноді getInfo може кидати поки Tor ще в процесі старту
-                            }
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ie) {
-                                log("Interrupted while waiting for bootstrap");
-                                return;
-                            }
-                            bootstrapRetries++;
-                        }
-                        if (!bootDone) {
-                            log("Warning: BOOTSTRAP=100 not reached within timeout — continuing but operations may fail");
-                        }
-
-                        if (!bootDone) {
-                            log("ERROR: Tor bootstrap not completed, aborting hidden service setup.");
-                            return;
-                        }
-
-                        // Запускаємо підключення (NEWNYM) і просимо RELOAD (безпечніше після bootstrap)
-                        try {
-                            torControlConnection.signal("NEWNYM");
-                        } catch (IOException ioe) {
-                            log("NEWNYM failed: " + ioe.getMessage());
-                        }
-                        try {
-                            torControlConnection.signal("RELOAD");
-                        } catch (IOException ioe) {
-                            log("RELOAD failed: " + ioe.getMessage());
-                        }
-
-                        // Чекаємо генерацію ключів hidden service (даємо трохи більше часу)
-                        File hostnameFile = new File(hiddenServiceDir, "hostname");
-                        File secretKeyFile = new File(hiddenServiceDir, "hs_ed25519_secret_key");
-
-                        int retries = 0;
-                        while ((!hostnameFile.exists() || !secretKeyFile.exists()) && retries < 120) {
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ie) {
-                                log("Interrupted while waiting for hidden service files");
-                                return;
-                            }
-                            retries++;
-                        }
-
-                        List<ConfigEntry> configEntries = torControlConnection.getConf("Bridge");
-                        for(ConfigEntry configEntry : configEntries) {
-                            log("Bridges in Tor config: " + configEntry.key + " " + configEntry.value);
-                        }
-                        List<ConfigEntry> useBridges = torControlConnection.getConf("UseBridges");
-                        for(ConfigEntry useBridge : useBridges) {
-                            log("UseBridges=" + useBridge.key + " " + useBridge.value);
-                        }
-
-                        if (hostnameFile.exists()) {
-                            domain = Utils.readFileAsString(hostnameFile).trim();
-                            log("Onion domain ready: " + domain);
-                            ready = true;
-                        } else {
-                            log("ERROR: hostname file not generated by Tor");
-                        }
-
-                        if (!secretKeyFile.exists()) {
-                            log("ERROR: hs_ed25519_secret_key not generated by Tor");
-                        }
-
-                        try {
-                            String torStatus = torControlConnection.getInfo("status/circuit-established");
-                            log("Tor Circuit Status: " + torStatus);
-                        } catch (IOException ioe) {
-                            log("Could not get status/circuit-established: " + ioe.getMessage());
-                        }
-
-                    } catch (IOException e) {
-                        log("Error in configuring hidden service: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                }).start();
+                // Отримуємо onion адресу
+                domain = nativeGetHiddenServiceDomain(hiddenServiceDir.getAbsolutePath());
+                if (!domain.isEmpty()) {
+                    ready = true;
+                    log("Onion domain ready: " + domain);
+                } else {
+                    log("Failed to get onion domain");
+                }
+            } catch (Exception e) {
+                log("Error starting Tor: " + e.getMessage());
             }
+        }).start();
+    }
 
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                torService = null;
-                torControlConnection = null;
-            }
-        }, Context.BIND_AUTO_CREATE);
+    private File prepareTorrc() throws IOException {
+        File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
+        File torrc = new File(appTorServiceDir, "torrc-defaults");
+
+        List<String> bridgeConfigs = getBridgeConfigs(TorBridgeParser.parseBridges());
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
+            writer.println("Log notice stdout");
+            writer.println("DataDirectory " + appTorServiceDir.getAbsolutePath() + "/data");
+            writer.println("SocksPort auto");
+            writer.println("ExitPolicy accept *:*");
+            writer.println("NumCPUs 2");
+
+            // Hidden service config
+            writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
+            writer.println("HiddenServiceVersion 3");
+            writer.println("HiddenServicePort 80 127.0.0.1:8080");
+
+//            if (!bridgeConfigs.isEmpty()) {
+//                writer.println("UseBridges 1");
+//                for (String bridge : bridgeConfigs) {
+//                    writer.println(bridge);
+//                }
+//                writer.println("ClientUseIPv4 1");
+//                writer.println("ClientUseIPv6 1");
+//                writer.println("ClientPreferIPv6ORPort 1");
+//            }
+        }
+
+        return torrc;
     }
 
     private static List<String> getBridgeConfigs(List<String> bridgeLines) {
@@ -308,33 +135,27 @@ public class TorManager {
         }
 
         // Додаємо meek_lite і snowflake
-        bridgeConfigs.add("Bridge meek_lite 0.0.2.0:2 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com");
-        bridgeConfigs.add("Bridge snowflake 0.0.3.0:1");
+        bridgeConfigs.add("Bridge meek 0.0.2.0:3 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com");
+        bridgeConfigs.add("Bridge meek_lite 192.0.2.20:80 url=https://1314488750.rsc.cdn77.org front=www.phpmyadmin.net utls=HelloRandomizedALPN");
+        bridgeConfigs.add("Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn");
+        bridgeConfigs.add("Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn");
         return bridgeConfigs;
     }
 
-    public void stopTor() throws IOException {
-        Intent intent = new Intent(context, TorService.class);
-        context.stopService(intent);
-        if (torControlConnection != null) {
-            torControlConnection.signal("HALT");
-        }
+    public void stopTor() {
+        nativeStopTor();
     }
 
-    public void stopReceiver() {
-        try {
-            context.unregisterReceiver(torStatusReceiver);
-        } catch (IllegalArgumentException ignore) {}
-    }
-
-    void stat(String s) {
-        status = s;
-        if (listener != null) listener.onChange();
-        LogListener l = logListener;
-        if (l != null) {
-            l.onLog();
+    // викликається з native через log_message()
+    @SuppressWarnings("unused") // викликається з JNI
+    private void onLog(String line) {
+        if (line == null) return;
+        log(line);
+        synchronized (logListeners) {
+            for (LogListener l : logListeners) {
+                l.onTorLog(line); // розсилка всім слухачам
+            }
         }
-        log(s);
     }
 
     private void log(String s) {
@@ -343,7 +164,7 @@ public class TorManager {
     }
 
     public int getPort() {
-        return TorService.httpTunnelPort;
+        return nativeGetSocksPort();
     }
 
     public String getOnion() {
@@ -356,10 +177,6 @@ public class TorManager {
 
     File getHiddenServiceDir() {
         return hiddenServiceDir;
-    }
-
-    public void setLogListener(LogListener l) {
-        logListener = l;
     }
 
     public String getStatus() {
@@ -404,11 +221,21 @@ public class TorManager {
         return Ed25519Signature.checkEd25519Signature(pubkey, sig, msg);
     }
 
-    public interface Listener {
-        void onChange();
+    public interface LogListener {
+        void onTorLog(String line);
     }
 
-    public interface LogListener {
-        void onLog();
+    private final List<LogListener> logListeners = new ArrayList<>();
+
+    public void addLogListener(LogListener listener) {
+        synchronized (logListeners) {
+            logListeners.add(listener);
+        }
+    }
+
+    public void removeLogListener(LogListener listener) {
+        synchronized (logListeners) {
+            logListeners.remove(listener);
+        }
     }
 }
