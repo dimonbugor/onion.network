@@ -144,14 +144,18 @@ public class Utils {
         return s != null && s.chars().allMatch(Character::isLetterOrDigit);
     }
 
-    public static void copyAssetFile(Context context, String assetName, File outFile) throws IOException {
-        try (InputStream in = context.getAssets().open(assetName);
-             OutputStream out = new FileOutputStream(outFile)) {
-            byte[] buffer = new byte[8192];
+    public static String copyAssetFile(Context context, String assetName) throws IOException {
+        InputStream in = context.getAssets().open(assetName);
+        File outFile = new File(context.getFilesDir(), assetName);
+
+        try (OutputStream out = new FileOutputStream(outFile)) {
+            byte[] buf = new byte[4096];
             int len;
-            while ((len = in.read(buffer)) != -1) {
-                out.write(buffer, 0, len);
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
             }
         }
+        outFile.setExecutable(true);
+        return outFile.getAbsolutePath();
     }
 }

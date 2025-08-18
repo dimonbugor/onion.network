@@ -8,10 +8,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.TorBridgeParser;
+import onion.network.helpers.Utils;
 
 public class TorManager {
     private static TorManager instance = null;
@@ -90,7 +93,7 @@ public class TorManager {
         File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
         File torrc = new File(appTorServiceDir, "torrc-defaults");
 
-        List<String> bridgeConfigs = getBridgeConfigs(TorBridgeParser.parseBridges());
+        List<String> bridgeConfigs = TorBridgeParser.getBridgeConfigs();
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
             writer.println("Log notice stdout");
@@ -103,43 +106,62 @@ public class TorManager {
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
             writer.println("HiddenServiceVersion 3");
             writer.println("HiddenServicePort 80 127.0.0.1:8080");
+            writer.println();
 
-//            if (!bridgeConfigs.isEmpty()) {
-//                writer.println("UseBridges 1");
-//                for (String bridge : bridgeConfigs) {
-//                    writer.println(bridge);
-//                }
-//                writer.println("ClientUseIPv4 1");
+            if (!bridgeConfigs.isEmpty()) {
+                String libObfs4Path = context.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so";
+                new File(libObfs4Path).setExecutable(true);
+                String libWebtunnelPath = context.getApplicationInfo().nativeLibraryDir + "/libwebtunnel.so";
+                new File(libWebtunnelPath).setExecutable(true);
+                String libSnowflakePath = context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so";
+                new File(libSnowflakePath).setExecutable(true);
+                String libMeekPath = Utils.copyAssetFile(context, "meek-client");
+
+                writer.println("UseBridges 1");
+                writer.println();
+
+                Set<String> clients = new HashSet<>();
+                for (String bridge : bridgeConfigs) {
+                    if (bridge.contains("obfs4")) {
+                        writer.println(bridge);
+                        clients.add("obfs4");
+                    }
+                    if (bridge.contains("webtunnel")) {
+                        writer.println(bridge);
+                        clients.add("webtunnel");
+                    }
+                    if (bridge.contains("snowflake")) {
+                        writer.println(bridge);
+                        clients.add("snowflake");
+                    }
+                    if (bridge.contains("meek")) {
+                        writer.println(bridge);
+                        clients.add("meek");
+                    }
+                }
+                writer.println();
+
+                if (clients.contains("obfs4")) {
+                    writer.println("ClientTransportPlugin obfs4 exec " + libObfs4Path);
+                }
+                if (clients.contains("webtunnel")) {
+                    writer.println("ClientTransportPlugin webtunnel exec " + libWebtunnelPath);
+                }
+                if (clients.contains("snowflake")) {
+                    writer.println("ClientTransportPlugin snowflake exec " + libSnowflakePath);
+                }
+                if (clients.contains("meek")) {
+                    writer.println("ClientTransportPlugin meek exec " + libMeekPath);
+                }
+                writer.println();
+
+                writer.println("ClientUseIPv4 1");
 //                writer.println("ClientUseIPv6 1");
 //                writer.println("ClientPreferIPv6ORPort 1");
-//            }
-        }
-
-        return torrc;
-    }
-
-    private static List<String> getBridgeConfigs(List<String> bridgeLines) {
-        List<String> bridgeConfigs = new ArrayList<>();
-
-        if (bridgeLines != null && !bridgeLines.isEmpty()) {
-            for (String bridge : bridgeLines) {
-                if (bridge == null) continue;
-                String val = bridge.trim();
-                if (val.length() == 0) continue;
-                // Якщо парсер вже повернув 'Bridge ...' — прибираємо префікс
-                if (val.toLowerCase().startsWith("bridge ")) {
-                    val = val.substring(6).trim();
-                }
-                bridgeConfigs.add("Bridge " + val);
             }
         }
 
-        // Додаємо meek_lite і snowflake
-        bridgeConfigs.add("Bridge meek 0.0.2.0:3 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com");
-        bridgeConfigs.add("Bridge meek_lite 192.0.2.20:80 url=https://1314488750.rsc.cdn77.org front=www.phpmyadmin.net utls=HelloRandomizedALPN");
-        bridgeConfigs.add("Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn");
-        bridgeConfigs.add("Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn");
-        return bridgeConfigs;
+        return torrc;
     }
 
     public void stopTor() {

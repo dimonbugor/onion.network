@@ -9,12 +9,20 @@
 #include <pthread.h>
 #include <android/log.h>
 #include <dlfcn.h>
+#include <vector>
+#include <sstream>   // для std::istringstream
+#include <string>
+#include <cstring>   // для strdup
+#include <jni.h>
+#include <pthread.h>
+#include <dlfcn.h>
+#include <android/log.h>
 
-// Функції з libtor
-extern "C" {
-int tor_main(int argc, char *argv[]);
-void tor_cleanup(void);
-}
+#include <jni.h>
+#include <unistd.h>
+
+#define TAG "TorNative"
+#define log(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
 static JavaVM *jvm = nullptr;
 static jobject torManagerInstance = nullptr;
@@ -31,23 +39,27 @@ void log_message(const char *message) {
     if (jvm && torManagerInstance && logMethodID) {
         JNIEnv *env;
         jvm->AttachCurrentThread(&env, nullptr);
-
         jstring jMessage = env->NewStringUTF(message);
         env->CallVoidMethod(torManagerInstance, logMethodID, jMessage);
         env->DeleteLocalRef(jMessage);
     }
 }
 
-extern "C" JNIEXPORT jboolean Java_onion_network_TorManager_nativeStartTor(
-        JNIEnv *env,
+extern "C" JNIEXPORT jboolean
+Java_onion_network_TorManager_nativeStartTor(
+        JNIEnv
+        *env,
         jobject thiz,
-        jstring torrc_path,
-        jstring data_dir) {
+        jstring
+        torrc_path,
+        jstring data_dir
+) {
 
     const char *torrc = env->GetStringUTFChars(torrc_path, nullptr);
     const char *data = env->GetStringUTFChars(data_dir, nullptr);
 
-    env->GetJavaVM(&jvm);
+    env->
+            GetJavaVM(&jvm);
     torManagerInstance = env->NewGlobalRef(thiz);
 
     jclass cls = env->GetObjectClass(thiz);
@@ -56,13 +68,17 @@ extern "C" JNIEXPORT jboolean Java_onion_network_TorManager_nativeStartTor(
     char **argv = new char *[5];
     argv[0] = strdup("tor");
     argv[1] = strdup("-f");
-    argv[2] = strdup(torrc);
+    argv[2] =
+            strdup(torrc);
     argv[3] = strdup("--DataDirectory");
-    argv[4] = strdup(data);
+    argv[4] =
+            strdup(data);
 
     TorArgs *args = new TorArgs();
-    args->argc = 5;
-    args->argv = argv;
+    args->
+            argc = 5;
+    args->
+            argv = argv;
 
     pthread_t thread;
     int result = pthread_create(&thread, nullptr, [](void *arg) -> void * {
@@ -125,76 +141,111 @@ extern "C" JNIEXPORT jboolean Java_onion_network_TorManager_nativeStartTor(
         return nullptr;
     }, args);
 
-    env->ReleaseStringUTFChars(torrc_path, torrc);
-    env->ReleaseStringUTFChars(data_dir, data);
+    env->
+            ReleaseStringUTFChars(torrc_path, torrc
+    );
+    env->
+            ReleaseStringUTFChars(data_dir, data
+    );
 
-    return result == 0 ? JNI_TRUE : JNI_FALSE;
+    return result == 0 ? JNI_TRUE :
+           JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_onion_network_TorManager_nativeStopTor(JNIEnv *env, jobject thiz) {
+Java_onion_network_TorManager_nativeStopTor(JNIEnv
+                                            *env,
+                                            jobject thiz
+) {
     running = false; // 🛑 закриваємо лог-потік
 
     void *handle = dlopen("libtor.so", RTLD_NOW);
     if (handle) {
         typedef void (*TorCleanupFunc)();
+
         TorCleanupFunc cleanup = (TorCleanupFunc) dlsym(handle, "tor_cleanup");
-        if (cleanup) cleanup();
+        if (cleanup)
+
+            cleanup();
+
         dlclose(handle);
     }
 
     if (torManagerInstance) {
-        env->DeleteGlobalRef(torManagerInstance);
+        env->
+                DeleteGlobalRef(torManagerInstance);
         torManagerInstance = nullptr;
     }
 }
 
 
-extern "C" JNIEXPORT jboolean JNICALL
+extern "C" JNIEXPORT jboolean
+JNICALL
 Java_onion_network_TorManager_nativeIsBootstrapped(
         JNIEnv *env,
-        jobject thiz) {
+        jobject
+        thiz) {
 // Тут можна реалізувати перевірку стану через контрольний порт
 // Поки що просто повертаємо true
-    return JNI_TRUE;
+    return
+            JNI_TRUE;
 }
 
-extern "C" JNIEXPORT jstring JNICALL
+extern "C" JNIEXPORT jstring
+JNICALL
 Java_onion_network_TorManager_nativeGetHiddenServiceDomain(
         JNIEnv *env,
-        jobject thiz,
-        jstring hs_dir) {
+        jobject
+        thiz,
+        jstring hs_dir
+) {
     const char *dir = env->GetStringUTFChars(hs_dir, nullptr);
 
     char hostname_path[512];
-    snprintf(hostname_path, sizeof(hostname_path), "%s/hostname", dir);
+    snprintf(hostname_path,
+             sizeof(hostname_path), "%s/hostname", dir);
 
     FILE *fp = fopen(hostname_path, "r");
     if (!fp) {
-        env->ReleaseStringUTFChars(hs_dir, dir);
+        env->
+                ReleaseStringUTFChars(hs_dir, dir
+        );
         return env->NewStringUTF("");
     }
 
     char onion_domain[128];
-    fgets(onion_domain, sizeof(onion_domain), fp);
+    fgets(onion_domain,
+          sizeof(onion_domain), fp);
     fclose(fp);
 
 // Видаляємо \n
-    onion_domain[strcspn(onion_domain, "\n")] = 0;
+    onion_domain[
+            strcspn(onion_domain,
+                    "\n")] = 0;
 
-    env->ReleaseStringUTFChars(hs_dir, dir);
-    return env->NewStringUTF(onion_domain);
+    env->
+            ReleaseStringUTFChars(hs_dir, dir
+    );
+    return env->
+            NewStringUTF(onion_domain);
 }
 
-extern "C" JNIEXPORT jint JNICALL
-Java_onion_network_TorManager_nativeGetSocksPort(JNIEnv *env, jobject thiz) {
+extern "C" JNIEXPORT jint
+JNICALL
+Java_onion_network_TorManager_nativeGetSocksPort(JNIEnv *env, jobject
+thiz) {
 // Шукаємо у логах рядок виду "SocksPort listening on 127.0.0.1:9050"
     FILE *log = fopen("path_to_tor_log", "r");
     char line[256];
-    while (fgets(line, sizeof(line), log)) {
-        if (strstr(line, "SocksPort listening on")) {
+    while (
+            fgets(line,
+                  sizeof(line), log)) {
+        if (
+                strstr(line,
+                       "SocksPort listening on")) {
             char *port_str = strrchr(line, ':') + 1;
-            return atoi(port_str);
+            return
+                    atoi(port_str);
         }
     }
     return 9050; // Fallback

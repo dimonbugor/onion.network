@@ -1,0 +1,60 @@
+ #!/bin/bash
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+lyrebird_version=prod
+dnscryptproxy_version=master
+snowflake_version=feat/check-dns-ip
+libzmq_version=v4.3.5
+conjure_version=prod
+webtunnel_version=prod
+tor_openssl_version=openssl-3.4.1
+libevent_version=release-2.1.12-stable
+zstd_version=v1.4.9
+xz_version=v5.2.4
+tor_version=prod
+i2pd_openssl_version=openssl-3.5.0
+miniupnpc_version=miniupnpc_2_2_8
+i2pd_version=2.57.0
+
+git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
+
+git clone --single-branch --branch $dnscryptproxy_version https://github.com/Gedsh/dnscrypt-proxy
+
+git clone --single-branch --branch $snowflake_version https://gitlab.torproject.org/Gedsh/snowflake.git
+
+git clone https://github.com/zeromq/libzmq
+pushd libzmq/
+git checkout -f $libzmq_version -b $libzmq_version
+popd
+
+git clone --single-branch --branch $conjure_version https://gitlab.torproject.org/Gedsh/conjure
+
+git clone --single-branch --branch $webtunnel_version https://gitlab.torproject.org/Gedsh/webtunnel
+
+git clone https://github.com/Gedsh/Nflog-android
+
+pushd ../../TorBuildScript/external/
+git clone --single-branch --branch $tor_openssl_version https://github.com/openssl/openssl.git
+git clone --single-branch --branch $libevent_version https://github.com/libevent/libevent.git
+git clone --single-branch --branch $zstd_version https://github.com/facebook/zstd.git
+git clone --single-branch --branch $xz_version https://git.tukaani.org/xz.git
+git clone --single-branch --branch $tor_version https://gitlab.torproject.org/Gedsh/tor.git
+popd
+
+pushd ../../PurpleI2PBuildScript/external/
+mkdir -p libs
+pushd libs/
+git clone --single-branch --branch $i2pd_openssl_version https://github.com/openssl/openssl.git
+git clone https://github.com/moritz-wundke/Boost-for-Android.git
+git clone https://github.com/miniupnp/miniupnp.git
+pushd miniupnp/
+git checkout -f $miniupnpc_version -b $miniupnpc_version
+popd
+git clone https://github.com/PurpleI2P/android-ifaddrs.git
+popd
+git clone https://github.com/PurpleI2P/i2pd.git
+pushd i2pd/
+git checkout -f $i2pd_version -b $i2pd_version
+popd
+popd
