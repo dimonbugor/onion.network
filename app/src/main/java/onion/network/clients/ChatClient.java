@@ -2,12 +2,16 @@
 
 package onion.network.clients;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
 import onion.network.databases.ChatDatabase;
@@ -50,10 +54,11 @@ public class ChatClient {
     }
 
     public Uri makeUri(String sender, String receiver, String content, long time) {
+        byte[] msgToSign = (receiver + " " + sender + " " + time + " " + content)
+                .getBytes(StandardCharsets.UTF_8);
+        String sig = Ed25519Signature.base64Encode(torManager.sign(msgToSign));
 
-        content = Ed25519Signature.base64Encode(content.getBytes(Utils.UTF_8));
-
-        String sig = Ed25519Signature.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
+        String contentEnc = Ed25519Signature.base64Encode(content.getBytes(StandardCharsets.UTF_8));
 
         String name = ItemDatabase.getInstance(context).getstr("name");
         if (name == null) name = "";
@@ -61,8 +66,8 @@ public class ChatClient {
         String uri = "http://" + receiver + ".onion/m?";
         uri += "a=" + Uri.encode(sender) + "&";
         uri += "b=" + Uri.encode(receiver) + "&";
-        uri += "t=" + Uri.encode("" + time) + "&";
-        uri += "m=" + Uri.encode(content) + "&";
+        uri += "t=" + time + "&";
+        uri += "m=" + Uri.encode(contentEnc) + "&"; // base64
         uri += "p=" + Uri.encode(Ed25519Signature.base64Encode(torManager.pubkey())) + "&";
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);

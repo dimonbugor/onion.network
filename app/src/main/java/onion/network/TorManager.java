@@ -100,11 +100,11 @@ public class TorManager {
             writer.println("SocksPort auto");
 //            writer.println("SocksPort 9050");
             writer.println("ExitPolicy accept *:*");
-            writer.println("NumCPUs 4");
+            writer.println("NumCPUs 2");
 
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
-            writer.println("HiddenServiceVersion 3");
+//            writer.println("HiddenServiceVersion 3");
 //            writer.println("HiddenServicePort 80 127.0.0.1:8080");
             Server server = Server.getInstance(context);
             writer.println("HiddenServicePort 80 " + server.getSocketName());
@@ -173,7 +173,7 @@ public class TorManager {
     // викликається з native через log_message()
     @SuppressWarnings("unused") // викликається з JNI
     private void onLog(String line) {
-        if (line == null) return;
+        if (line == null || line.isEmpty()) return;
         log(line);
         onPortInLogListener(line);
         if(line.contains("Bootstrapped 100%")) {
@@ -193,7 +193,7 @@ public class TorManager {
 
     private void onPortInLogListener(String line) {
         int i = line.indexOf("Socks listener listening on port ");
-        if (i >= 0) {
+        if (i >= 0 && i < line.length()) {
             try {
                 String num = line.substring(i).replaceAll("\\D+", "");
                 int p = Integer.parseInt(num);
@@ -230,7 +230,7 @@ public class TorManager {
         return domain.replace(".onion", "").trim();
     }
 
-    File getHiddenServiceDir() {
+    public File getHiddenServiceDir() {
         return hiddenServiceDir;
     }
 

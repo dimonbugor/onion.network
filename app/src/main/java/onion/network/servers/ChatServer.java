@@ -48,16 +48,12 @@ public class ChatServer {
 
 
     public boolean handle(Uri uri) {
-
         log("handle " + uri);
-
-
-        // get & check params
-
         final String sender = uri.getQueryParameter("a");
         final String receiver = uri.getQueryParameter("b");
         final String time = uri.getQueryParameter("t");
         String m = uri.getQueryParameter("m");
+        String content = new String(Ed25519Signature.base64Decode(m), StandardCharsets.UTF_8); // base64 decode
         final String pubkey = uri.getQueryParameter("p");
         final String signature = uri.getQueryParameter("s");
         final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
@@ -66,18 +62,18 @@ public class ChatServer {
             log("message wrong address");
             return false;
         }
-        log("message address ok");
 
-        if (!tor.checksig(
+        boolean ok = tor.checksig(
                 Ed25519Signature.base64Decode(pubkey),
                 Ed25519Signature.base64Decode(signature),
-                (receiver + " " + sender + " " + time + " " + m).getBytes(StandardCharsets.UTF_8))) {
+                (receiver + " " + sender + " " + time + " " + content).getBytes(StandardCharsets.UTF_8)
+        );
+
+        if (!ok) {
             log("message invalid signature");
             return false;
         }
         log("message signature ok");
-
-        final String content = new String(Ed25519Signature.base64Decode(m), Charset.forName("UTF-8"));
 
         final long ltime;
         try {

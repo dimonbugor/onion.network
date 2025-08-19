@@ -6,7 +6,11 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TorBridgeParser {
 
@@ -44,48 +48,79 @@ public class TorBridgeParser {
     }
 
     private static List<String> parseObfsBridges(boolean ipv6) {
-        List<String> resp = new ArrayList<>();
-        // Отримуємо HTML з веб-сторінки бриджів
         String url = "https://bridges.torproject.org/bridges?transport=obfs4";
-        if(ipv6) url = "https://bridges.torproject.org/bridges?transport=obfs4&ipv6=yes";
-        String bridgeInfo = parseBridgelines(url);
-
-        // Якщо це бридж obfs4, то витягти адресу і сертифікат
-        if (bridgeInfo.startsWith("obfs4")) {
-            String[] parts = bridgeInfo.split("obfs4");
-            resp.add("obfs4" + parts[1]);
-            resp.add("obfs4" + parts[2]);
-        }
-        return resp;
+        if (ipv6) url = "https://bridges.torproject.org/bridges?transport=obfs4&ipv6=yes";
+        return parseBridgelines(url);
     }
 
     private static List<String> parseWebtunnelBridges() {
-        List<String> resp = new ArrayList<>();
-        // Отримуємо HTML з веб-сторінки бриджів
         String url = "https://bridges.torproject.org/bridges?transport=webtunnel&ipv6=yes";
-        String bridgeInfo = parseBridgelines(url);
-
-        // Якщо це бридж webtunnel, то витягти адресу і сертифікат
-        if (bridgeInfo.startsWith("webtunnel")) {
-            String[] parts = bridgeInfo.split("webtunnel");
-            resp.add("webtunnel" + parts[1]);
-            resp.add("webtunnel" + parts[2]);
-        }
-        return resp;
+        return parseBridgelines(url);
     }
 
-    private static String parseBridgelines(String url) {
+    private static List<String> parseBridgelines(String url) {
+        List<String> bridgeLines = new ArrayList<>();
         try {
             Document doc = Jsoup.connect(url).get();
-
-            // Знаходимо всі блоки з адресами бриджів (припускаючи, що це <pre> блоки)
             Element element = doc.getElementById("bridgelines");
+            if (element == null) return bridgeLines;
 
-            // Перебираємо всі знайдені бриджі
-            return element.text();
+            String input = element.text();
+
+            Pattern bridgePattern = Pattern.compile(
+                    "(\\S+)\\s+(\\S+)\\s+([0-9A-F]{40})((?:\\s+\\S+=\\S+)*)"
+            );
+
+            Matcher m = bridgePattern.matcher(input);
+            while (m.find()) {
+                String transport = m.group(1);
+                String hostPort  = m.group(2);
+                String fp        = m.group(3);
+                String params    = m.group(4).trim();
+
+                String host;
+                String port;
+
+                if (hostPort.startsWith("[")) {
+                    int idx = hostPort.indexOf("]:");
+                    host = hostPort.substring(1, idx);
+                    port = hostPort.substring(idx + 2);
+                } else if (hostPort.chars().filter(ch -> ch == ':').count() > 1) {
+                    // IPv6 без дужок → розділяємо за останньою двокрапкою
+                    int idx = hostPort.lastIndexOf(':');
+                    host = hostPort.substring(0, idx);
+                    port = hostPort.substring(idx + 1);
+                } else {
+                    // IPv4
+                    int idx = hostPort.indexOf(':');
+                    host = hostPort.substring(0, idx);
+                    port = hostPort.substring(idx + 1);
+                }
+
+                // після визначення host/port
+                if (host.contains(":") && !host.startsWith("[")) {
+                    host = "[" + host + "]";
+                }
+
+                bridgeLines.add(buildBridgeLine(transport, host, port, fp, params));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return bridgeLines;
     }
+
+    public static String buildBridgeLine(String transport, String host, String port,
+                                         String fingerprint, String params) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(transport).append(' ')
+                .append(host).append(':').append(port).append(' ')
+                .append(fingerprint);
+        if (!params.isEmpty()) {
+            sb.append(' ').append(params);
+        }
+        return sb.toString();
+    }
+
+
 }
