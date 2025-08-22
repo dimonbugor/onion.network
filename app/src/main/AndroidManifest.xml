@@ -255,15 +255,20 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
-
+        <activity
+            android:configChanges="screenSize|screenLayout|orientation|uiMode"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan"
+            android:name=".ui.PostActivity" />
         <service
-            android:name=".HostService"
+            android:name=".services.HostService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
         <receiver
-            android:name=".OnBootReceiver"
+            android:name=".services.OnBootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

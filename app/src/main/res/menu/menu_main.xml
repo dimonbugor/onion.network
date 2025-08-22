@@ -3,6 +3,45 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="onion.network.ui.MainActivity">
 
+    <item
+        android:visible="false"
+        android:id="@+id/action_photo"
+        android:icon="@drawable/ic_insert_photo_white_24dp"
+        android:title="Post Image"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_camera"
+        android:icon="@drawable/ic_add_a_photo_black_36dp"
+        android:title="Take Photo"
+        android:iconTint="@color/white"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_blog_title"
+        android:title="Change Blog Title"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_share"
+        android:title="Address" />
+
+    <item
+        android:id="@+id/action_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/action_add_post"
+        android:title="Write" />
+
+    <item
+        android:id="@+id/action_style"
+        android:title="Style" />
 
     <item
         android:id="@+id/action_add_friend"
@@ -20,7 +59,6 @@
         android:icon="@drawable/ic_sync_white_36dp"
         android:title="Refresh"
         app:showAsAction="always" />
-
 
     <item
         android:id="@+id/action_menu_scan_qr"
@@ -55,5 +93,13 @@
     <item
         android:id="@+id/action_menu_settings"
         android:title="Settings" />
+
+    <item
+        android:id="@+id/about"
+        android:title="About" />
+
+    <item
+        android:id="@+id/share"
+        android:title="Share this app" />
 
 </menu>

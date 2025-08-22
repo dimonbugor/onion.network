@@ -4,7 +4,6 @@ package onion.network.pages;
 
 import android.database.Cursor;
 
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.method.LinkMovementMethod;
@@ -18,18 +17,19 @@ import android.widget.Toast;
 
 import com.google.android.material.card.MaterialCardView;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.servers.ChatServer;
-import onion.network.Item;
+import onion.network.models.Item;
 import onion.network.ui.MainActivity;
 import onion.network.R;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
-import onion.network.UpdateScheduler;
+import onion.network.services.UpdateScheduler;
 import onion.network.helpers.Utils;
 
 public class ChatPage extends BasePage
@@ -142,7 +142,11 @@ public class ChatPage extends BasePage
     }
 
     synchronized void sendUnsent() {
-        chatClient.sendUnsent(address);
+        try {
+            chatClient.sendUnsent(address);
+        } catch (IOException e) {
+            log(e.getMessage());
+        }
     }
 
     @Override

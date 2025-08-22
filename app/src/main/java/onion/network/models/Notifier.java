@@ -1,4 +1,4 @@
-package onion.network;
+package onion.network.models;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,6 +13,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import onion.network.R;
 import onion.network.settings.Settings;
 import onion.network.ui.MainActivity;
 

@@ -1,4 +1,4 @@
-package onion.network;
+package onion.network.services;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

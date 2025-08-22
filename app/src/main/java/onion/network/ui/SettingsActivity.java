@@ -20,7 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.io.IOException;
 
 import onion.network.R;
-import onion.network.WallBot;
+import onion.network.models.WallBot;
 import onion.network.cashes.ItemCache;
 import onion.network.cashes.SiteCache;
 import onion.network.helpers.Utils;

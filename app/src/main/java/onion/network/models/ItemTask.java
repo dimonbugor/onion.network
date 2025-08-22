@@ -1,6 +1,6 @@
 
 
-package onion.network;
+package onion.network.models;
 
 import android.content.Context;
 import android.net.Uri;
@@ -15,10 +15,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 
+import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.clients.HttpClient;
 import onion.network.databases.ItemDatabase;
-import onion.network.models.ItemResult;
 
 public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
 

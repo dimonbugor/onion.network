@@ -16,9 +16,9 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import onion.network.FriendTool;
-import onion.network.Item;
-import onion.network.Site;
+import onion.network.models.FriendTool;
+import onion.network.models.Item;
+import onion.network.models.Site;
 import onion.network.TorManager;
 import onion.network.databases.ItemDatabase;
 import onion.network.models.ItemResult;
@@ -172,4 +172,7 @@ public class Server {
         return socketName;
     }
 
+    public LocalSocket getLs() {
+        return ls;
+    }
 }

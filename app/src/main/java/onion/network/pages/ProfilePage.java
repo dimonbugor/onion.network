@@ -28,9 +28,9 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import onion.network.FriendTool;
-import onion.network.Item;
-import onion.network.ItemTask;
+import onion.network.models.FriendTool;
+import onion.network.models.Item;
+import onion.network.models.ItemTask;
 import onion.network.R;
 import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;

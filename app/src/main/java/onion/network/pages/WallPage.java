@@ -28,8 +28,8 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import onion.network.Item;
-import onion.network.ItemTask;
+import onion.network.models.Item;
+import onion.network.models.ItemTask;
 import onion.network.R;
 import onion.network.TorManager;
 import onion.network.databases.ItemDatabase;

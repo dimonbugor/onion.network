@@ -307,7 +307,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/account_circle/baseline_account_circle_24.xml" />
+                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/insert_photo/baseline_insert_photo_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -317,9 +317,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_comments" />
+                            <entry key="outputName" value="ic_insert_photo_white_24dp" />
                             <entry key="sourceFile" value="$USER_HOME$/Downloads/comments-svgrepo-com(1).svg" />
                           </map>
                         </option>

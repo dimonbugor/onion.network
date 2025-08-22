@@ -2,7 +2,6 @@ package onion.network.helpers;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -25,10 +24,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import android.util.Base64;
 import java.util.Date;
 
 import onion.network.R;
@@ -157,5 +158,23 @@ public class Utils {
         }
         outFile.setExecutable(true);
         return outFile.getAbsolutePath();
+    }
+
+    public static byte[] buildMessageForSignature(
+            String sender, String receiver, long timestamp, byte[] msg) {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            out.write(sender.getBytes(StandardCharsets.UTF_8));
+            out.write(' ');
+            out.write(receiver.getBytes(StandardCharsets.UTF_8));
+            out.write(' ');
+            out.write(Long.toString(timestamp).getBytes(StandardCharsets.UTF_8));
+            out.write(' ');
+            out.write(msg); // ⚡ сирі байти контенту
+        } catch (IOException e) {
+            Log.e("buildMessageForSignature", e.getMessage());
+        }
+        return out.toByteArray();
     }
 }

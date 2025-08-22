@@ -5,8 +5,6 @@ package onion.network.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import onion.network.Item;
-
 public class ItemResult {
 
     private List<Item> _data;

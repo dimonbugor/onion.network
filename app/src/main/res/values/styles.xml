@@ -23,6 +23,14 @@
 
         <item name="android:popupBackground">@drawable/rounded_dialog</item>
         <item name="popupMenuBackground">@drawable/rounded_dialog</item>
+
+        <!-- Білий колір для іконок меню -->
+        <item name="actionMenuTextColor">@android:color/white</item>
+        <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
+    </style>
+
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:colorControlNormal">@android:color/white</item>
     </style>
 
     <!-- Стиль панелі дій -->

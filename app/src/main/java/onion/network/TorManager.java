@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -167,7 +170,9 @@ public class TorManager {
     }
 
     public void stopTor() {
-        nativeStopTor();
+        new Thread(() -> {
+            nativeStopTor();
+        }).start();
     }
 
     // викликається з native через log_message()
@@ -272,8 +277,60 @@ public class TorManager {
         }
     }
 
-    public boolean checksig(byte[] pubkey, byte[] sig, byte[] msg) {
-        return Ed25519Signature.checkEd25519Signature(pubkey, sig, msg);
+    public boolean checksig(byte[] ed25519PubKey32, byte[] sig, byte[] msg) {
+        try {
+            return Ed25519Signature.checkEd25519Signature(ed25519PubKey32, sig, msg);
+        } catch (Exception e) {
+            log("checksig exception: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static String computeOnionV3(byte[] ed25519PubKey32) {
+        if (ed25519PubKey32 == null || ed25519PubKey32.length != 32) {
+            throw new IllegalArgumentException("ed25519 pubkey must be 32 bytes");
+        }
+
+        try {
+            // version byte
+            byte version = 0x03;
+
+            // checksum input = ".onion checksum" || pubkey || version
+            byte[] prefix = ".onion checksum".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+            byte[] checksumInput = new byte[prefix.length + 32 + 1];
+            System.arraycopy(prefix, 0, checksumInput, 0, prefix.length);
+            System.arraycopy(ed25519PubKey32, 0, checksumInput, prefix.length, 32);
+            checksumInput[checksumInput.length - 1] = version;
+
+            // SHA3-256 (є в Java 9+, на Android – через BouncyCastle "BC")
+            java.security.MessageDigest md;
+            try {
+                md = java.security.MessageDigest.getInstance("SHA3-256");
+            } catch (java.security.NoSuchAlgorithmException e) {
+                md = java.security.MessageDigest.getInstance("SHA3-256", "BC");
+            }
+            byte[] hash = md.digest(checksumInput);
+
+            // беремо перші 2 байти як checksum
+            byte[] checksum2 = new byte[] { hash[0], hash[1] };
+
+            // addr_bytes = pubkey || checksum || version
+            byte[] addr = new byte[32 + 2 + 1];
+            System.arraycopy(ed25519PubKey32, 0, addr, 0, 32);
+            addr[32] = checksum2[0];
+            addr[33] = checksum2[1];
+            addr[34] = version;
+
+            // Base32 без паддінгу, нижній регістр (RFC4648)
+            org.apache.commons.codec.binary.Base32 b32 = new org.apache.commons.codec.binary.Base32(false); // no padding
+            String onion = b32.encodeAsString(addr).toLowerCase(java.util.Locale.US);
+
+            // має бути 56 символів
+            if (onion.endsWith("=")) onion = onion.replace("=", "");
+            return onion;
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to compute onion v3", ex);
+        }
     }
 
     public interface LogListener {

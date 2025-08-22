@@ -10,7 +10,7 @@ import android.widget.FrameLayout;
 
 import java.io.IOException;
 
-import onion.network.Item;
+import onion.network.models.Item;
 import onion.network.databases.ItemDatabase;
 import onion.network.ui.MainActivity;
 
@@ -43,7 +43,7 @@ public abstract class BasePage extends FrameLayout {
     }
 
     public void onTabSelected() {
-
+        activity.togglePostMainMenu();
     }
 
     public String getBadge() {
@@ -73,6 +73,8 @@ public abstract class BasePage extends FrameLayout {
 
     public void onResume() {
     }
+
+
 
     public int getIcon() {
         return 0;

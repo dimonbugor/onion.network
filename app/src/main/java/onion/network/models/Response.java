@@ -67,4 +67,8 @@ public class Response {
     public void setContentPlain(String text) {
         setContent(text.getBytes(utf8), "Content-Type: text/plain; charset=utf-8");
     }
+
+    public String getCharset() {
+        return "UTF-8";
+    }
 }

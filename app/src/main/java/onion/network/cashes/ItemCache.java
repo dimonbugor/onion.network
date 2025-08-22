@@ -13,7 +13,7 @@ import androidx.collection.LruCache;
 import java.util.ArrayList;
 import java.util.List;
 
-import onion.network.Item;
+import onion.network.models.Item;
 import onion.network.models.ItemResult;
 import onion.network.settings.Settings;
 import onion.network.helpers.Utils;

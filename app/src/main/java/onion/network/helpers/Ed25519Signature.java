@@ -21,15 +21,26 @@ public class Ed25519Signature {
     }
 
     private static byte[] readKey(File file, String header, int keyLength, int skip) throws IOException {
-        byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
-        int headerIndex = new String(fileBytes, StandardCharsets.US_ASCII).indexOf(header);
+        byte[] fileBytes = new byte[(int) file.length()];
+        try (FileInputStream fis = new FileInputStream(file)) {
+            int read = fis.read(fileBytes);
+            if (read != fileBytes.length) {
+                throw new IOException("Could not read entire file");
+            }
+        }
+
+        // шукаємо хедер
+        String fileContent = new String(fileBytes, StandardCharsets.US_ASCII);
+        int headerIndex = fileContent.indexOf(header);
         if (headerIndex == -1) {
             throw new IOException("Header not found in key file: " + header);
         }
+
         int keyStart = headerIndex + header.length() + skip; // пропускаємо службові байти
         if (fileBytes.length < keyStart + keyLength) {
             throw new IOException("Key file too short");
         }
+
         return Arrays.copyOfRange(fileBytes, keyStart, keyStart + keyLength);
     }
 

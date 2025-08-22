@@ -1,6 +1,6 @@
 
 
-package onion.network;
+package onion.network.models;
 
 import android.content.Context;
 import android.net.Uri;
@@ -9,13 +9,13 @@ import android.util.Log;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import onion.network.TorManager;
 import onion.network.clients.HttpClient;
 import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.OnionUrlBuilder;
 import onion.network.helpers.Utils;
-import onion.network.models.ItemResult;
 
 public class FriendTool {
 

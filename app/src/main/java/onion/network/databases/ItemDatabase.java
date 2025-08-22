@@ -12,7 +12,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import onion.network.Item;
+import onion.network.models.Item;
 import onion.network.models.ItemResult;
 
 public class ItemDatabase extends SQLiteOpenHelper {

@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
@@ -52,23 +54,23 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import onion.network.FriendTool;
-import onion.network.HostService;
-import onion.network.Item;
-import onion.network.ItemTask;
-import onion.network.Notifier;
-import onion.network.QR;
+import onion.network.models.FriendTool;
+import onion.network.pages.BlogPage;
+import onion.network.services.HostService;
+import onion.network.models.Item;
+import onion.network.models.ItemTask;
+import onion.network.models.Notifier;
+import onion.network.models.QR;
 import onion.network.R;
-import onion.network.Site;
+import onion.network.models.Site;
 import onion.network.TorManager;
-import onion.network.UpdateScheduler;
-import onion.network.WallBot;
+import onion.network.services.UpdateScheduler;
+import onion.network.models.WallBot;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
@@ -106,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
     ArcButtonLayout arcButtonLayout;
     FloatingActionButton menuFab;
     private ViewPager viewPager;
+    public static int REQUEST_CAMERA = 24;
+    public static int REQUEST_PICKER = 25;
 
     public static void addFriendItem(final Context context, String a, String name) {
 
@@ -275,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
                     requestPage,
                     new ConversationPage(this),
                     new ProfilePage(this),
-                    new InfoPage(this),
+                    new BlogPage(this),
                     new CloudPage(this),
                     new PrivacyPage(this),
             };
@@ -286,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                     friendPage,
                     chatPage,
                     new ProfilePage(this),
-                    new InfoPage(this),
+                    new BlogPage(this),
                     new CloudPage(this),
                     new PrivacyPage(this),
             };
@@ -294,6 +298,11 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Встановити білий tint для всіх іконок меню
+        toolbar.setTitleTextColor(Color.WHITE);
+        toolbar.setSubtitleTextColor(Color.WHITE);
+        toolbar.getOverflowIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
 
         if (!address.isEmpty()) {
 
@@ -341,6 +350,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("ViewPager", "Page selected: " + position);
 
                 fabvis();
+                togglePostMainMenu();
             }
 
             @Override
@@ -838,14 +848,58 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.findItem(R.id.action_add_friend).setVisible(!address.isEmpty() && !db.hasKey("friend", address));
-        menu.findItem(R.id.action_friends).setVisible(!address.isEmpty() && db.hasKey("friend", address));
-        menu.findItem(R.id.action_clear_chat).setVisible(!address.isEmpty());
-        menu.findItem(R.id.action_menu_invite_friends).setVisible(address.isEmpty());
-        return true;
+    boolean actionPhotoOption = false;
+    boolean actionCameraOption = false;
+    boolean actionBlogTitleOption = false;
+    boolean actionShareOption = false;
+    boolean actionHomeOption = false;
+    boolean actionAddPostOption = false;
+    boolean actionStyleOption = false;
+
+    boolean actionRefreshQrOption = true;
+    boolean actionMenuScanQrOption = true;
+    boolean actionMenuShowMyQrOption = true;
+    boolean actionMenuEnterIdOption = true;
+    boolean actionMenuShowMyIdOption = true;
+    boolean actionMenuShowUriOption = true;
+    boolean actionMenuInviteFriendsOption = true;
+
+    public void togglePostMainMenu() {
+        boolean showBlogScreen = currentPage() instanceof BlogPage;
+        if (showBlogScreen) {
+            actionPhotoOption = true;
+            actionCameraOption = true;
+            actionBlogTitleOption = true;
+            actionShareOption = true;
+            actionHomeOption = true;
+            actionAddPostOption = true;
+            actionStyleOption = true;
+
+            actionRefreshQrOption = false;
+            actionMenuScanQrOption = false;
+            actionMenuShowMyQrOption = false;
+            actionMenuEnterIdOption = false;
+            actionMenuShowMyIdOption = false;
+            actionMenuShowUriOption = false;
+            actionMenuInviteFriendsOption = false;
+        } else {
+            actionPhotoOption = false;
+            actionCameraOption = false;
+            actionBlogTitleOption = false;
+            actionShareOption = false;
+            actionHomeOption = false;
+            actionAddPostOption = false;
+            actionStyleOption = false;
+
+            actionRefreshQrOption = true;
+            actionMenuScanQrOption = true;
+            actionMenuShowMyQrOption = true;
+            actionMenuEnterIdOption = true;
+            actionMenuShowMyIdOption = true;
+            actionMenuShowUriOption = true;
+            actionMenuInviteFriendsOption = true;
+        }
+        updateMenu();
     }
 
     void updateMenu() {
@@ -853,8 +907,103 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_photo).setVisible(actionPhotoOption);
+        menu.findItem(R.id.action_camera).setVisible(actionCameraOption);
+        menu.findItem(R.id.action_blog_title).setVisible(actionBlogTitleOption);
+        menu.findItem(R.id.action_share).setVisible(actionShareOption);
+        menu.findItem(R.id.action_home).setVisible(actionHomeOption);
+        menu.findItem(R.id.action_add_post).setVisible(actionAddPostOption);
+        menu.findItem(R.id.action_style).setVisible(actionStyleOption);
+
+        menu.findItem(R.id.action_refresh).setVisible(actionMenuScanQrOption);
+        menu.findItem(R.id.action_menu_scan_qr).setVisible(actionMenuScanQrOption);
+        menu.findItem(R.id.action_menu_show_my_qr).setVisible(actionMenuShowMyQrOption);
+        menu.findItem(R.id.action_menu_enter_id).setVisible(actionMenuEnterIdOption);
+        menu.findItem(R.id.action_menu_show_my_id).setVisible(actionMenuShowMyIdOption);
+        menu.findItem(R.id.action_menu_show_uri).setVisible(actionMenuShowUriOption);
+        menu.findItem(R.id.action_menu_invite_friends).setVisible(actionMenuInviteFriendsOption);
+
+        menu.findItem(R.id.action_add_friend).setVisible(!address.isEmpty() && !db.hasKey("friend", address));
+        menu.findItem(R.id.action_friends).setVisible(!address.isEmpty() && db.hasKey("friend", address));
+        menu.findItem(R.id.action_clear_chat).setVisible(!address.isEmpty());
+        menu.findItem(R.id.action_menu_invite_friends).setVisible(address.isEmpty());
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
+        if (id == R.id.action_blog_title) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).editTitle();
+            }
+            return true;
+        }
+        if (id == R.id.action_photo) {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            intent.setType("image/*");
+            startActivityForResult(Intent.createChooser(intent, "Complete action using"), REQUEST_PICKER);
+            return true;
+        }
+        if (id == R.id.action_camera) {
+            //getPackageManager().hasSystemFeature(CAME)
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            //takePictureIntent.resolveActivity(getPackageManager());
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+            return true;
+        }
+        if (id == R.id.action_add_post) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).addPost();
+            }
+            return true;
+        }
+        if (id == R.id.action_share) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).share();
+            }
+            return true;
+        }
+        if (id == R.id.share) {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=" + getPackageName());
+            intent.setType("text/plain");
+            startActivity(intent);
+        }
+        if (id == R.id.about) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).showAbout();
+            }
+            return true;
+        }
+        if (id == R.id.action_style) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).selectStyle();
+            }
+            return true;
+        }
+        if (id == R.id.action_home) {
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                ((BlogPage) page).goHome();
+            }
+            return true;
+        }
 
         if (id == R.id.action_friends) {
             AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
@@ -876,19 +1025,15 @@ public class MainActivity extends AppCompatActivity {
             dialog.show();
             return true;
         }
-
         if (id == R.id.action_add_friend) {
             addFriend(address, name);
             snack("Added friend");
             return true;
         }
-
         if (id == R.id.action_refresh) {
             load();
             return true;
         }
-
-
         if (id == R.id.action_menu_enter_id) {
             showEnterId();
             return true;
@@ -900,7 +1045,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_menu_show_uri) {
             showUrl();
         }
-
         if (id == R.id.action_menu_scan_qr) {
             scanQR();
             return true;
@@ -909,22 +1053,18 @@ public class MainActivity extends AppCompatActivity {
             showQR();
             return true;
         }
-
         if (id == R.id.action_menu_invite_friends) {
             inviteFriend();
             return true;
         }
-
         if (id == R.id.action_menu_rate) {
             rateThisApp();
             return true;
         }
-
         if (id == R.id.action_menu_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
-
         if (id == R.id.action_clear_chat) {
             AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
                     .setTitle("Clear chat")

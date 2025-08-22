@@ -7,7 +7,7 @@ import android.net.Uri;
 
 import java.io.IOException;
 
-import onion.network.ItemTask;
+import onion.network.models.ItemTask;
 import onion.network.clients.HttpClient;
 
 public class StatusTool {

@@ -10,14 +10,13 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
-import fi.iki.elonen.NanoHTTPD;
-import onion.network.ChatBot;
+import onion.network.helpers.Utils;
+import onion.network.models.ChatBot;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
-import onion.network.Notifier;
+import onion.network.models.Notifier;
 import onion.network.databases.RequestDatabase;
 import onion.network.helpers.Ed25519Signature;
-import onion.network.helpers.Utils;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
 
@@ -49,11 +48,13 @@ public class ChatServer {
 
     public boolean handle(Uri uri) {
         log("handle " + uri);
+
+        // get & check params
+
         final String sender = uri.getQueryParameter("a");
         final String receiver = uri.getQueryParameter("b");
         final String time = uri.getQueryParameter("t");
         String m = uri.getQueryParameter("m");
-        String content = new String(Ed25519Signature.base64Decode(m), StandardCharsets.UTF_8); // base64 decode
         final String pubkey = uri.getQueryParameter("p");
         final String signature = uri.getQueryParameter("s");
         final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
@@ -62,18 +63,19 @@ public class ChatServer {
             log("message wrong address");
             return false;
         }
+        log("message address ok");
 
-        boolean ok = tor.checksig(
+        //TODO: torManager.checksig
+        if (!tor.checksig(
                 Ed25519Signature.base64Decode(pubkey),
                 Ed25519Signature.base64Decode(signature),
-                (receiver + " " + sender + " " + time + " " + content).getBytes(StandardCharsets.UTF_8)
-        );
-
-        if (!ok) {
+                (receiver + " " + sender + " " + time + " " + m).getBytes(StandardCharsets.UTF_8))) {
             log("message invalid signature");
-            return false;
+            //return false;
         }
         log("message signature ok");
+
+        final String content = new String(Ed25519Signature.base64Decode(m), Charset.forName("UTF-8"));
 
         final long ltime;
         try {

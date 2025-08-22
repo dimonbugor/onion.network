@@ -1,6 +1,6 @@
 
 
-package onion.network;
+package onion.network.models;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,10 +10,10 @@ import android.util.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
-import onion.network.models.ItemResult;
 import onion.network.settings.Settings;
 
 public class Item {

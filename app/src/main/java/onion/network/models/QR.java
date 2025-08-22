@@ -1,6 +1,6 @@
 
 
-package onion.network;
+package onion.network.models;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

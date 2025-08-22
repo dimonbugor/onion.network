@@ -2,14 +2,11 @@
 
 package onion.network.clients;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -45,7 +42,7 @@ public class ChatClient {
         Log.i(TAG, s);
     }
 
-    private boolean sendOne(Cursor cursor) {
+    private boolean sendOne(Cursor cursor) throws IOException {
         String sender = cursor.getString(cursor.getColumnIndexOrThrow("sender"));
         String receiver = cursor.getString(cursor.getColumnIndexOrThrow("receiver"));
         String content = cursor.getString(cursor.getColumnIndexOrThrow("content"));
@@ -54,11 +51,10 @@ public class ChatClient {
     }
 
     public Uri makeUri(String sender, String receiver, String content, long time) {
-        byte[] msgToSign = (receiver + " " + sender + " " + time + " " + content)
-                .getBytes(StandardCharsets.UTF_8);
-        String sig = Ed25519Signature.base64Encode(torManager.sign(msgToSign));
 
-        String contentEnc = Ed25519Signature.base64Encode(content.getBytes(StandardCharsets.UTF_8));
+        content = Ed25519Signature.base64Encode(content.getBytes(Utils.UTF_8));
+
+        String sig = Ed25519Signature.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
 
         String name = ItemDatabase.getInstance(context).getstr("name");
         if (name == null) name = "";
@@ -66,8 +62,8 @@ public class ChatClient {
         String uri = "http://" + receiver + ".onion/m?";
         uri += "a=" + Uri.encode(sender) + "&";
         uri += "b=" + Uri.encode(receiver) + "&";
-        uri += "t=" + time + "&";
-        uri += "m=" + Uri.encode(contentEnc) + "&"; // base64
+        uri += "t=" + Uri.encode("" + time) + "&";
+        uri += "m=" + Uri.encode(content) + "&";
         uri += "p=" + Uri.encode(Ed25519Signature.base64Encode(torManager.pubkey())) + "&";
         uri += "s=" + Uri.encode(sig) + "&";
         uri += "n=" + Uri.encode(name);
@@ -75,7 +71,7 @@ public class ChatClient {
         return Uri.parse(uri);
     }
 
-    public boolean sendOne(String sender, String receiver, String content, long time) {
+    public boolean sendOne(String sender, String receiver, String content, long time) throws IOException {
 
         Uri uri = makeUri(sender, receiver, content, time);
         log("" + uri);
@@ -103,7 +99,7 @@ public class ChatClient {
 
     }
 
-    private void sendAll(Cursor cursor) {
+    private void sendAll(Cursor cursor) throws IOException {
         while (cursor.moveToNext()) {
             sendOne(cursor);
         }
@@ -117,11 +113,11 @@ public class ChatClient {
         return ret;
     }
 
-    public void sendUnsent() {
+    public void sendUnsent() throws IOException {
         sendAll(chatDatabase.getUnsent());
     }
 
-    public void sendUnsent(String address) {
+    public void sendUnsent(String address) throws IOException {
         sendAll(chatDatabase.getUnsent(address));
     }
 

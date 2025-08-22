@@ -1,6 +1,6 @@
 
 
-package onion.network;
+package onion.network.models;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -22,10 +22,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
+import onion.network.R;
+import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.cashes.SiteCache;
 import onion.network.databases.ItemDatabase;
-import onion.network.models.ItemResult;
 import onion.network.pages.ProfilePage;
 import onion.network.helpers.Utils;
 

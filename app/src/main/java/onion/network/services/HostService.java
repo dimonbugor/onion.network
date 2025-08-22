@@ -1,4 +1,4 @@
-package onion.network;
+package onion.network.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -14,9 +14,13 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import onion.network.R;
+import onion.network.TorManager;
+import onion.network.models.WallBot;
 import onion.network.clients.ChatClient;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;
@@ -79,7 +83,11 @@ public class HostService extends Service {
             @Override
             public void run() {
                 log("Updating unsent messages and requests");
-                ChatClient.getInstance(getApplicationContext()).sendUnsent();
+                try {
+                    ChatClient.getInstance(getApplicationContext()).sendUnsent();
+                } catch (IOException e) {
+                    log(e.getMessage());
+                }
                 RequestTool.getInstance(getApplicationContext()).sendAllRequests();
             }
         }, 0, 1000 * 60 * 60); // Оновлюємо раз на годину
