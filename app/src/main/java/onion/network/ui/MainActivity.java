@@ -323,6 +323,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Set up the ViewPager with the sections adapter.
         viewPager = (ViewPager) findViewById(R.id.container);
+        viewPager.setClipToPadding(false);
+        viewPager.setPageMargin(20);
+
         viewPager.setAdapter(new PagerAdapter() {
             @Override
             public int getCount() {
@@ -883,7 +886,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!fab.isShown()) {
                         fab.show();
                     }
-                    fab.setOnClickListener(v -> page.onFab());
+                    fab.setOnClickListener(v -> currentPage().onFab());
                 } else {
                     if (fab.isShown()) {
                         fab.hide();
