@@ -21,8 +21,10 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Choreographer;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -36,7 +38,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.ActionMenuView;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
@@ -54,6 +59,8 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -108,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
     ArcButtonLayout arcButtonLayout;
     FloatingActionButton menuFab;
     private ViewPager viewPager;
+    private View dimOverlay;
     public static int REQUEST_CAMERA = 24;
     public static int REQUEST_PICKER = 25;
 
@@ -250,6 +258,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    boolean overlayVisible = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -362,15 +372,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         menuFab = findViewById(R.id.menuFab);
-        View dimOverlay = findViewById(R.id.dimOverlay);
+        dimOverlay = findViewById(R.id.dimOverlay);
         arcButtonLayout = findViewById(R.id.arcButtonLayout);
         arcButtonLayout.setFab(menuFab);
         arcButtonLayout.setOnExpansionChangedListener(expanded -> {
             fadeOverlay(dimOverlay, expanded);
-        });
-
-        Objects.requireNonNull(getSupportActionBar()).addOnMenuVisibilityListener(isVisible -> {
-            fadeOverlay(dimOverlay, isVisible);
         });
 
         for (int i = 0; i < pages.length; i++) {
@@ -453,6 +459,60 @@ public class MainActivity extends AppCompatActivity {
         WallBot.getInstance(this);
 
     }
+
+    @Override protected void onStart() {
+        super.onStart();
+        Choreographer.getInstance().postFrameCallback(menuWatcher);
+    }
+
+    @Override protected void onStop() {
+        super.onStop();
+        Choreographer.getInstance().removeFrameCallback(menuWatcher);
+        if (overlayVisible) {
+            overlayVisible = false;
+            fadeOverlay(dimOverlay, false);
+        }
+    }
+
+    /** Детектим, чи є зараз popup overflow меню серед глобальних в'юшок WindowManager */
+    @SuppressWarnings("unchecked")
+    private boolean isOverflowMenuShowing() {
+        try {
+            Class<?> wmgClass = Class.forName("android.view.WindowManagerGlobal");
+            Method getInstance = wmgClass.getMethod("getInstance");
+            Object wmg = getInstance.invoke(null);
+
+            Field mViewsField = wmgClass.getDeclaredField("mViews");
+            mViewsField.setAccessible(true);
+            List<View> views = (List<View>) mViewsField.get(wmg);
+            if (views == null) return false;
+
+            for (View v : views) {
+                String name = v.getClass().getName();
+                // різні варіанти на різних версіях Android/AppCompat
+                if ((name.contains("MenuPopupWindow")
+                        || name.contains("PopupDecorView")
+                        || name.contains("MenuDropDownListView")
+                        || name.contains("ListPopupWindow$DropDownListView"))
+                        && v.isShown()) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    private final Choreographer.FrameCallback menuWatcher = new Choreographer.FrameCallback() {
+        @Override public void doFrame(long frameTimeNanos) {
+            boolean open = isOverflowMenuShowing();
+            if (open != overlayVisible) {
+                overlayVisible = open;
+                fadeOverlay(dimOverlay, open);
+            }
+            // безперервно спостерігаємо
+            Choreographer.getInstance().postFrameCallback(menuWatcher);
+        }
+    };
 
     private void fadeOverlay(View overlay, boolean show) {
         overlay.animate()
@@ -814,9 +874,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void fabvis() {
-
         initTabs();
-
         int cFab = currentPage().getFab();
         for (final BasePage page : pages) {
             FloatingActionButton fab = (FloatingActionButton) findViewById(page.getFab());
@@ -825,12 +883,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!fab.isShown()) {
                         fab.show();
                     }
-                    fab.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            page.onFab();
-                        }
-                    });
+                    fab.setOnClickListener(v -> page.onFab());
                 } else {
                     if (fab.isShown()) {
                         fab.hide();
@@ -845,7 +898,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
     }
 
     boolean actionPhotoOption = false;

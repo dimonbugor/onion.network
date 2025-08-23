@@ -73,7 +73,7 @@ public class BlogPage extends BasePage {
             public void delete(final String id) {
                 if (id == null) return;
                 activity.runOnUiThread(() -> {
-                    AlertDialog dialog = new AlertDialog.Builder(activity)
+                    AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                             .setTitle("Remove Post?")
                             .setMessage("Do you really want to remove this post?")
                             .setPositiveButton("Yes", (dialog2, which) -> {
@@ -277,7 +277,7 @@ public class BlogPage extends BasePage {
     public void editTitle() {
         final View view = activity.getLayoutInflater().inflate(R.layout.dialog_title, null);
         ((EditText) view.findViewById(R.id.title)).setText(blog.getTitle());
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setTitle("Change Blog Title")
                 .setView(view)
                 .setPositiveButton("Publish", (dialog1, which) -> {
@@ -347,7 +347,7 @@ public class BlogPage extends BasePage {
             activity.startActivity(intent);
         });
 
-        new AlertDialog.Builder(activity)
+        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setView(view)
                 .show();
     }
@@ -359,7 +359,7 @@ public class BlogPage extends BasePage {
         } catch (PackageManager.NameNotFoundException e) {
             throw new RuntimeException(e);
         }
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setTitle(activity.getString(R.string.app_name))
                 //.setMessage(BuildConfig.APPLICATION_ID + "\n\nVersion: " + BuildConfig.VERSION_NAME)
                 .setMessage("Version: " + versionName)
@@ -380,7 +380,7 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity)
+        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setTitle("Third party software used in this app (click to view license)")
                 .setItems(items, (dialog, which) -> showLicense(items[which]))
                 .show();
@@ -392,13 +392,13 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity)
+        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setTitle(name)
                 .setMessage(text)
                 .show();
     }
     public void selectStyle() {
-        AlertDialog dialog = new AlertDialog.Builder(activity)
+        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
                 .setTitle("Choose Style")
                 .setSingleChoiceItems(blog.getStyles(), blog.getStyleIndex(), (d, which) -> {
                     blog.setStyle(which);
