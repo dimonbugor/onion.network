@@ -1,9 +1,13 @@
 package onion.network.ui;
 
+import static android.view.View.VISIBLE;
+
 import android.content.Intent;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -14,29 +18,12 @@ import onion.network.helpers.PermissionHelper;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int MAX_LAUNCH_COUNT = 10;
-    private static final String PREF_NAME = "app_prefs";
-    private static final String LAUNCH_COUNT_KEY = "launch_count";
-
     private ActivitySplashBinding binding;
     private PermissionHelper permissionHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Перевірка ліміту запусків
-//        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
-//        int launchCount = prefs.getInt(LAUNCH_COUNT_KEY, 0);
-//
-//        if (launchCount >= MAX_LAUNCH_COUNT) {
-//            Toast.makeText(this, "Тестовий період завершено. Дякуємо!", Toast.LENGTH_LONG).show();
-//            finish(); // Закриваємо додаток
-//            return;
-//        }
-//
-//        // Збільшуємо лічильник і зберігаємо
-//        prefs.edit().putInt(LAUNCH_COUNT_KEY, launchCount + 1).apply();
 
         binding = ActivitySplashBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -46,6 +33,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onPermissionsGranted() {
                 // Тут продовжуємо роботу після надання всіх дозволів
+                binding.fullscreenContent.setVisibility(VISIBLE);
                 proceedWithAppFunctionality();
             }
 
@@ -69,8 +57,9 @@ public class SplashActivity extends AppCompatActivity {
 
     // Метод, що викликається після надання всіх дозволів
     private void proceedWithAppFunctionality() {
-        // Тут продовжуйте вашу логіку
-        goToMainActivity();
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            goToMainActivity();
+        }, 2000);
     }
 
     private void showDeniedMessage() {

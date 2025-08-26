@@ -98,17 +98,13 @@ public class TorManager {
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
             writer.println("Log notice stdout");
-//            writer.println("Log debug stdout");
             writer.println("DataDirectory " + appTorServiceDir.getAbsolutePath() + "/data");
             writer.println("SocksPort auto");
-//            writer.println("SocksPort 9050");
             writer.println("ExitPolicy accept *:*");
             writer.println("NumCPUs 2");
 
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
-//            writer.println("HiddenServiceVersion 3");
-//            writer.println("HiddenServicePort 80 127.0.0.1:8080");
             Server server = Server.getInstance(context);
             writer.println("HiddenServicePort 80 " + server.getSocketName());
             writer.println();
@@ -121,6 +117,8 @@ public class TorManager {
                 String libSnowflakePath = context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so";
                 new File(libSnowflakePath).setExecutable(true);
                 String libMeekPath = Utils.copyAssetFile(context, "meek-client");
+                String libConjurePath = context.getApplicationInfo().nativeLibraryDir + "/libconjure.so";
+                new File(libConjurePath).setExecutable(true);
 
                 writer.println("UseBridges 1");
                 writer.println();
@@ -158,11 +156,10 @@ public class TorManager {
                 if (clients.contains("meek")) {
                     writer.println("ClientTransportPlugin meek exec " + libMeekPath);
                 }
+                if (clients.contains("conjure")) {
+                    writer.println("ClientTransportPlugin conjure exec " + libConjurePath);
+                }
                 writer.println();
-
-//                writer.println("ClientUseIPv4 1");
-//                writer.println("ClientUseIPv6 1");
-//                writer.println("ClientPreferIPv6ORPort 1");
             }
         }
 
@@ -283,53 +280,6 @@ public class TorManager {
         } catch (Exception e) {
             log("checksig exception: " + e.getMessage());
             return false;
-        }
-    }
-
-    private static String computeOnionV3(byte[] ed25519PubKey32) {
-        if (ed25519PubKey32 == null || ed25519PubKey32.length != 32) {
-            throw new IllegalArgumentException("ed25519 pubkey must be 32 bytes");
-        }
-
-        try {
-            // version byte
-            byte version = 0x03;
-
-            // checksum input = ".onion checksum" || pubkey || version
-            byte[] prefix = ".onion checksum".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
-            byte[] checksumInput = new byte[prefix.length + 32 + 1];
-            System.arraycopy(prefix, 0, checksumInput, 0, prefix.length);
-            System.arraycopy(ed25519PubKey32, 0, checksumInput, prefix.length, 32);
-            checksumInput[checksumInput.length - 1] = version;
-
-            // SHA3-256 (є в Java 9+, на Android – через BouncyCastle "BC")
-            java.security.MessageDigest md;
-            try {
-                md = java.security.MessageDigest.getInstance("SHA3-256");
-            } catch (java.security.NoSuchAlgorithmException e) {
-                md = java.security.MessageDigest.getInstance("SHA3-256", "BC");
-            }
-            byte[] hash = md.digest(checksumInput);
-
-            // беремо перші 2 байти як checksum
-            byte[] checksum2 = new byte[] { hash[0], hash[1] };
-
-            // addr_bytes = pubkey || checksum || version
-            byte[] addr = new byte[32 + 2 + 1];
-            System.arraycopy(ed25519PubKey32, 0, addr, 0, 32);
-            addr[32] = checksum2[0];
-            addr[33] = checksum2[1];
-            addr[34] = version;
-
-            // Base32 без паддінгу, нижній регістр (RFC4648)
-            org.apache.commons.codec.binary.Base32 b32 = new org.apache.commons.codec.binary.Base32(false); // no padding
-            String onion = b32.encodeAsString(addr).toLowerCase(java.util.Locale.US);
-
-            // має бути 56 символів
-            if (onion.endsWith("=")) onion = onion.replace("=", "");
-            return onion;
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to compute onion v3", ex);
         }
     }
 

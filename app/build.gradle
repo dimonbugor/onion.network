@@ -7,8 +7,8 @@ android {
     defaultConfig {
         applicationId "onion.network"
         targetSdkVersion 35
-        versionCode 1400
-        versionName "14"
+        versionCode 1500
+        versionName "15"
         minSdkVersion 24
         multiDexEnabled = true
 
