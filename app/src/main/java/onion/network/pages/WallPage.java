@@ -304,6 +304,8 @@ public class WallPage extends BasePage {
                     TextView name = ((TextView) v.findViewById(R.id.name));
                     TextView date = ((TextView) v.findViewById(R.id.date));
                     TextView text = ((TextView) v.findViewById(R.id.text));
+                    ImageView like = ((ImageView) v.findViewById(R.id.like));
+                    ImageView comments = ((ImageView) v.findViewById(R.id.comments));
                     ImageView share = ((ImageView) v.findViewById(R.id.share));
                     ImageView delete = ((ImageView) v.findViewById(R.id.delete));
                     ImageView edit = ((ImageView) v.findViewById(R.id.edit));
@@ -382,6 +384,22 @@ public class WallPage extends BasePage {
                             }
                         });
                     }
+
+                    like.setClickable(true);
+                    like.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            activity.snack("Available soon");
+                        }
+                    });
+
+                    comments.setClickable(true);
+                    comments.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            activity.snack("Available soon");
+                        }
+                    });
 
                     if (wallAddress.equals(myAddress)) {
                         delete.setClickable(true);

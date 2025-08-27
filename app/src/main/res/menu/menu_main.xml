@@ -54,6 +54,11 @@
         android:title="Friend"
         app:showAsAction="always|withText" />
 
+    <item
+        android:id="@+id/action_call"
+        android:icon="@drawable/ic_call"
+        android:title="Call"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/action_refresh"

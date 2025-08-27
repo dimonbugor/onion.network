@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Base64;
@@ -63,10 +64,6 @@ public class ProfilePage extends BasePage {
         findViewById(R.id.choose_photo).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                //Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                //intent.setType("image/*");
-                //activity.startActivityForResult(intent, REQUEST_PHOTO);
                 startImageChooser(REQUEST_PHOTO);
             }
         });
@@ -134,10 +131,10 @@ public class ProfilePage extends BasePage {
             Bitmap bmp;
 
             if (requestCode == REQUEST_PHOTO) {
-                //bmp = ThumbnailUtils.extractThumbnail(MediaStore.Images.Media.getBitmap(activity.getContentResolver(), uri), 320, 320);
+                Uri uri = data.getData();
                 bmp = getActivityResultBitmap(data);
+                bmp = fixImageOrientation(bmp, uri);
             } else { // REQUEST_TAKE_PHOTO
-                //bmp = ThumbnailUtils.extractThumbnail((Bitmap) data.getExtras().get("data"), 320, 320);
                 bmp = (Bitmap) data.getExtras().get("data");
             }
 

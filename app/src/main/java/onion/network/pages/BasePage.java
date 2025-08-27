@@ -5,6 +5,9 @@ package onion.network.pages;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.widget.FrameLayout;
 
@@ -43,7 +46,7 @@ public abstract class BasePage extends FrameLayout {
     }
 
     public void onTabSelected() {
-        activity.togglePostMainMenu();
+        activity.toggleMainMenu();
     }
 
     public String getBadge() {
@@ -98,6 +101,37 @@ public abstract class BasePage extends FrameLayout {
             toast("Access denied");
             return null;
         }
+    }
+
+    public Bitmap fixImageOrientation(Bitmap bitmap, Uri uri) {
+        try {
+            ExifInterface exif = new ExifInterface(activity.getContentResolver().openInputStream(uri));
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+            int rotation = 0;
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotation = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotation = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotation = 270;
+                    break;
+                default:
+                    rotation = 0;
+            }
+
+            if (rotation != 0) {
+                Matrix matrix = new Matrix();
+                matrix.postRotate(rotation);
+                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 
     private void log(String s) {

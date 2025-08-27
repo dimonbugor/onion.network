@@ -461,12 +461,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override protected void onStart() {
+    @Override
+    protected void onStart() {
         super.onStart();
         Choreographer.getInstance().postFrameCallback(menuWatcher);
     }
 
-    @Override protected void onStop() {
+    @Override
+    protected void onStop() {
         super.onStop();
         Choreographer.getInstance().removeFrameCallback(menuWatcher);
         if (overlayVisible) {
@@ -475,7 +477,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** Детектим, чи є зараз popup overflow меню серед глобальних в'юшок WindowManager */
+    /**
+     * Детектим, чи є зараз popup overflow меню серед глобальних в'юшок WindowManager
+     */
     @SuppressWarnings("unchecked")
     private boolean isOverflowMenuShowing() {
         try {
@@ -499,12 +503,14 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
         return false;
     }
 
     private final Choreographer.FrameCallback menuWatcher = new Choreographer.FrameCallback() {
-        @Override public void doFrame(long frameTimeNanos) {
+        @Override
+        public void doFrame(long frameTimeNanos) {
             boolean open = isOverflowMenuShowing();
             if (open != overlayVisible) {
                 overlayVisible = open;
@@ -909,6 +915,7 @@ public class MainActivity extends AppCompatActivity {
     boolean actionAddPostOption = false;
     boolean actionStyleOption = false;
 
+    boolean actionCallOption = false;
     boolean actionRefreshQrOption = true;
     boolean actionMenuScanQrOption = true;
     boolean actionMenuShowMyQrOption = true;
@@ -917,7 +924,22 @@ public class MainActivity extends AppCompatActivity {
     boolean actionMenuShowUriOption = true;
     boolean actionMenuInviteFriendsOption = true;
 
-    public void togglePostMainMenu() {
+    public void toggleMainMenu() {
+        toggleChatMainMenu();
+        togglePostMainMenu();
+    }
+
+    private void toggleChatMainMenu() {
+        boolean showChatScreen = currentPage() instanceof ChatPage;
+        if (showChatScreen) {
+            actionCallOption = true;
+        } else {
+            actionCallOption = false;
+        }
+        updateMenu();
+    }
+
+    private void togglePostMainMenu() {
         boolean showBlogScreen = currentPage() instanceof BlogPage;
         if (showBlogScreen) {
             actionPhotoOption = true;
@@ -969,6 +991,7 @@ public class MainActivity extends AppCompatActivity {
         menu.findItem(R.id.action_add_post).setVisible(actionAddPostOption);
         menu.findItem(R.id.action_style).setVisible(actionStyleOption);
 
+        menu.findItem(R.id.action_call).setVisible(actionCallOption);
         menu.findItem(R.id.action_refresh).setVisible(actionMenuScanQrOption);
         menu.findItem(R.id.action_menu_scan_qr).setVisible(actionMenuScanQrOption);
         menu.findItem(R.id.action_menu_show_my_qr).setVisible(actionMenuShowMyQrOption);
@@ -995,6 +1018,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
+        if (id == R.id.action_blog_title) {
+            snack("Available soon");
+        }
         if (id == R.id.action_blog_title) {
             BasePage page = currentPage();
             if (page instanceof BlogPage) {
@@ -1295,7 +1321,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void snack(String str) {
+    public void snack(String str) {
         Snackbar.make(viewPager, str, Snackbar.LENGTH_SHORT).show();
     }
 
