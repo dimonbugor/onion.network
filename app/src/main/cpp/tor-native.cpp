@@ -20,6 +20,9 @@
 
 #include <jni.h>
 #include <unistd.h>
+#include <signal.h>
+#include <atomic>
+#include <chrono>
 
 #define TAG "TorNative"
 #define log(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
@@ -27,6 +30,9 @@
 static JavaVM *jvm = nullptr;
 static jobject torManagerInstance = nullptr;
 static jmethodID logMethodID = nullptr;
+
+static pthread_t gTorThread = 0;
+static std::atomic<bool> torExited(false);
 
 struct TorArgs {
     int argc;
@@ -47,19 +53,15 @@ void log_message(const char *message) {
 
 extern "C" JNIEXPORT jboolean
 Java_onion_network_TorManager_nativeStartTor(
-        JNIEnv
-        *env,
+        JNIEnv *env,
         jobject thiz,
-        jstring
-        torrc_path,
+        jstring torrc_path,
         jstring data_dir
 ) {
-
     const char *torrc = env->GetStringUTFChars(torrc_path, nullptr);
     const char *data = env->GetStringUTFChars(data_dir, nullptr);
 
-    env->
-            GetJavaVM(&jvm);
+    env->GetJavaVM(&jvm);
     torManagerInstance = env->NewGlobalRef(thiz);
 
     jclass cls = env->GetObjectClass(thiz);
@@ -68,17 +70,13 @@ Java_onion_network_TorManager_nativeStartTor(
     char **argv = new char *[5];
     argv[0] = strdup("tor");
     argv[1] = strdup("-f");
-    argv[2] =
-            strdup(torrc);
+    argv[2] = strdup(torrc);
     argv[3] = strdup("--DataDirectory");
-    argv[4] =
-            strdup(data);
+    argv[4] = strdup(data);
 
     TorArgs *args = new TorArgs();
-    args->
-            argc = 5;
-    args->
-            argv = argv;
+    args->argc = 5;
+    args->argv = argv;
 
     pthread_t thread;
     int result = pthread_create(&thread, nullptr, [](void *arg) -> void * {
@@ -87,6 +85,7 @@ Java_onion_network_TorManager_nativeStartTor(
         int pipefd[2];
         if (pipe(pipefd) == -1) {
             log_message("❌ Failed to create pipe for logs");
+            torExited.store(true);
             return nullptr;
         }
 
@@ -99,7 +98,7 @@ Java_onion_network_TorManager_nativeStartTor(
         pthread_t logThread;
         int readFd = pipefd[0];
         pthread_create(&logThread, nullptr, [](void *arg) -> void * {
-            int fd = *(int *) arg;
+            int fd = *(int *)arg;
             FILE *stream = fdopen(fd, "r");
             if (!stream) return nullptr;
 
@@ -115,41 +114,57 @@ Java_onion_network_TorManager_nativeStartTor(
         void *handle = dlopen("libtor.so", RTLD_NOW);
         if (!handle) {
             log_message("❌ Failed to open libtor.so");
-            return nullptr;
+            running = false;
+            torExited.store(true);
+
+            // чистимо аргументи
+            for (int i = 0; i < torArgs->argc; i++) {
+                free(torArgs->argv[i]);
+            }
+            delete[] torArgs->argv;
+            delete torArgs;
+
+            gTorThread = 0;
+            return nullptr; // просто виходимо із lambda
         }
 
         typedef int (*TorMainFunc)(int, char **);
-        TorMainFunc tor_main_ptr = (TorMainFunc) dlsym(handle, "tor_main");
+        TorMainFunc tor_main_ptr = (TorMainFunc)dlsym(handle, "tor_main");
         if (!tor_main_ptr) {
             log_message("❌ tor_main not found in libtor.so");
             dlclose(handle);
-            return nullptr;
+            running = false;
+            torExited.store(true);
+            goto cleanup_args;
         }
 
         tor_main_ptr(torArgs->argc, torArgs->argv);
 
         dlclose(handle);
+        running = false;
 
-        running = false; // 🛑 сигнал для лог-потоку
-
+        cleanup_args:
         for (int i = 0; i < torArgs->argc; i++) {
             free(torArgs->argv[i]);
         }
         delete[] torArgs->argv;
         delete torArgs;
 
+        torExited.store(true);
+        gTorThread = 0;
+
         return nullptr;
     }, args);
 
-    env->
-            ReleaseStringUTFChars(torrc_path, torrc
-    );
-    env->
-            ReleaseStringUTFChars(data_dir, data
-    );
+    if (result == 0) {
+        gTorThread = thread;
+        torExited.store(false);
+    }
 
-    return result == 0 ? JNI_TRUE :
-           JNI_FALSE;
+    env->ReleaseStringUTFChars(torrc_path, torrc);
+    env->ReleaseStringUTFChars(data_dir, data);
+
+    return result == 0 ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -157,25 +172,68 @@ Java_onion_network_TorManager_nativeStopTor(JNIEnv
                                             *env,
                                             jobject thiz
 ) {
-    running = false; // 🛑 закриваємо лог-потік
+    // 1) Сигнал для лог-потоку (щоб fread у лог-потоці завершився)
+    running = false;
 
-    void *handle = dlopen("libtor.so", RTLD_NOW);
-    if (handle) {
-        typedef void (*TorCleanupFunc)();
+    // 2) Якщо tor тред ще запущений — шлемо SIGINT (Tor обробляє як graceful shutdown)
+    if (gTorThread != 0) {
+        log("⟲ Requesting Tor graceful shutdown (SIGINT)...");
+        int kill_res = pthread_kill(gTorThread, SIGINT);
+        if (kill_res != 0) {
+            __android_log_print(ANDROID_LOG_WARN, TAG, "pthread_kill failed: %d", kill_res);
+        }
 
-        TorCleanupFunc cleanup = (TorCleanupFunc) dlsym(handle, "tor_cleanup");
-        if (cleanup)
+        // 3) Чекаємо на завершення треда з timeout-ом (наприклад 8 секунд)
+        const int timeout_ms = 8000;
+        int waited = 0;
+        const int step = 100; // ms
+        while (!torExited.load() && waited < timeout_ms) {
+            usleep(step * 1000);
+            waited += step;
+        }
 
-            cleanup();
+        if (!torExited.load()) {
+            __android_log_print(ANDROID_LOG_WARN, TAG,
+                                "Tor didn't exit within %d ms after SIGINT. Trying SIGTERM...", timeout_ms);
+            // Спроба SIGTERM — деякі збірки можуть обробити
+            pthread_kill(gTorThread, SIGTERM);
 
-        dlclose(handle);
+            // чекаємо ще трохи
+            waited = 0;
+            const int extra_ms = 3000;
+            while (!torExited.load() && waited < extra_ms) {
+                usleep(step * 1000);
+                waited += step;
+            }
+        }
+
+        if (!torExited.load()) {
+            __android_log_print(ANDROID_LOG_ERROR, TAG,
+                                "Tor did not stop gracefully. Avoid calling tor_cleanup() from another thread (would crash).");
+            // не робимо SIGKILL або виклик tor_cleanup() тут — це небезпечно для in-process libtor
+        } else {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "Tor exited cleanly.");
+        }
+
+        // optional: pthread_join if torExited true and thread handle valid
+        if (gTorThread != 0 && torExited.load()) {
+            // спробуємо приєднатися, якщо pthread_join не викликається раніше
+            // але не блокуємо довго — оскільки ми вже переконались, що torExited==true
+            pthread_join(gTorThread, nullptr);
+            gTorThread = 0;
+        }
+    } else {
+        __android_log_print(ANDROID_LOG_INFO, TAG, "Tor thread not running (gTorThread==0).");
     }
 
+    // 4) Далі чистимо GlobalRef
     if (torManagerInstance) {
-        env->
-                DeleteGlobalRef(torManagerInstance);
+        env->DeleteGlobalRef(torManagerInstance);
         torManagerInstance = nullptr;
     }
+
+    // 5) Закриваємо логи (вже running=false)
+    torExited.store(true);
 }
 
 

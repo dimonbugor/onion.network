@@ -19,7 +19,7 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:background="@color/colorAccent"
+            android:background="?attr/colorAccent"
             android:clickable="true"
             android:gravity="center"
             android:paddingVertical="@dimen/dp8"

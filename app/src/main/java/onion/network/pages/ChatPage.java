@@ -23,6 +23,7 @@ import java.util.TimerTask;
 
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
+import onion.network.helpers.ThemeManager;
 import onion.network.servers.ChatServer;
 import onion.network.models.Item;
 import onion.network.ui.MainActivity;
@@ -118,7 +119,7 @@ public class ChatPage extends BasePage
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_question_answer_white_36dp;
+        return R.drawable.ic_question_answer;
         //return R.drawable.ic_mail_outline_white_36dp;
     }
 
@@ -355,8 +356,8 @@ public class ChatPage extends BasePage
                 holder.abort.setOnClickListener(null);
             }
 
-            int color = pending ? getResources().getColor(R.color.white_50)
-                    : getResources().getColor(R.color.white_80);
+            int color = pending ? ThemeManager.getColor(activity, R.attr.white_50)
+                    : ThemeManager.getColor(activity, R.attr.white_80);
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 

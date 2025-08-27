@@ -67,7 +67,7 @@
                         android:text="fuehwuajskdifuvh"
                         android:ellipsize="end"
                         android:textSize="@dimen/sp14"
-                        android:textColor="@color/white" />
+                        android:textColor="?attr/colorOnBackground" />
 
                     <TextView
                         android:id="@+id/name"
@@ -80,7 +80,7 @@
                         android:fontFamily="@font/geologica_600"
                         android:textFontWeight="600"
                         android:textSize="@dimen/sp14"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnBackground"
                         android:text="Anonymous"
                          />
                 </RelativeLayout>
@@ -97,7 +97,7 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:singleLine="true"
-                        android:textColor="@color/white"
+                        android:textColor="?attr/colorOnBackground"
                         android:text="aifjnelsdfjpeuvb"
                         android:textSize="@dimen/sp12"
                          />
@@ -107,8 +107,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        app:tint="@color/white_80"
-                        android:src="@drawable/ic_call_received_black_18dp" />
+                        app:tint="?attr/white_80"
+                        android:src="@drawable/ic_received" />
 
                 </LinearLayout>
 

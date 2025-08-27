@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import org.json.JSONObject;
 
+import onion.network.helpers.ThemeManager;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemResult;
@@ -83,7 +84,7 @@ public class FriendPage extends BasePage {
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_people_white_36dp;
+        return R.drawable.ic_people;
     }
 
     @Override
@@ -152,7 +153,7 @@ public class FriendPage extends BasePage {
                             @Override
                             public boolean onLongClick(View v) {
 
-                                AlertDialog dialogDeleteFriend = new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
+                                AlertDialog dialogDeleteFriend = new AlertDialog.Builder(context, ThemeManager.getDialogThemeResId(context))
                                         .setTitle("Delete Friend?")
                                         .setMessage("Do you really want to delete this friend?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -169,8 +170,8 @@ public class FriendPage extends BasePage {
                                         })
                                         .create();
                                 dialogDeleteFriend.setOnShowListener(d -> {
-                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
                                 });
                                 dialogDeleteFriend.show();
 

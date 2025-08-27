@@ -1,22 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#23262A</color>
-    <color name="colorOnPrimary">#BFC7E6</color>
-    <color name="colorPrimaryContainer">#28304B</color>
-    <color name="colorPrimaryContainerAlpha">#3328304B</color>
-    <color name="colorOnPrimaryContainer">#FFFFFF</color>
-    <color name="colorSecondary">#3A47A0</color>
-    <color name="colorAccent">#0277BD</color>
+    <color name="overlay">#CC000000</color>
     <color name="colorAccentAlpha">#6603A9F4</color>
-    <color name="colorOnSecondary">#B0C5F0</color>
-    <color name="colorSurface">#23262A</color>
-    <color name="colorOnSurface">#BFC7E6</color>
-    <color name="colorBackground">#23262A</color>
+    <color name="colorPrimaryContainerAlpha">#3328304B</color>
     <color name="colorBackgroundAlpha_80">#CC23262A</color>
     <color name="colorBackgroundAlpha">#4D6A6C6D</color>
-    <color name="colorDialogBackgroundAlpha">#CC212424</color>
-    <color name="white">#FFFFFF</color>
-    <color name="white_50">#80FFFFFF</color>
-    <color name="white_80">#CCFFFFFF</color>
-    <color name="overlay">#CC000000</color>
+
+    <!-- Dark -->
+    <color name="dark_colorPrimary">#23262A</color>
+    <color name="dark_colorOnPrimary">#BFC7E6</color>
+    <color name="dark_colorPrimaryContainer">#28304B</color>
+    <color name="dark_colorOnPrimaryContainer">#FFFFFF</color>
+    <color name="dark_colorSecondary">#3A47A0</color>
+    <color name="dark_colorOnSecondary">#B0C5F0</color>
+    <color name="dark_colorSurface">#23262A</color>
+    <color name="dark_colorOnSurface">#BFC7E6</color>
+    <color name="dark_colorBackground">#23262A</color>
+    <color name="dark_colorOnBackground">#FFFFFF</color>
+    <color name="dark_colorAccent">#0277BD</color>
+    <color name="dark_colorDialogBackgroundAlpha">#CC212424</color>
+    <color name="dark_white_50">#80FFFFFF</color>
+    <color name="dark_white_80">#CCFFFFFF</color>
+
+    <!-- Light -->
+    <color name="light_colorPrimary">#FFFFFF</color>
+    <color name="light_colorOnPrimary">#23262A</color>
+    <color name="light_colorPrimaryContainer">#F2F2F7</color>
+    <color name="light_colorOnPrimaryContainer">#000000</color>
+    <color name="light_colorSecondary">#3A47A0</color>
+    <color name="light_colorOnSecondary">#FFFFFF</color>
+    <color name="light_colorSurface">#FFFFFF</color>
+    <color name="light_colorOnSurface">#23262A</color>
+    <color name="light_colorBackground">#F2F2F7</color>
+    <color name="light_colorOnBackground">#000000</color>
+    <color name="light_colorAccent">#0277BD</color>
+    <color name="light_colorDialogBackgroundAlpha">#CCC5D7D7</color>
+    <color name="light_white_50">#80000000</color>
+    <color name="light_white_80">#CC000000</color>
 </resources>

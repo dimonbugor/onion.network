@@ -8,6 +8,7 @@
         android:id="@+id/action_photo"
         android:icon="@drawable/ic_insert_photo_white_24dp"
         android:title="Post Image"
+        android:iconTint="?attr/colorOnBackground"
         android:orderInCategory="100"
         app:showAsAction="always" />
 
@@ -16,7 +17,7 @@
         android:id="@+id/action_camera"
         android:icon="@drawable/ic_add_a_photo_black_36dp"
         android:title="Take Photo"
-        android:iconTint="@color/white"
+        android:iconTint="?attr/colorOnBackground"
         android:orderInCategory="100"
         app:showAsAction="always" />
 
@@ -56,7 +57,7 @@
 
     <item
         android:id="@+id/action_refresh"
-        android:icon="@drawable/ic_sync_white_36dp"
+        android:icon="@drawable/ic_sync"
         android:title="Refresh"
         app:showAsAction="always" />
 
@@ -93,6 +94,10 @@
     <item
         android:id="@+id/action_menu_settings"
         android:title="Settings" />
+
+    <item
+        android:id="@+id/action_menu_themes"
+        android:title="Themes" />
 
     <item
         android:id="@+id/about"

@@ -79,7 +79,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="$USER_HOME$/Downloads/icons8-поделиться-hand-drawn/icons8-поделиться-100.png" />
+                                                <entry key="imagePath" value="$USER_HOME$/Downloads" />
                                                 <entry key="scalingPercent" value="68" />
                                               </map>
                                             </option>
@@ -174,7 +174,18 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="/private/var/folders/gb/t0q56tsn4kjfkr9xlthzsxz40000gn/T/ic_android_black_24dp.xml" />
+                                                <entry key="imagePath" value="/private/var/folders/gb/t0q56tsn4kjfkr9xlthzsxz40000gn/T/outline_health_and_safety_24.xml" />
+                                              </map>
+                                            </option>
+                                          </PersistentState>
+                                        </value>
+                                      </entry>
+                                      <entry key="clipartAsset">
+                                        <value>
+                                          <PersistentState>
+                                            <option name="values">
+                                              <map>
+                                                <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialsymbolsoutlined/health_and_safety/outline_health_and_safety_24.xml" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -186,6 +197,8 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
+                                                <entry key="fontFamily" value="Futura" />
+                                                <entry key="text" value="Blck" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -197,11 +210,18 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
+                                                <entry key="fontFamily" value="Futura" />
+                                                <entry key="text" value="Blck" />
                                               </map>
                                             </option>
                                           </PersistentState>
                                         </value>
                                       </entry>
+                                    </map>
+                                  </option>
+                                  <option name="values">
+                                    <map>
+                                      <entry key="assetType" value="TEXT" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -284,6 +304,11 @@
                             </entry>
                           </map>
                         </option>
+                        <option name="values">
+                          <map>
+                            <entry key="outputIconType" value="NOTIFICATION" />
+                          </map>
+                        </option>
                       </PersistentState>
                     </value>
                   </entry>
@@ -307,7 +332,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/insert_photo/baseline_insert_photo_24.xml" />
+                                      <entry key="url" value="file:$USER_HOME$/Library/Android/sdk/icons/material/materialicons/link/baseline_link_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -317,8 +342,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_insert_photo_white_24dp" />
+                            <entry key="color" value="0d1b28" />
+                            <entry key="outputName" value="ic_link_black" />
                             <entry key="sourceFile" value="$USER_HOME$/Downloads/comments-svgrepo-com(1).svg" />
                           </map>
                         </option>

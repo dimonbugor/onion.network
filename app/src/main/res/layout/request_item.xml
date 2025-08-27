@@ -41,8 +41,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginEnd="@dimen/dp4"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/colorAccent"
+        android:textColor="?attr/colorOnBackground"
+        android:backgroundTint="?attr/colorAccent"
         android:text="Decline" />
 
     <com.google.android.material.button.MaterialButton
@@ -50,8 +50,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:backgroundTint="@color/colorAccent"
-        android:textColor="@color/white"
+        android:backgroundTint="?attr/colorAccent"
+        android:textColor="?attr/colorOnBackground"
         android:text="Accept" />
 
 </LinearLayout>

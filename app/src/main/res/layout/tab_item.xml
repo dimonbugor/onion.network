@@ -11,9 +11,9 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_menu"
         android:visibility="visible"
-        app:tint="@android:color/white"
+        app:tint="?attr/colorOnBackground"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-        app:backgroundTint="@color/colorPrimaryContainer"
+        app:backgroundTint="?attr/colorPrimaryContainer"
         app:fabCustomSize="@dimen/dp36" />
 
     <TextView

@@ -24,8 +24,8 @@
         android:id="@+id/is_friend"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_check_black_24dp"
-        android:drawableTint="@android:color/white"
+        android:drawableLeft="@drawable/ic_check"
+        android:drawableTint="?attr/colorOnBackground"
         android:gravity="center_vertical"
         android:padding="@dimen/dp8"
         android:text="   Friends" />
@@ -33,8 +33,8 @@
     <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/colorAccent"
+        android:textColor="?attr/colorOnBackground"
+        android:backgroundTint="?attr/colorAccent"
         android:text="Add Friend" />
 
 </LinearLayout>

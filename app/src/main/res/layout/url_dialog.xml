@@ -42,8 +42,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Copy" />
 
                 <com.google.android.material.button.MaterialButton
@@ -52,8 +52,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/dp4"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Share" />
 
                 <com.google.android.material.button.MaterialButton
@@ -61,8 +61,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Open" />
             </LinearLayout>
 
@@ -100,8 +100,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Copy" />
 
                 <com.google.android.material.button.MaterialButton
@@ -110,8 +110,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="@dimen/dp4"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Share" />
 
                 <com.google.android.material.button.MaterialButton
@@ -119,8 +119,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
                     android:text="Open" />
             </LinearLayout>
 

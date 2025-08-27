@@ -39,6 +39,7 @@ import java.net.URL;
 
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.helpers.ThemeManager;
 import onion.network.helpers.Utils;
 import onion.network.models.Blog;
 import onion.network.models.Response;
@@ -73,7 +74,7 @@ public class BlogPage extends BasePage {
             public void delete(final String id) {
                 if (id == null) return;
                 activity.runOnUiThread(() -> {
-                    AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+                    AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                             .setTitle("Remove Post?")
                             .setMessage("Do you really want to remove this post?")
                             .setPositiveButton("Yes", (dialog2, which) -> {
@@ -88,8 +89,8 @@ public class BlogPage extends BasePage {
                             .setNegativeButton("No", (dialog1, which) -> {
                             }).create();
                     dialog.setOnShowListener(d -> {
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
                     });
                     dialog.show();
                 });
@@ -167,30 +168,6 @@ public class BlogPage extends BasePage {
                         new ByteArrayInputStream(response.getContent())
                 );
 
-
-                /*
-                try {
-
-                    LocalSocket s = new LocalSocket();
-                    s.connect(new LocalSocketAddress(Server.getExistingInstance().getSocketName(), LocalSocketAddress.Namespace.FILESYSTEM));
-                    OutputStreamWriter w = new OutputStreamWriter(s.getOutputStream());
-                    w.write("GET " + path + " HTTP/1.0\r\n");
-                    w.write("\r\n");
-                    w.flush();
-                    return new WebResourceResponse(
-                            "text/html",
-                            "utf-8",
-                            s.getInputStream());
-
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                return new WebResourceResponse(
-                        "text/html",
-                        "utf-8",
-                        new ByteArrayInputStream("Error".getBytes()));
-                */
-
             }
         });
     }
@@ -237,8 +214,8 @@ public class BlogPage extends BasePage {
         if(fab != null){
             fab.setImageResource(
                     editId == null ?
-                            R.drawable.ic_add_white_48dp :
-                            R.drawable.ic_edit_white_36dp
+                            R.drawable.ic_add :
+                            R.drawable.ic_edit
             );
 
             fab.setVisibility(editId != null || Uri.parse(url).getPath().split("/").length < 3 ? View.VISIBLE : View.GONE);
@@ -277,7 +254,7 @@ public class BlogPage extends BasePage {
     public void editTitle() {
         final View view = activity.getLayoutInflater().inflate(R.layout.dialog_title, null);
         ((EditText) view.findViewById(R.id.title)).setText(blog.getTitle());
-        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Change Blog Title")
                 .setView(view)
                 .setPositiveButton("Publish", (dialog1, which) -> {
@@ -291,13 +268,10 @@ public class BlogPage extends BasePage {
                 })
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
-        // view.findViewById(R.id.title).requestFocus();
-        //((EditText) view.findViewById(R.id.title)).selectAll();
-        //showkey();
     }
     public void addPost() {
         activity.startActivity(new Intent(activity, PostActivity.class));
@@ -347,7 +321,7 @@ public class BlogPage extends BasePage {
             activity.startActivity(intent);
         });
 
-        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setView(view)
                 .show();
     }
@@ -359,7 +333,7 @@ public class BlogPage extends BasePage {
         } catch (PackageManager.NameNotFoundException e) {
             throw new RuntimeException(e);
         }
-        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle(activity.getString(R.string.app_name))
                 //.setMessage(BuildConfig.APPLICATION_ID + "\n\nVersion: " + BuildConfig.VERSION_NAME)
                 .setMessage("Version: " + versionName)
@@ -367,9 +341,9 @@ public class BlogPage extends BasePage {
                 .setPositiveButton("OK", (d, which) -> {
                 }).create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }
@@ -380,7 +354,7 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Third party software used in this app (click to view license)")
                 .setItems(items, (dialog, which) -> showLicense(items[which]))
                 .show();
@@ -392,13 +366,13 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle(name)
                 .setMessage(text)
                 .show();
     }
     public void selectStyle() {
-        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Choose Style")
                 .setSingleChoiceItems(blog.getStyles(), blog.getStyleIndex(), (d, which) -> {
                     blog.setStyle(which);
@@ -409,9 +383,9 @@ public class BlogPage extends BasePage {
                 })
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }

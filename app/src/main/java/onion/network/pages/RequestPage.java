@@ -50,7 +50,7 @@ public class RequestPage extends BasePage {
                         RequestDatabase.getInstance(activity).removeIncoming(addr);
                         activity.addFriend(addr, name);
                         load();
-                        activity.blink(R.drawable.ic_people_white_36dp);
+                        activity.blink(R.drawable.ic_people);
                     }
                 });
                 viewHolder.decline.setOnClickListener(new View.OnClickListener() {
@@ -128,7 +128,7 @@ public class RequestPage extends BasePage {
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_group_add_white_36dp;
+        return R.drawable.ic_group_add;
     }
 
     public void load() {

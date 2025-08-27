@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import onion.network.R;
+import onion.network.helpers.ThemeManager;
 import onion.network.settings.Settings;
 import onion.network.ui.MainActivity;
 
@@ -67,11 +68,11 @@ public class Notifier {
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setColor(context.getResources().getColor(R.color.colorBackground))
+                .setColor(ThemeManager.getColor(context, android.R.attr.colorBackground))
                 .setContentTitle(context.getResources().getString(R.string.app_name))
                 .setContentText("New Message")
                 .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class).putExtra("page", "chat"), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(R.drawable.ic_stat_name)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT); // Set priority for Android 8.0+
 
         if (sound) {
@@ -86,7 +87,7 @@ public class Notifier {
         if (mainActivity != null) {
             if (mainActivity.address.isEmpty() || mainActivity.address.equals(sender)) {
                 msgSound();
-                mainActivity.blink(R.drawable.ic_question_answer_white_36dp);
+                mainActivity.blink(R.drawable.ic_question_answer);
             } else {
                 msgNotify();
             }

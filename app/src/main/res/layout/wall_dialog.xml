@@ -56,8 +56,8 @@
                     android:alpha="0.8"
                     android:background="?selectableItemBackground"
                     android:padding="@dimen/dp16"
-                    android:src="@drawable/ic_photo_black_24dp"
-                    app:tint="@android:color/white" />
+                    android:src="@drawable/ic_image"
+                    app:tint="?attr/colorOnBackground" />
 
                 <ImageButton
                     android:id="@+id/take_photo"
@@ -68,8 +68,8 @@
                     android:alpha="0.8"
                     android:background="?selectableItemBackground"
                     android:padding="@dimen/dp16"
-                    android:src="@drawable/ic_photo_camera_black_24dp"
-                    app:tint="@android:color/white" />
+                    android:src="@drawable/ic_photo_camera"
+                    app:tint="?attr/colorOnBackground" />
 
                 <FrameLayout
                     android:layout_width="wrap_content"
@@ -81,9 +81,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/colorAccent"
-                    android:drawableStart="@drawable/ic_check_black_24dp"
+                    android:textColor="?attr/colorOnBackground"
+                    android:backgroundTint="?attr/colorAccent"
+                    android:drawableStart="@drawable/ic_check"
                     android:drawablePadding="@dimen/dp8"
                     android:text="Publish" />
             </LinearLayout>

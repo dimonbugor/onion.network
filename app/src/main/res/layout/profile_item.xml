@@ -45,8 +45,8 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:src="@drawable/ic_edit_black_24dp"
-            app:tint="@color/white_50" />
+            android:src="@drawable/ic_edit"
+            app:tint="?attr/white_50" />
 
     </LinearLayout>
 

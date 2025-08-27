@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/win_bg"
     tools:context="onion.network.ui.MainActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -28,7 +27,6 @@
                 android:paddingVertical="0dp"
                 android:gravity="center_vertical"
                 app:titleMarginTop="0dp"
-                app:titleTextAppearance="@style/ToolbarTitleStyle"
                 android:background="@android:color/transparent"
                 app:layout_scrollFlags="">
 
@@ -113,8 +111,8 @@
                 android:layout_gravity="start|bottom"
                 android:layout_margin="@dimen/dp24"
                 android:src="@drawable/ic_menu"
-                app:tint="@android:color/white"
-                app:backgroundTint="@color/colorPrimaryContainer"
+                app:tint="?attr/colorOnBackground"
+                app:backgroundTint="?attr/colorPrimaryContainer"
                 app:rippleColor="#fff" />
 
         </onion.network.ui.views.ArcButtonLayout>
@@ -126,10 +124,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
-            android:src="@drawable/ic_create_white_48dp"
+            android:src="@drawable/ic_edit"
             android:visibility="visible"
-            app:tint="@android:color/white"
-            app:backgroundTint="@color/colorPrimaryContainer"
+            app:tint="?attr/colorOnBackground"
+            app:backgroundTint="?attr/colorPrimaryContainer"
             app:rippleColor="#fff" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -139,10 +137,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
-            android:src="@drawable/ic_person_add_white_48dp"
+            android:src="@drawable/ic_person_add"
             android:visibility="gone"
-            app:tint="@android:color/white"
-            app:backgroundTint="@color/colorPrimaryContainer"
+            app:tint="?attr/colorOnBackground"
+            app:backgroundTint="?attr/colorPrimaryContainer"
             app:rippleColor="#fff" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

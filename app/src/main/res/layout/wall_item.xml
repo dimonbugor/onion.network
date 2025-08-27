@@ -96,7 +96,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:fontFamily="@font/geologica_400"
-                            android:textColor="@color/white_80"
+                            android:textColor="?attr/white_80"
                             android:gravity="bottom"
                             android:layout_marginLeft="@dimen/dp8"
                             android:layout_marginTop="@dimen/dp8"
@@ -116,7 +116,7 @@
                             android:layout_marginLeft="@dimen/dp8"
                             android:ellipsize="none"
                             android:singleLine="true"
-                            android:textColor="@color/white_80"
+                            android:textColor="?attr/white_80"
                             android:text="fuehwuajskdifuvh"
                             android:textSize="@dimen/sp14"/>
 
@@ -165,7 +165,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="@color/white_80"
+                        app:tint="?attr/white_80"
                         android:contentDescription="Like" />
 
                     <ImageView
@@ -178,7 +178,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="@color/white_80"
+                        app:tint="?attr/white_80"
                         android:contentDescription="Comments" />
 
                     <View
@@ -191,12 +191,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
-                        android:src="@drawable/ic_edit_black_24dp"
+                        android:src="@drawable/ic_edit"
                         android:paddingLeft="@dimen/dp8"
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="@color/white_80"
+                        app:tint="?attr/white_80"
                         android:contentDescription="Edit" />
 
                     <ImageView
@@ -209,7 +209,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="@color/white_80"
+                        app:tint="?attr/white_80"
                         android:contentDescription="Share" />
 
                     <ImageView
@@ -217,12 +217,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="?selectableItemBackground"
-                        android:src="@drawable/ic_delete_white_24dp"
+                        android:src="@drawable/ic_delete"
                         android:paddingLeft="@dimen/dp8"
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="@color/white_80"
+                        app:tint="?attr/white_80"
                         android:contentDescription="Delete" />
 
                     <View

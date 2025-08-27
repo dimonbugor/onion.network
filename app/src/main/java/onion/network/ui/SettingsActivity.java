@@ -20,6 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.io.IOException;
 
 import onion.network.R;
+import onion.network.helpers.ThemeManager;
 import onion.network.models.WallBot;
 import onion.network.cashes.ItemCache;
 import onion.network.cashes.SiteCache;
@@ -30,6 +31,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);
 
         Settings.getPrefs(this);
@@ -105,8 +107,8 @@ public class SettingsActivity extends AppCompatActivity {
                             })
                             .create();
                     dialog.setOnShowListener(d -> {
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
+                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
                     });
                     dialog.show();
                     return true;
@@ -140,8 +142,8 @@ public class SettingsActivity extends AppCompatActivity {
                     })
                     .create();
             dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
             });
             dialog.show();
         }
@@ -158,8 +160,8 @@ public class SettingsActivity extends AppCompatActivity {
                     .setMessage(text)
                     .create();
             dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
             });
             dialog.show();
         }

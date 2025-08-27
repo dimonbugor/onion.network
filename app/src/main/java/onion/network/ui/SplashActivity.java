@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import onion.network.databinding.ActivitySplashBinding;
 import onion.network.helpers.PermissionHelper;
+import onion.network.helpers.ThemeManager;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -23,6 +24,7 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);
 
         binding = ActivitySplashBinding.inflate(getLayoutInflater());

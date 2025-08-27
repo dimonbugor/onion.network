@@ -24,10 +24,7 @@
         android:extractNativeLibs="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-        tools:replace="android:allowBackup"
-        android:theme="@style/AppTheme"
-        tools:targetApi="p">
+        tools:replace="android:allowBackup">
 
         <activity
             android:name=".ui.SplashActivity"
@@ -35,7 +32,6 @@
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,7 +45,6 @@
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan">
 
             <!-- http://network.onion/?... -->
@@ -258,7 +253,6 @@
         <activity
             android:configChanges="screenSize|screenLayout|orientation|uiMode"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustPan"
             android:name=".ui.PostActivity" />
         <service
@@ -286,7 +280,6 @@
         <activity
             android:name=".ui.SettingsActivity"
             android:label="Settings"
-            android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".ui.MainActivity" />
     </application>
 

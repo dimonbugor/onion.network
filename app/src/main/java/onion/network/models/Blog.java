@@ -279,8 +279,22 @@ public class Blog {
                 w.write(date(pn));
 
                 if (edit) {
-                    w.write(" <a class=\"act\" href=\"javascript:cms.edit('" + pn + "')\">[ed]</a>");
-                    w.write(" <a class=\"act\" href=\"javascript:cms.delete('" + pn + "')\">[rm]</a>");
+                    w.write(
+                            " <a class=\"act\" href=\"javascript:cms.edit('" + pn + "')\">" +
+                                    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" viewBox=\"0 0 16 16\">" +
+                                    "<path d=\"M15.502 1.94a.5.5 0 0 1 0 .706l-1.439 1.439-2.121-2.121 1.439-1.439a.5.5 0 0 1 .706 0l1.415 1.415z\"/>" +
+                                    "<path d=\"M14.061 4.439l-2.121-2.121L4.5 9.757V12h2.243l7.318-7.561z\"/>" +
+                                    "</svg>" +
+                                    "</a>"
+                    );
+                    w.write(
+                            " <a class=\"act\" href=\"javascript:cms.delete('" + pn + "')\">" +
+                                    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" viewBox=\"0 0 16 16\">" +
+                                    "<path d=\"M5.5 5.5a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0v-6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0v-6zm2 .5a.5.5 0 0 1 .5-.5v6a.5.5 0 0 1-1 0v-6a.5.5 0 0 1 .5-.5z\"/>" +
+                                    "<path fill-rule=\"evenodd\" d=\"M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3a.5.5 0 0 0 0 1H13.5a.5.5 0 0 0 0-1H2.5z\"/>" +
+                                    "</svg>" +
+                                    "</a>"
+                    );
                 }
 
                 w.write("</p>");
@@ -506,7 +520,12 @@ public class Blog {
             {
                 String titleedit = "<div style=\"height:0;text-align:right;\">" +
                         "<div style=\"position:relative\">" +
-                        "<a style=\"color:#888;\" href=\"javascript:cms.title()\">[ed]</a>" +
+                        "<a style=\"color:#888;\" href=\"javascript:cms.title()\">" +
+                        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" viewBox=\"0 0 16 16\">" +
+                        "<path d=\"M15.502 1.94a.5.5 0 0 1 0 .706l-1.439 1.439-2.121-2.121 1.439-1.439a.5.5 0 0 1 .706 0l1.415 1.415z\"/>" +
+                        "<path d=\"M14.061 4.439l-2.121-2.121L4.5 9.757V12h2.243l7.318-7.561z\"/>" +
+                        "</svg>" +
+                        "</a>" +
                         "</div>" +
                         "</div>";
 

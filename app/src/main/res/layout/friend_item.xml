@@ -56,7 +56,7 @@
                 android:singleLine="true"
                 android:fontFamily="@font/geologica_600"
                 android:textFontWeight="600"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnBackground"
                 android:textSize="@dimen/sp16"
                 android:text="aifjnelsdfjpeuvb" />
 
@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:textColor="@color/white_80"
+                android:textColor="?attr/white_80"
                 android:singleLine="true"
                 android:text="aifjnelsdfjpeuvb" />
         </LinearLayout>

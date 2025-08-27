@@ -59,7 +59,7 @@ public class PermissionHelper {
     }
 
     private void showPermissionExplanationDialog() {
-        AlertDialog dialogPermissions = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+        AlertDialog dialogPermissions = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Permissions required")
                 .setMessage("This app requires permissions to access files and show notifications.")
                 .setCancelable(false)
@@ -76,8 +76,8 @@ public class PermissionHelper {
                     }
                 }).create();
         dialogPermissions.setOnShowListener(d -> {
-            dialogPermissions.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialogPermissions.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialogPermissions.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialogPermissions.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialogPermissions.show();
     }

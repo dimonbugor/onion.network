@@ -28,6 +28,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.helpers.ThemeManager;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
 import onion.network.R;
@@ -97,7 +98,7 @@ public class WallPage extends BasePage {
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_format_list_bulleted_white_36dp;
+        return R.drawable.ic_format_list_bulleted;
     }
 
     @Override
@@ -171,7 +172,7 @@ public class WallPage extends BasePage {
             dialogView.findViewById(R.id.image).setVisibility(View.GONE);
         }
 
-        AlertDialog.Builder b = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog).setView(dialogView);
+        AlertDialog.Builder b = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity)).setView(dialogView);
 
         final Bitmap bmp = bitmap;
 
@@ -387,7 +388,7 @@ public class WallPage extends BasePage {
                         delete.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                AlertDialog dialogDeletePost = new AlertDialog.Builder(context, R.style.RoundedAlertDialog)
+                                AlertDialog dialogDeletePost = new AlertDialog.Builder(context, ThemeManager.getDialogThemeResId(context))
                                         .setTitle("Delete Post?")
                                         .setMessage("Do you really want to delete this post?")
                                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -404,8 +405,8 @@ public class WallPage extends BasePage {
                                         })
                                         .create();
                                 dialogDeletePost.setOnShowListener(d -> {
-                                    dialogDeletePost.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                                    dialogDeletePost.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                    dialogDeletePost.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                                    dialogDeletePost.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
                                 });
                                 dialogDeletePost.show();
                             }

@@ -79,7 +79,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/text_input_layout"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp32"
+        android:layout_height="@dimen/dp36"
         android:layout_marginEnd="@dimen/dp16"
         android:layout_marginStart="@dimen/dp96"
         android:layout_marginBottom="@dimen/dp24"
@@ -99,7 +99,7 @@
                 android:layout_gravity="center"
                 android:paddingEnd="@dimen/dp32"
                 android:paddingVertical="0dp"
-                android:textColor="@color/white"
+                android:textColor="?attr/colorOnBackground"
                 android:textSize="@dimen/sp12"
                 android:background="@drawable/edit_rounded_background"
                 android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
@@ -113,8 +113,10 @@
                 android:background="?selectableItemBackground"
                 android:src="@drawable/ic_send_black_24dp"
                 android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"
                 android:contentDescription="Send"
-                app:tint="@color/white_80" />
+                app:tint="?attr/white_80" />
 
         </RelativeLayout>
     </com.google.android.material.textfield.TextInputLayout>

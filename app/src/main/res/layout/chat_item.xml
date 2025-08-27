@@ -20,8 +20,8 @@
             android:background="?selectableItemBackground"
             android:padding="@dimen/dp4"
             android:scaleType="center"
-            android:src="@drawable/ic_close_black_24dp"
-            app:tint="@android:color/white" />
+            android:src="@drawable/ic_close"
+            app:tint="?attr/colorOnBackground" />
 
     </FrameLayout>
 
@@ -72,7 +72,7 @@
                 android:gravity="end|bottom"
                 android:singleLine="true"
                 android:text="1234-12-12 12:12"
-                android:textColor="@color/white_50"
+                android:textColor="?attr/white_50"
                 android:fontFamily="@font/geologica_400"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textSize="9sp" />

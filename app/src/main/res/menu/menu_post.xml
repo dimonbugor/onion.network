@@ -10,16 +10,16 @@
         android:id="@+id/action_photo"
         android:icon="@drawable/ic_insert_photo_white_24dp"
         android:title="Image"
-        android:iconTint="@color/white"
         android:orderInCategory="100"
+        android:iconTint="?attr/colorOnBackground"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_publish"
         android:icon="@drawable/ic_send_black_24dp"
         android:title="Publish"
-        android:iconTint="@color/white"
         android:orderInCategory="100"
+        android:iconTint="?attr/colorOnBackground"
         app:showAsAction="always" />
 
 

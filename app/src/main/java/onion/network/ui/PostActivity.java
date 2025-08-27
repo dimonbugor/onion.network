@@ -28,6 +28,7 @@ import androidx.appcompat.widget.Toolbar;
 import java.io.IOException;
 
 import onion.network.R;
+import onion.network.helpers.ThemeManager;
 import onion.network.models.Blog;
 
 public class PostActivity extends AppCompatActivity {
@@ -42,6 +43,7 @@ public class PostActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_post);
@@ -50,9 +52,9 @@ public class PostActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Встановити білий tint для всіх іконок меню
-        toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setSubtitleTextColor(Color.WHITE);
-        toolbar.getOverflowIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+        toolbar.setTitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+        toolbar.setSubtitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+        toolbar.getOverflowIcon().setColorFilter(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor), PorterDuff.Mode.SRC_ATOP);
 
         // Увімкнути кнопку "назад"
         if (getSupportActionBar() != null) {

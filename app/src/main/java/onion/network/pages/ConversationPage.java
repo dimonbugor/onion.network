@@ -97,7 +97,7 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_question_answer_white_36dp;
+        return R.drawable.ic_question_answer;
     }
 
     @Override
@@ -180,7 +180,7 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
                 }
             });
 
-            holder.direction.setImageResource(myid.equals(sender) ? R.drawable.ic_call_made_black_18dp : R.drawable.ic_call_received_black_18dp);
+            holder.direction.setImageResource(myid.equals(sender) ? R.drawable.ic_call_made : R.drawable.ic_call_received);
 
             holder.data.setAlpha(incoming ? 1.0f : 0.4f);
         }

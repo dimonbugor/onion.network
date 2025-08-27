@@ -2,6 +2,9 @@
 
 package onion.network.ui;
 
+import static onion.network.helpers.ThemeManager.themeKeys;
+import static onion.network.helpers.ThemeManager.themes;
+
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
@@ -24,13 +27,12 @@ import android.util.TypedValue;
 import android.view.Choreographer;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -38,10 +40,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.ActionMenuView;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
@@ -62,7 +61,6 @@ import org.json.JSONObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -88,13 +86,13 @@ import onion.network.pages.ChatPage;
 import onion.network.pages.CloudPage;
 import onion.network.pages.ConversationPage;
 import onion.network.pages.FriendPage;
-import onion.network.pages.InfoPage;
 import onion.network.pages.PrivacyPage;
 import onion.network.pages.ProfilePage;
 import onion.network.pages.RequestPage;
 import onion.network.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
 import onion.network.ui.views.RequestTool;
+import onion.network.helpers.ThemeManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -264,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         Log.i(TAG, "onCreate");
-
+        ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
@@ -310,9 +308,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Встановити білий tint для всіх іконок меню
-        toolbar.setTitleTextColor(Color.WHITE);
-        toolbar.setSubtitleTextColor(Color.WHITE);
-        toolbar.getOverflowIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+        toolbar.setTitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+        toolbar.setSubtitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+        toolbar.getOverflowIcon().setColorFilter(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor), PorterDuff.Mode.SRC_ATOP);
 
         if (!address.isEmpty()) {
 
@@ -543,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
     void showEnterId() {
         View dialogView = getLayoutInflater().inflate(R.layout.friend_dialog, null);
         final EditText addressEdit = (EditText) dialogView.findViewById(R.id.address);
-        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this, ThemeManager.getDialogThemeResId(MainActivity.this))
                 .setTitle("Enter ID")
                 .setView(dialogView)
                 .setNegativeButton("Cancel", (d, which) -> {
@@ -559,8 +557,8 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }
@@ -591,7 +589,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAddFriend() {
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setTitle("Add Friend")
                 .setItems(new String[]{
                         "Scan QR",
@@ -616,8 +614,8 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }
@@ -703,7 +701,7 @@ public class MainActivity extends AppCompatActivity {
             name += "  (friend)";
         }
 
-        AlertDialog.Builder a = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog.Builder a = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setTitle(name)
                 .setMessage(id);
 
@@ -764,12 +762,12 @@ public class MainActivity extends AppCompatActivity {
         int s = (int) (Math.min(displayRectangle.width(), displayRectangle.height()) * 0.9);
         view.setMinimumWidth(s);
         view.setMinimumHeight(s);
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setView(view)
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }
@@ -1061,7 +1059,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_friends) {
-            AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                     .setTitle("Friends")
                     .setMessage("You are friends with this user")
                     .setNeutralButton("Remove friend", new DialogInterface.OnClickListener() {
@@ -1074,8 +1072,8 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .create();
             dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
             });
             dialog.show();
             return true;
@@ -1120,8 +1118,33 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
+        if (id == R.id.action_menu_themes) {
+            int selectedIndex = -1;
+            String currentTheme = ThemeManager.init(this).getTheme();
+            for (int i = 0; i < themeKeys.length; i++) {
+                if (themeKeys[i].equals(currentTheme)) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_single_choice_item, themes);
+
+            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
+                    .setTitle("Choose a theme")
+                    .setSingleChoiceItems(adapter, selectedIndex, (d, which) -> {
+                        ThemeManager.init(this).setTheme(this, themeKeys[which]);
+                        recreate(); // Перезапускає тільки цю Activity
+                        d.dismiss();
+                    }).create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            });
+            dialog.show();
+            return true;
+        }
         if (id == R.id.action_clear_chat) {
-            AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                     .setTitle("Clear chat")
                     .setMessage("Do you really want to delete all messages exchanged with this contact?")
                     .setNegativeButton("No", null)
@@ -1135,8 +1158,8 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .create();
             dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
             });
             dialog.show();
         }
@@ -1160,7 +1183,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void showId() {
         final String id = getID();
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setTitle("ID: " + id)
                 .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
                     @Override
@@ -1178,8 +1201,8 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
     }
@@ -1238,12 +1261,12 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.RoundedAlertDialog)
+        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setView(v)
                 .create();
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         });
         dialog.show();
 

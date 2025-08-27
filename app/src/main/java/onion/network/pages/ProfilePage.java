@@ -28,6 +28,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.helpers.ThemeManager;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
@@ -74,7 +75,7 @@ public class ProfilePage extends BasePage {
         findViewById(R.id.delete_photo).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+                AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                         .setTitle("Delete Photo")
                         .setMessage("Do you really want to delete this photo?")
                         .setNegativeButton("No", null)
@@ -89,8 +90,8 @@ public class ProfilePage extends BasePage {
                         })
                         .create();
                 dialogDeletePhoto.setOnShowListener(d -> {
-                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
                 });
                 dialogDeletePhoto.show();
             }
@@ -117,7 +118,7 @@ public class ProfilePage extends BasePage {
     @Override
     public int getIcon() {
         //return R.drawable.ic_account_circle_white_36dp;
-        return R.drawable.ic_assignment_ind_white_36dp;
+        return R.drawable.ic_assignment_ind;
     }
 
     @Override
@@ -151,7 +152,7 @@ public class ProfilePage extends BasePage {
 
             final Bitmap fbmp = bmp;
 
-            AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, R.style.RoundedAlertDialog)
+            AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                     .setTitle("Set Photo")
                     .setView(view)
                     .setNegativeButton("Cancel", null)
@@ -179,8 +180,8 @@ public class ProfilePage extends BasePage {
                     })
                     .create();
             dialogSetPhoto.setOnShowListener(d -> {
-                dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
             });
             dialogSetPhoto.show();
 
@@ -281,7 +282,7 @@ public class ProfilePage extends BasePage {
 
                     View v = activity.getLayoutInflater().inflate(R.layout.profile_item, contentView, false);
                     //v.findViewById(R.id.edit).setVisibility(View.GONE);
-                    ((ImageView) v.findViewById(R.id.edit)).setImageResource(R.drawable.ic_link_black_24dp);
+                    ((ImageView) v.findViewById(R.id.edit)).setImageResource(R.drawable.ic_link_black);
                     TextView keyview = ((TextView) v.findViewById(R.id.key));
                     TextView valview = ((TextView) v.findViewById(R.id.val));
                     keyview.setText("ID");
@@ -331,7 +332,7 @@ public class ProfilePage extends BasePage {
 
                         valview.setText("Unknown");
                         //valview.setTextColor(0xffbbbbbb);
-                        valview.setTextColor(getResources().getColor(R.color.white_50));
+                        valview.setTextColor(ThemeManager.getColor(activity, R.attr.white_50));
                     } else {
                         valview.setText(val.trim());
                         //valview.setTextColor(0xff000000);
@@ -414,9 +415,9 @@ public class ProfilePage extends BasePage {
                                         })
                                         .create();
                                 dialog.setOnShowListener(d -> {
-                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(Color.WHITE);
-                                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
                                 });
                                 dialog.show();
 
