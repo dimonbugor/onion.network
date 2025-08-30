@@ -47,6 +47,7 @@ import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.BinaryBitmap;
@@ -303,6 +304,17 @@ public class MainActivity extends AppCompatActivity {
                     new PrivacyPage(this),
             };
         }
+
+        AppBarLayout appbar = findViewById(R.id.appbar);
+        appbar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            if (verticalOffset == 0) {
+                // повністю зверху
+                appBarLayout.setBackgroundColor(Color.TRANSPARENT);
+            } else {
+                // є скрол
+                appBarLayout.setBackgroundColor(Color.RED);
+            }
+        });
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -595,28 +607,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAddFriend() {
+        String[] menuItems = new String[]{
+                "Scan QR",
+                "Show QR",
+                "Enter ID",
+                "Show ID",
+                "Address",
+                "Invite friends",
+        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_single_item, menuItems);
+
         AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                 .setTitle("Add Friend")
-                .setItems(new String[]{
-                        "Scan QR",
-                        "Show QR",
-                        "Enter ID",
-                        "Show ID",
-                        "Address",
-                        "Invite friends",
-                }, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) scanQR();
-                        if (which == 1) showQR();
+                .setSingleChoiceItems(adapter, 0, (dialog1, which) -> {
+                    if (which == 0) scanQR();
+                    if (which == 1) showQR();
 
-                        if (which == 2) showEnterId();
-                        if (which == 3) showId();
+                    if (which == 2) showEnterId();
+                    if (which == 3) showId();
 
-                        if (which == 4) showUrl();
+                    if (which == 4) showUrl();
 
-                        if (which == 5) inviteFriend();
-                    }
+                    if (which == 5) inviteFriend();
                 })
                 .create();
         dialog.setOnShowListener(d -> {
@@ -924,12 +936,7 @@ public class MainActivity extends AppCompatActivity {
     boolean actionMenuShowUriOption = true;
     boolean actionMenuInviteFriendsOption = true;
 
-    public void toggleMainMenu() {
-        toggleChatMainMenu();
-        togglePostMainMenu();
-    }
-
-    private void toggleChatMainMenu() {
+    public void toggleChatMainMenu() {
         boolean showChatScreen = currentPage() instanceof ChatPage;
         if (showChatScreen) {
             actionCallOption = true;
@@ -939,7 +946,7 @@ public class MainActivity extends AppCompatActivity {
         updateMenu();
     }
 
-    private void togglePostMainMenu() {
+    public void togglePostMainMenu() {
         boolean showBlogScreen = currentPage() instanceof BlogPage;
         if (showBlogScreen) {
             actionPhotoOption = true;
@@ -1018,7 +1025,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_blog_title) {
+        if (id == R.id.action_call) {
             snack("Available soon");
         }
         if (id == R.id.action_blog_title) {

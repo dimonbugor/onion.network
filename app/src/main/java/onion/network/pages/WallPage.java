@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.method.LinkMovementMethod;
 import android.util.Base64;
@@ -186,23 +187,17 @@ public class WallPage extends BasePage {
 
         final Dialog d = b.create();
 
-        dialogView.findViewById(R.id.publish).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doPostPublish(item, text, bmp, dialogView);
-                d.cancel();
-            }
+        dialogView.findViewById(R.id.publish).setOnClickListener(v -> {
+            doPostPublish(item, text, bmp, dialogView);
+            d.cancel();
         });
 
         if (item == null) {
-            dialogView.findViewById(R.id.take_photo).setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    postEditText = textEdit.getText().toString();
-                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                    d.cancel();
-                }
+            dialogView.findViewById(R.id.take_photo).setOnClickListener(v -> {
+                postEditText = textEdit.getText().toString();
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                d.cancel();
             });
             dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
@@ -238,7 +233,9 @@ public class WallPage extends BasePage {
         Bitmap bmp = null;
 
         if (requestCode == REQUEST_PHOTO) {
+            Uri uri = data.getData();
             bmp = getActivityResultBitmap(data);
+            bmp = fixImageOrientation(bmp, uri);
         }
 
         if (requestCode == REQUEST_TAKE_PHOTO) {

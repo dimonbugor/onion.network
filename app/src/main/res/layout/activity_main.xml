@@ -15,20 +15,22 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
-            android:background="@android:color/transparent"
             android:layout_width="match_parent"
-            android:paddingVertical="0dp"
-            android:layout_height="@dimen/dp32">
+            android:layout_height="@dimen/dp32"
+            android:background="@android:color/transparent"
+            app:liftOnScroll="true"
+            app:liftOnScrollTargetViewId="@id/container"
+            android:paddingVertical="0dp">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingVertical="0dp"
-                android:gravity="center_vertical"
-                app:titleMarginTop="0dp"
                 android:background="@android:color/transparent"
-                app:layout_scrollFlags="">
+                android:gravity="center_vertical"
+                android:paddingVertical="0dp"
+                app:layout_scrollFlags=""
+                app:titleMarginTop="0dp">
 
             </androidx.appcompat.widget.Toolbar>
 
@@ -105,43 +107,43 @@
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/menuFab"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|bottom"
                 android:layout_margin="@dimen/dp24"
                 android:src="@drawable/ic_menu"
-                app:tint="?attr/colorOnBackground"
                 app:backgroundTint="?attr/colorPrimaryContainer"
-                app:rippleColor="#fff" />
+                app:rippleColor="#fff"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
+                app:tint="?attr/colorOnBackground" />
 
         </onion.network.ui.views.ArcButtonLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/wallFab"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
             android:src="@drawable/ic_edit"
             android:visibility="visible"
-            app:tint="?attr/colorOnBackground"
             app:backgroundTint="?attr/colorPrimaryContainer"
-            app:rippleColor="#fff" />
+            app:rippleColor="#fff"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
+            app:tint="?attr/colorOnBackground" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/friendFab"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
             android:src="@drawable/ic_person_add"
             android:visibility="gone"
-            app:tint="?attr/colorOnBackground"
             app:backgroundTint="?attr/colorPrimaryContainer"
-            app:rippleColor="#fff" />
+            app:rippleColor="#fff"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
+            app:tint="?attr/colorOnBackground" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

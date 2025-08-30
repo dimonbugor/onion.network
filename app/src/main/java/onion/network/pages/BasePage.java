@@ -46,7 +46,7 @@ public abstract class BasePage extends FrameLayout {
     }
 
     public void onTabSelected() {
-        activity.toggleMainMenu();
+        activity.togglePostMainMenu();
     }
 
     public String getBadge() {

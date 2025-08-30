@@ -200,6 +200,7 @@ public class ChatPage extends BasePage
     @Override
     public void onTabSelected() {
         log("onTabSelected");
+        activity.toggleChatMainMenu();
         if (isPageShown()) {
             load();
         }
