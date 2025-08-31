@@ -63,6 +63,14 @@ public class ChatPage extends BasePage
         adapter = new ChatAdapter();
         recycler.setAdapter(adapter);
 
+        final View mic = findViewById(R.id.micro);
+        mic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                activity.snack("Available soon");
+            }
+        });
+
         final View send = findViewById(R.id.send);
         send.setOnClickListener(new View.OnClickListener() {
             @Override

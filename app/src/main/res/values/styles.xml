@@ -1,10 +1,18 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Основна тема застосунку -->
     <style name="AppTheme.Base" parent="Theme.Material3.DayNight">
         <!-- спільні -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="fontFamily">@font/geologica_500</item>
+
+        <!-- Колір фону сплеш-екрана -->
+        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">@android:color/black</item>
+        <!-- Анімація іконки (центрована) -->
+        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:ignore="NewApi">@android:color/black</item>
+        <!-- Тривалість анімації іконки (необов'язково) -->
+        <item name="android:windowSplashScreenAnimationDuration" tools:ignore="NewApi">100</item>
     </style>
 
     <style name="AppTheme.Dark" parent="AppTheme.Base">

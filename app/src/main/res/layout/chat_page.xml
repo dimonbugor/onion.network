@@ -107,6 +107,19 @@
                 android:maxLength="1000" />
 
             <ImageButton
+                android:id="@+id/micro"
+                android:layout_width="@dimen/dp32"
+                android:layout_height="@dimen/dp32"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="@dimen/dp8"
+                android:layout_toStartOf="@+id/send"
+                android:background="?selectableItemBackground"
+                android:contentDescription="Micro"
+                android:src="@drawable/ic_mic"
+                app:tint="?attr/white_80" />
+
+            <ImageButton
                 android:id="@+id/send"
                 android:layout_width="@dimen/dp32"
                 android:layout_height="@dimen/dp32"

@@ -35,7 +35,14 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onPermissionsGranted() {
                 // Тут продовжуємо роботу після надання всіх дозволів
-                binding.fullscreenContent.setVisibility(VISIBLE);
+                binding.webView.setVisibility(VISIBLE);
+                String htmlData = "<html><head><style>"
+                        + "body { margin:0; padding:0; background-color:#000; display:flex; justify-content:center; align-items:center; height:100vh; }"
+                        + "img { max-width:300px; max-height:300px; width:auto; height:auto; }"
+                        + "</style></head>"
+                        + "<body><img src='file:///android_asset/animation.gif'/></body></html>";
+                binding.webView.loadDataWithBaseURL("file:///android_asset/", htmlData, "text/html", "UTF-8", null);
+
                 proceedWithAppFunctionality();
             }
 
@@ -61,7 +68,7 @@ public class SplashActivity extends AppCompatActivity {
     private void proceedWithAppFunctionality() {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             goToMainActivity();
-        }, 2000);
+        }, 7000);
     }
 
     private void showDeniedMessage() {
