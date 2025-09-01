@@ -5,14 +5,6 @@
         <!-- спільні -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="fontFamily">@font/geologica_500</item>
-
-        <!-- Колір фону сплеш-екрана -->
-        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">@android:color/black</item>
-        <!-- Анімація іконки (центрована) -->
-        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">@mipmap/ic_launcher_foreground</item>
-        <item name="android:windowSplashScreenIconBackgroundColor" tools:ignore="NewApi">@android:color/black</item>
-        <!-- Тривалість анімації іконки (необов'язково) -->
-        <item name="android:windowSplashScreenAnimationDuration" tools:ignore="NewApi">100</item>
     </style>
 
     <style name="AppTheme.Dark" parent="AppTheme.Base">
@@ -69,6 +61,16 @@
         <item name="android:textColor">@color/light_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/light_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/light_colorOnSurface</item>
+    </style>
+
+    <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight">
+        <!-- Колір фону сплеш-екрана -->
+        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">@android:color/black</item>
+        <!-- Анімація іконки (центрована) -->
+        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">@drawable/empty_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:ignore="NewApi">@android:color/black</item>
+        <!-- Тривалість анімації іконки (необов'язково) -->
+        <item name="android:windowSplashScreenAnimationDuration" tools:ignore="NewApi">1000</item>
     </style>
 
     <!-- Базовий стиль PopupMenu -->

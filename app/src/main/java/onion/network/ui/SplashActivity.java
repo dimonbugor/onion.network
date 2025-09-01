@@ -38,7 +38,7 @@ public class SplashActivity extends AppCompatActivity {
                 binding.webView.setVisibility(VISIBLE);
                 String htmlData = "<html><head><style>"
                         + "body { margin:0; padding:0; background-color:#000; display:flex; justify-content:center; align-items:center; height:100vh; }"
-                        + "img { max-width:300px; max-height:300px; width:auto; height:auto; }"
+                        + "img { max-width:360px; max-height:360px; width:auto; height:auto; }"
                         + "</style></head>"
                         + "<body><img src='file:///android_asset/animation.gif'/></body></html>";
                 binding.webView.loadDataWithBaseURL("file:///android_asset/", htmlData, "text/html", "UTF-8", null);

@@ -947,6 +947,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void togglePostMainMenu() {
+        toggleChatMainMenu();
         boolean showBlogScreen = currentPage() instanceof BlogPage;
         if (showBlogScreen) {
             actionPhotoOption = true;
