@@ -386,6 +386,14 @@ public class MainActivity extends AppCompatActivity {
 
         menuFab = findViewById(R.id.menuFab);
         dimOverlay = findViewById(R.id.dimOverlay);
+        if (dimOverlay != null) {
+            dimOverlay.setVisibility(View.VISIBLE);
+            dimOverlay.setAlpha(1f);
+            dimOverlay.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> dimOverlay.setVisibility(View.GONE));
+        }
         arcButtonLayout = findViewById(R.id.arcButtonLayout);
         arcButtonLayout.setFab(menuFab);
         arcButtonLayout.setOnExpansionChangedListener(expanded -> {
@@ -1166,10 +1174,20 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
                     .setTitle("Choose a theme")
                     .setSingleChoiceItems(adapter, selectedIndex, (d, which) -> {
-                        ThemeManager.init(this).setTheme(this, themeKeys[which]);
-                        recreate(); // Перезапускає тільки цю Activity
-                        d.dismiss();
-                    }).create();
+                        // Показуємо overlay
+                        dimOverlay.setVisibility(View.VISIBLE);
+                        dimOverlay.setAlpha(0f);
+                        dimOverlay.animate()
+                                .alpha(1f)
+                                .setDuration(200)
+                                .withEndAction(() -> {
+                                    ThemeManager.init(this).setTheme(this, themeKeys[which]);
+                                    d.dismiss();
+                                    recreate(); // перезапуск активності
+                                });
+
+                    })
+                    .create();
             dialog.setOnShowListener(d -> {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
                 dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
