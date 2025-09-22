@@ -262,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        startHostService();
+
         Log.i(TAG, "onCreate");
         ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);

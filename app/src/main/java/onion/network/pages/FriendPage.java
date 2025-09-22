@@ -103,7 +103,6 @@ public class FriendPage extends BasePage {
     }
 
     void load(final int i, String s) {
-
         new ItemTask(getContext(), address, "friend", s, count) {
 
             void fill(ItemResult itemResult, boolean finished) {
