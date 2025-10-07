@@ -22,6 +22,7 @@ import onion.network.R;
 import onion.network.TorManager;
 import onion.network.models.WallBot;
 import onion.network.clients.ChatClient;
+import onion.network.servers.BlogServer;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;
 
@@ -30,6 +31,7 @@ public class HostService extends Service {
     private Timer timer;
     private TorManager torManager;
     private Server server;
+    private BlogServer blogServer;
     private PowerManager.WakeLock wakeLock;
 
     @Override
@@ -45,6 +47,7 @@ public class HostService extends Service {
             startForeground(1, createNotification());
         }
         server = Server.getInstance(this);
+        blogServer = BlogServer.getInstance(this);
         torManager = TorManager.getInstance(this);
         return START_STICKY;
     }
@@ -75,6 +78,7 @@ public class HostService extends Service {
         log("Service created");
 
         server = Server.getInstance(this);
+        blogServer = BlogServer.getInstance(this);
         torManager = TorManager.getInstance(this);
 
         // Ініціалізуємо таймер для періодичних задач

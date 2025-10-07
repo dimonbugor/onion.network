@@ -29,14 +29,24 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+<!--    <FrameLayout-->
+<!--        android:layout_gravity="bottom"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        >-->
+
+<!--        <include layout="@layout/status_bar" />-->
+<!--    </FrameLayout>-->
+
     <FrameLayout
-        android:layout_gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        >
+        android:layout_gravity="center">
 
-        <include layout="@layout/status_bar" />
+        <ProgressBar
+            android:layout_width="@dimen/dp32"
+            android:layout_height="@dimen/dp32"
+            android:layout_gravity="center" />
     </FrameLayout>
 
 </FrameLayout>
