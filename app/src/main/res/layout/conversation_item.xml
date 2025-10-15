@@ -26,19 +26,17 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="@dimen/dp48"
                 android:layout_height="@dimen/dp48"
-                app:strokeColor="@color/colorAccentAlpha"
-                app:strokeWidth="1dp"
-                android:layout_marginVertical="@dimen/dp8"
                 android:layout_marginStart="@dimen/dp16"
-                app:cardCornerRadius="@dimen/dp48">
+                android:layout_marginVertical="@dimen/dp8"
+                app:cardCornerRadius="@dimen/dp48"
+                app:strokeColor="@color/colorAccentAlpha"
+                app:strokeWidth="1dp">
 
-                <ImageView
+                <onion.network.views.AvatarView
                     android:id="@+id/thumb"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:background="@color/colorBackgroundAlpha"
-                    android:src="@drawable/nothumb" />
+                    android:background="@color/colorBackgroundAlpha" />
             </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout

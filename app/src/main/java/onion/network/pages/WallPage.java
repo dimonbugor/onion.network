@@ -2,8 +2,6 @@
 
 package onion.network.pages;
 
-import static onion.network.helpers.BitmapHelper.getCircledBitmap;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,6 +36,7 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
+import onion.network.views.AvatarView;
 
 public class WallPage extends BasePage {
 
@@ -306,22 +305,13 @@ public class WallPage extends BasePage {
                     ImageView share = ((ImageView) v.findViewById(R.id.share));
                     ImageView delete = ((ImageView) v.findViewById(R.id.delete));
                     ImageView edit = ((ImageView) v.findViewById(R.id.edit));
-                    ImageView thumb = ((ImageView) v.findViewById(R.id.thumb));
+                    AvatarView thumb = (AvatarView) v.findViewById(R.id.thumb);
                     ImageView image = ((ImageView) v.findViewById(R.id.image));
 
-                    try {
-                        String str = o.optString("thumb");
-                        str = str.trim();
-                        if (!str.isEmpty()) {
-                            byte[] photodata = Base64.decode(str, Base64.DEFAULT);
-                            if (photodata.length > 0) {
-                                thumb.setImageBitmap(
-                                        getCircledBitmap(BitmapFactory.decodeByteArray(photodata, 0, photodata.length)));
-                            }
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+                    Bitmap photoThumb = item.bitmap("thumb");
+                    Bitmap videoThumb = item.bitmap("video_thumb");
+                    String videoUri = o.optString("video", "").trim();
+                    thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
 
                     image.setVisibility(View.GONE);
                     try {
@@ -465,7 +455,7 @@ public class WallPage extends BasePage {
                     contentView.addView(v);
                 }
 
-                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
+//                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
                 findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
 
                 smore = finished ? itemResult.more() : null;

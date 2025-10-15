@@ -131,6 +131,8 @@ public class FriendTool {
 
         new ItemTask(context, addr, "name").execute2();
         new ItemTask(context, addr, "thumb").execute2();
+        new ItemTask(context, addr, "video").execute2();
+        new ItemTask(context, addr, "video_thumb").execute2();
 
         return true;
     }

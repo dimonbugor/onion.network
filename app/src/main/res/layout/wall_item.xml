@@ -35,18 +35,16 @@
                         android:layout_height="@dimen/dp48"
                         android:layout_marginStart="@dimen/dp16"
                         android:layout_marginTop="@dimen/dp8"
-                        app:cardCornerRadius="@dimen/dp48"
                         app:cardBackgroundColor="@android:color/transparent"
+                        app:cardCornerRadius="@dimen/dp48"
                         app:strokeColor="@color/colorAccentAlpha"
                         app:strokeWidth="1dp">
 
-                        <ImageView
+                        <onion.network.views.AvatarView
                             android:id="@+id/thumb"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@color/colorBackgroundAlpha"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/nothumb" />
+                            android:background="@color/colorBackgroundAlpha" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <FrameLayout

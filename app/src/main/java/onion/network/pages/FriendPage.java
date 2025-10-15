@@ -1,9 +1,6 @@
 
 
 package onion.network.pages;
-
-import static onion.network.helpers.BitmapHelper.getCircledBitmap;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,6 +23,7 @@ import onion.network.models.ItemResult;
 import onion.network.models.ItemTask;
 import onion.network.ui.MainActivity;
 import onion.network.R;
+import onion.network.views.AvatarView;
 
 public class FriendPage extends BasePage {
 
@@ -121,7 +119,7 @@ public class FriendPage extends BasePage {
 
                     TextView address = ((TextView) v.findViewById(R.id.address));
                     TextView name = ((TextView) v.findViewById(R.id.name));
-                    ImageView thumb = (ImageView) v.findViewById(R.id.thumb);
+                    AvatarView thumb = (AvatarView) v.findViewById(R.id.thumb);
                     View it = v.findViewById(R.id.item);
 
                     final String addr = o.optString("addr");
@@ -142,10 +140,10 @@ public class FriendPage extends BasePage {
                         }
                     });
 
-                    Bitmap th = item.bitmap("thumb");
-                    if (th != null) {
-                        thumb.setImageBitmap(getCircledBitmap(th));
-                    }
+                    Bitmap photoThumb = item.bitmap("thumb");
+                    Bitmap videoThumb = item.bitmap("video_thumb");
+                    String videoUri = o.optString("video", "").trim();
+                    thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
 
                     if (activity.address.isEmpty()) {
                         it.setOnLongClickListener(new OnLongClickListener() {
@@ -188,7 +186,7 @@ public class FriendPage extends BasePage {
                     contentView.addView(v);
                 }
 
-                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
+//                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
                 findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
 
                 smore = finished ? itemResult.more() : null;

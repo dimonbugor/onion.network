@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/status_bar_top" />
+    <include
+        layout="@layout/status_bar_top"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        tools:ignore="Suspicious0dp" />
 
     <LinearLayout
         android:id="@+id/no_msg"
@@ -80,8 +85,8 @@
         android:id="@+id/text_input_layout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginEnd="@dimen/dp16"
         android:layout_marginStart="@dimen/dp96"
+        android:layout_marginEnd="@dimen/dp16"
         android:layout_marginBottom="@dimen/dp16"
         app:boxBackgroundMode="none"
         app:hintEnabled="false">
@@ -97,14 +102,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:paddingEnd="@dimen/dp32"
-                android:paddingVertical="0dp"
-                android:textColor="?attr/colorOnBackground"
-                android:textSize="@dimen/sp12"
                 android:background="@drawable/edit_rounded_background"
                 android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
                 android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine"
-                android:maxLength="1000" />
+                android:maxLength="1000"
+                android:paddingVertical="0dp"
+                android:paddingEnd="@dimen/dp32"
+                android:textColor="?attr/colorOnBackground"
+                android:textSize="@dimen/sp12" />
 
             <ImageButton
                 android:id="@+id/micro"
@@ -123,12 +128,12 @@
                 android:id="@+id/send"
                 android:layout_width="@dimen/dp32"
                 android:layout_height="@dimen/dp32"
-                android:background="?selectableItemBackground"
-                android:src="@drawable/ic_send_black_24dp"
-                android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:background="?selectableItemBackground"
                 android:contentDescription="Send"
+                android:src="@drawable/ic_send_black_24dp"
                 app:tint="?attr/white_80" />
 
         </RelativeLayout>

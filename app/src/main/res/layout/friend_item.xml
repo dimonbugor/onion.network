@@ -20,24 +20,21 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="@dimen/dp48"
-            android:layout_height="@dimen/dp48"
-            app:strokeColor="@color/colorAccentAlpha"
-            app:strokeWidth="1dp"
-            android:layout_marginStart="@dimen/dp16"
-            android:layout_marginVertical="@dimen/dp8"
-            app:cardCornerRadius="@dimen/dp48">
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="@dimen/dp48"
+                android:layout_height="@dimen/dp48"
+                android:layout_marginStart="@dimen/dp16"
+                android:layout_marginVertical="@dimen/dp8"
+                app:cardCornerRadius="@dimen/dp48"
+                app:strokeColor="@color/colorAccentAlpha"
+                app:strokeWidth="1dp">
 
-
-            <ImageView
-                android:id="@+id/thumb"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:background="@color/colorBackgroundAlpha"
-                android:src="@drawable/nothumb" />
-        </com.google.android.material.card.MaterialCardView>
+                <onion.network.views.AvatarView
+                    android:id="@+id/thumb"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/colorBackgroundAlpha" />
+            </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="0dp"

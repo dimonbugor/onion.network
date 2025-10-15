@@ -2,8 +2,6 @@
 
 package onion.network.pages;
 
-import static onion.network.helpers.BitmapHelper.getCircledBitmap;
-
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -15,13 +13,14 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import onion.network.R;
+import onion.network.TorManager;
+import onion.network.cashes.ItemCache;
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.servers.ChatServer;
-import onion.network.cashes.ItemCache;
 import onion.network.ui.MainActivity;
-import onion.network.R;
-import onion.network.TorManager;
+import onion.network.views.AvatarView;
 
 public class ConversationPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 
@@ -124,7 +123,8 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
 
     class ConversationHolder extends RecyclerView.ViewHolder {
         public TextView name, address, message;
-        public ImageView thumb, direction;
+        public AvatarView thumb;
+        public ImageView direction;
         public View data;
 
         public ConversationHolder(View v) {
@@ -132,7 +132,7 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             name = (TextView) v.findViewById(R.id.name);
             address = (TextView) v.findViewById(R.id.address);
             message = (TextView) v.findViewById(R.id.message);
-            thumb = (ImageView) v.findViewById(R.id.thumb);
+            thumb = (AvatarView) v.findViewById(R.id.thumb);
             direction = (ImageView) v.findViewById(R.id.direction);
             data = v.findViewById(R.id.data);
         }
@@ -162,12 +162,11 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             holder.message.setText(content);
             holder.address.setText(remoteAddress);
 
-            Bitmap th = ItemCache.getInstance(activity).get(remoteAddress, "thumb").one().bitmap("thumb");
-            if (th != null) {
-                holder.thumb.setImageBitmap(getCircledBitmap(th));
-            } else {
-                holder.thumb.setImageResource(R.drawable.nothumb);
-            }
+            ItemCache cache = ItemCache.getInstance(activity);
+            Bitmap photoThumb = cache.get(remoteAddress, "thumb").one().bitmap("thumb");
+            Bitmap videoThumb = cache.get(remoteAddress, "video_thumb").one().bitmap("video_thumb");
+            String videoUri = cache.get(remoteAddress, "video").one().json().optString("video", "").trim();
+            holder.thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
 
             holder.name.setText(ItemCache.getInstance(activity).get(remoteAddress, "name").one().json().optString("name", "Anonymous"));
 
@@ -188,6 +187,12 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
         @Override
         public int getItemCount() {
             return cursor != null ? cursor.getCount() : 0;
+        }
+
+        @Override
+        public void onViewRecycled(ConversationHolder holder) {
+            holder.thumb.release();
+            super.onViewRecycled(holder);
         }
 
     }

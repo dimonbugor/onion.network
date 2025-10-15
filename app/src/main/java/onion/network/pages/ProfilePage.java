@@ -1,20 +1,31 @@
-
-
 package onion.network.pages;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
+// media3
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+// для thumbnail
+import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -38,10 +49,102 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
+import onion.network.views.AvatarView;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.io.File;
+import androidx.core.content.FileProvider;
 
 public class ProfilePage extends BasePage {
 
-    public static final int REQUEST_PHOTO = 3;
+    private AvatarView profileAvatarView;
+    private Bitmap profilePhotoBitmap;
+    private Bitmap profileVideoThumbBitmap;
+
+    private static final int REQ_PERMS_VIDEO = 501;
+    private static final int REQ_PERMS_READ_MEDIA = 502;
+
+    // збережені URI/дані
+    private String videoUriStr = null;
+
+    private void updateProfileAvatar() {
+        if (profileAvatarView == null) return;
+
+        String videoUri = !TextUtils.isEmpty(videoUriStr) ? videoUriStr : null;
+        Bitmap fallback = profileVideoThumbBitmap != null ? profileVideoThumbBitmap : profilePhotoBitmap;
+
+        profileAvatarView.bind(profilePhotoBitmap, fallback, videoUri);
+
+        if (videoUri != null) {
+            profileAvatarView.setOnClickListener(v -> activity.lightboxVideo(Uri.parse(videoUri)));
+        } else if (profilePhotoBitmap != null) {
+            profileAvatarView.setOnClickListener(v -> activity.lightbox(profilePhotoBitmap));
+        } else {
+            profileAvatarView.setOnClickListener(null);
+        }
+    }
+
+    private void configureDeleteButtonForPhoto() {
+        View deleteBtn = findViewById(R.id.delete_photo);
+        if (deleteBtn == null) return;
+        deleteBtn.setOnClickListener(v -> {
+            AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                    .setTitle("Delete Photo")
+                    .setMessage("Do you really want to delete this photo?")
+                    .setNegativeButton("No", null)
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").build());
+                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").build());
+                        activity.load();
+                        FriendTool.getInstance(context).requestUpdates();
+                    })
+                    .create();
+            dialogDeletePhoto.setOnShowListener(d -> {
+                dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            });
+            dialogDeletePhoto.show();
+        });
+    }
+
+    private void configureDeleteButtonForVideo() {
+        View deleteBtn = findViewById(R.id.delete_photo);
+        if (deleteBtn == null) return;
+        deleteBtn.setOnClickListener(vbtn -> {
+            AlertDialog dlg = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                    .setTitle("Delete Video")
+                    .setMessage("Do you really want to delete this video?")
+                    .setNegativeButton("No", null)
+                    .setPositiveButton("Yes", (d, which) -> {
+                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("video", "", "").build());
+                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("video_thumb", "", "").build());
+                        videoUriStr = null;
+                        profileVideoThumbBitmap = null;
+                        updateProfileAvatar();
+                        activity.load();
+                        FriendTool.getInstance(context).requestUpdates();
+                    })
+                    .create();
+            dlg.setOnShowListener(d2 -> {
+                dlg.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+                dlg.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            });
+            dlg.show();
+        });
+    }
+
+    private void refreshDeleteButtonVisibility() {
+        View deleteBtn = findViewById(R.id.delete_photo);
+        if (deleteBtn == null) return;
+        if (!address.isEmpty()) {
+            deleteBtn.setVisibility(View.GONE);
+            return;
+        }
+        boolean hasVideo = !TextUtils.isEmpty(videoUriStr);
+        boolean hasPhoto = profilePhotoBitmap != null;
+        deleteBtn.setVisibility((hasVideo || hasPhoto) ? View.VISIBLE : View.GONE);
+    }
     public static Row[] rows = {
             new Row("name", "Name", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_PERSON_NAME),
             //new Row("location", "Location", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
@@ -54,54 +157,28 @@ public class ProfilePage extends BasePage {
             new Row("bio", "Bio", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
     };
     LinearLayout contentView;
-    int REQUEST_TAKE_PHOTO = 19;
+    public static final int REQUEST_PHOTO = 3;
+    public static final int REQUEST_TAKE_PHOTO = 19;
+    public static final int REQUEST_CHOOSE_MEDIA = 30;
+    public static final int REQUEST_TAKE_VIDEO = 32;
 
     public ProfilePage(final MainActivity activity) {
         super(activity);
         inflate(activity, R.layout.profile_page, this);
         contentView = (LinearLayout) findViewById(R.id.contentView);
 
-        findViewById(R.id.choose_photo).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startImageChooser(REQUEST_PHOTO);
-            }
-        });
+        profileAvatarView = (AvatarView) findViewById(R.id.profilephoto);
+        if (profileAvatarView != null) {
+            profileAvatarView.setPlaceholderResource(R.drawable.nophoto);
+        }
+
+        findViewById(R.id.choose_photo).setOnClickListener(v -> showPickMediaDialog());
         findViewById(R.id.choose_photo).setVisibility(address.isEmpty() ? View.VISIBLE : View.GONE);
 
-        findViewById(R.id.delete_photo).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                        .setTitle("Delete Photo")
-                        .setMessage("Do you really want to delete this photo?")
-                        .setNegativeButton("No", null)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").build());
-                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").build());
-                                activity.load();
-                                FriendTool.getInstance(context).requestUpdates();
-                            }
-                        })
-                        .create();
-                dialogDeletePhoto.setOnShowListener(d -> {
-                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                    dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                });
-                dialogDeletePhoto.show();
-            }
-        });
-        findViewById(R.id.delete_photo).setVisibility(View.GONE);
+        configureDeleteButtonForPhoto();
+        refreshDeleteButtonVisibility();
 
-        findViewById(R.id.take_photo).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-            }
-        });
+        findViewById(R.id.take_photo).setOnClickListener(v -> showCaptureMediaDialog());
         findViewById(R.id.take_photo).setVisibility(address.isEmpty() ? View.VISIBLE : View.GONE);
 
         //load();
@@ -118,74 +195,121 @@ public class ProfilePage extends BasePage {
         return R.drawable.ic_assignment_ind;
     }
 
+    @SuppressLint("WrongConstant")
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK)
-            return;
+        if (resultCode != Activity.RESULT_OK) return;
+        if (data == null && requestCode != REQUEST_TAKE_PHOTO) return;
 
-        if (requestCode == REQUEST_PHOTO || requestCode == REQUEST_TAKE_PHOTO) {
-            //try {
+        // ======= 1) PICK MEDIA (галерея) =======
+        if (requestCode == REQUEST_CHOOSE_MEDIA) {
+            Uri uri = data.getData();
+            if (uri == null) return;
 
-            //Uri uri = data.getData();
-
-            Bitmap bmp;
-
-            if (requestCode == REQUEST_PHOTO) {
-                Uri uri = data.getData();
-                bmp = getActivityResultBitmap(data);
-                bmp = fixImageOrientation(bmp, uri);
-            } else { // REQUEST_TAKE_PHOTO
-                bmp = (Bitmap) data.getExtras().get("data");
+            // persist (щоб мати довгостроковий доступ)
+            final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            try {
+                getContext().getContentResolver().takePersistableUriPermission(uri, takeFlags);
+            } catch (Exception ignore) {
             }
 
-            if (bmp == null) {
+            String mime = getMimeType(getContext(), uri);
+            if (mime != null && mime.startsWith("image/")) {
+                // === Фото з галереї
+                Bitmap bmp = getActivityResultBitmap(data);
+                bmp = fixImageOrientation(bmp, uri);
+                if (bmp == null) return;
+                bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
+                showAndSavePhoto(bmp);
+                return;
+            } else if (mime != null && mime.startsWith("video/")) {
+                // === Відео з галереї (URI зберігаємо як String, плюс thumbnail)
+                handlePickedVideo(uri);
+                return;
+            } else {
+                Snackbar.make(contentView, "Unsupported media type", Snackbar.LENGTH_SHORT).show();
                 return;
             }
-
-            bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
-
-            View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
-            ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(bmp);
-
-            final Bitmap fbmp = bmp;
-
-            AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                    .setTitle("Set Photo")
-                    .setView(view)
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            {
-                                String v = Utils.encodeImage(fbmp);
-                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").put("photo", v).build());
-                            }
-
-                            {
-                                String v = Utils.encodeImage(ThumbnailUtils.extractThumbnail(fbmp, 84, 84));
-                                ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").put("thumb", v).build());
-                            }
-
-                            Snackbar.make(contentView, "Photo changed", Snackbar.LENGTH_SHORT).show();
-
-                            activity.load();
-
-                            FriendTool.getInstance(context).requestUpdates();
-
-                        }
-                    })
-                    .create();
-            dialogSetPhoto.setOnShowListener(d -> {
-                dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            });
-            dialogSetPhoto.show();
-
-            /*} catch (IOException ex) {
-                Snackbar.make(this, "Error", Snackbar.LENGTH_SHORT).show();
-            }*/
         }
+
+        // ======= 2) TAKE PHOTO (камера фото) =======
+        if (requestCode == REQUEST_TAKE_PHOTO) {
+            Bitmap bmp = (Bitmap) data.getExtras().get("data"); // мініатюра
+            if (bmp == null) return;
+            bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
+            showAndSavePhoto(bmp);
+            return;
+        }
+
+        // ======= 3) TAKE VIDEO (камера відео) =======
+        if (requestCode == REQUEST_TAKE_VIDEO) {
+            Uri uri = (data != null && data.getData() != null) ? data.getData() : pendingVideoUri;
+            if (uri == null) {
+                Snackbar.make(contentView, "No video URI", Snackbar.LENGTH_LONG).show();
+                return;
+            }
+            handlePickedVideo(uri);
+            pendingVideoUri = null;
+            return;
+        }
+
+        // ======= 4) ТВОЇ СТАРІ ГІЛКИ (REQUEST_PHOTO) =======
+        if (requestCode == REQUEST_PHOTO) {
+            Uri uri = data.getData();
+            Bitmap bmp = getActivityResultBitmap(data);
+            bmp = fixImageOrientation(bmp, uri);
+            if (bmp == null) return;
+            bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
+            showAndSavePhoto(bmp);
+            return;
+        }
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        updateProfileAvatar();
+        if (profileAvatarView != null) {
+            profileAvatarView.resume();
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (profileAvatarView != null) {
+            profileAvatarView.release();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_PERMS_VIDEO) {
+            boolean granted = true;
+            for (int r : grantResults) granted &= (r == PackageManager.PERMISSION_GRANTED);
+            if (granted) {
+                captureVideo();
+            } else {
+                Snackbar.make(contentView, "Camera & Mic permissions are required for video", Snackbar.LENGTH_LONG).show();
+            }
+        }
+        if (requestCode == REQ_PERMS_READ_MEDIA) {
+            boolean granted = true;
+            for (int r : grantResults) granted &= (r == PackageManager.PERMISSION_GRANTED);
+            if (granted) {
+                showPickMediaDialog();
+            } else {
+                Snackbar.make(contentView, "Storage permission required for video", Snackbar.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public void onPageResume() {
+        if (profileAvatarView != null) profileAvatarView.resume();
+    }
+    public void onPagePause() {
+        if (profileAvatarView != null) profileAvatarView.pause();
     }
 
     void save(JSONObject o, String key, String val) {
@@ -214,13 +338,10 @@ public class ProfilePage extends BasePage {
 
     public void load() {
 
-        findViewById(R.id.delete_photo).setVisibility(View.GONE);
+        refreshDeleteButtonVisibility();
         new ItemTask(getContext(), address, "photo") {
             @Override
             protected void onProgressUpdate(ItemResult... values) {
-                ImageView photoview = ((ImageView) findViewById(R.id.profilephoto));
-                photoview.setOnClickListener(null);
-                photoview.setClickable(false);
                 try {
                     ItemResult itemResult = values[0];
                     String str = itemResult.one().json().optString("photo");
@@ -228,25 +349,17 @@ public class ProfilePage extends BasePage {
                     if (!str.isEmpty()) {
                         byte[] photodata = Base64.decode(str, Base64.DEFAULT);
                         if (photodata.length == 0) throw new Exception();
-                        final Bitmap bitmap = BitmapFactory.decodeByteArray(photodata, 0, photodata.length);
-                        photoview.setImageBitmap(bitmap);
-                        if (address.isEmpty()) {
-                            findViewById(R.id.delete_photo).setVisibility(View.VISIBLE);
-                        }
-                        photoview.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                activity.lightbox(bitmap);
-                            }
-                        });
-                        photoview.setClickable(true);
+                        profilePhotoBitmap = BitmapFactory.decodeByteArray(photodata, 0, photodata.length);
                     } else {
-                        ((ImageView) findViewById(R.id.profilephoto)).setImageResource(R.drawable.nophoto);
+                        profilePhotoBitmap = null;
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    ((ImageView) findViewById(R.id.profilephoto)).setImageResource(R.drawable.nophoto);
+                    profilePhotoBitmap = null;
                 }
+
+                updateProfileAvatar();
+                refreshDeleteButtonVisibility();
             }
         }.execute2();
 
@@ -271,7 +384,7 @@ public class ProfilePage extends BasePage {
                 contentView.removeAllViews();
 
 
-                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
+//                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
                 findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
 
 
@@ -432,6 +545,55 @@ public class ProfilePage extends BasePage {
 
         }.execute2();
 
+        // 1) Підтягнути відео
+        new ItemTask(getContext(), address, "video") {
+            @Override
+            protected void onProgressUpdate(ItemResult... values) {
+                try {
+                    ItemResult itemResult = values[0];
+                    String v = itemResult.one().json().optString("video", "").trim();
+                    videoUriStr = v.isEmpty() ? null : v;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    videoUriStr = null;
+                }
+
+                updateProfileAvatar();
+
+                if (address.isEmpty()) {
+                    if (!TextUtils.isEmpty(videoUriStr)) {
+                        configureDeleteButtonForVideo();
+                    } else {
+                        configureDeleteButtonForPhoto();
+                    }
+                }
+
+                refreshDeleteButtonVisibility();
+            }
+        }.execute2();
+
+        new ItemTask(getContext(), address, "video_thumb") {
+            @Override
+            protected void onProgressUpdate(ItemResult... values) {
+                try {
+                    ItemResult itemResult = values[0];
+                    String str = itemResult.one().json().optString("video_thumb", "").trim();
+                    Bitmap thumb = null;
+                    if (!str.isEmpty()) {
+                        byte[] data = Base64.decode(str, Base64.DEFAULT);
+                        if (data.length > 0) {
+                            thumb = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        }
+                    }
+                    profileVideoThumbBitmap = thumb;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    profileVideoThumbBitmap = null;
+                }
+
+                updateProfileAvatar();
+            }
+        }.execute2();
     }
 
     public static class Row {
@@ -445,16 +607,229 @@ public class ProfilePage extends BasePage {
             this.type = type;
         }
     }
+    // --- thumbnail з відео (перша секунда, або 0)
+    private Bitmap extractVideoThumbnail(@NonNull Uri uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(getContext(), uri);
+            // frame at 1s (1000000 мкс) — інколи 0 дає чорний кадр
+            Bitmap bmp = retriever.getFrameAtTime(1_000_000, MediaMetadataRetriever.OPTION_CLOSEST);
+            return (bmp != null) ? ThumbnailUtils.extractThumbnail(bmp, 320, 320) : null;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return null;
+        } finally {
+            try {
+                retriever.release();
+            } catch (Throwable ignore) {
+            }
+        }
+    }
 
+    private void showPickMediaDialog() {
+        new AlertDialog.Builder(getContext(), ThemeManager.getDialogThemeResId(getContext()))
+                .setTitle("Choose media")
+                .setItems(new CharSequence[]{"Photo from gallery", "Video from gallery"}, (d, which) -> {
+                    if (which == 0) pickMedia(true);
+                    else pickMedia(false);
+                })
+                .show();
+    }
+
+    private void showCaptureMediaDialog() {
+        new AlertDialog.Builder(getContext(), ThemeManager.getDialogThemeResId(getContext()))
+                .setTitle("Capture")
+                .setItems(new CharSequence[]{"Take Photo", "Record Video (5s)"}, (d, which) -> {
+                    if (which == 0) capturePhoto();
+                    else captureVideo();
+                })
+                .show();
+    }
+
+    private void pickMedia(boolean photo) {
+        if (!photo && !hasReadMediaPermission()) {
+            requestReadMediaPermission();
+            return;
+        }
+
+        prepareForCapture();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(photo ? "image/*" : "video/*");
+        activity.startActivityForResult(intent, REQUEST_CHOOSE_MEDIA);
+    }
+
+    private void capturePhoto() {
+        // Твоя поточна логіка — маленький bitmap із camera app
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+    }
+
+    private boolean ensureReadMediaPermissionForVideo() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED) {
+                requestReadMediaPermission();
+                return false;
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestReadMediaPermission();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Uri pendingVideoUri;
+
+    private Uri createVideoOutputUri() {
+        File dir = new File(getContext().getExternalCacheDir(), "camera");
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        String name = "VID_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".mp4";
+        File f = new File(dir, name);
+        return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", f);
+    }
+
+    private void prepareForCapture() {
+        if (profileAvatarView != null) {
+            profileAvatarView.pause();
+        }
+    }
+
+    private void captureVideo() {
+        if (!hasVideoPermissions()) { requestVideoPermissions(); return; }
+        if (!ensureReadMediaPermissionForVideo()) { return; }
+        prepareForCapture();
+
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 5);
+        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+
+        pendingVideoUri = createVideoOutputUri();
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingVideoUri);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        activity.startActivityForResult(intent, REQUEST_TAKE_VIDEO);
+    }
+
+    private void showAndSavePhoto(final Bitmap bmp320) {
+        View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
+        ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(bmp320);
+
+        AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                .setTitle("Set Photo")
+                .setView(view)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    String v = Utils.encodeImage(bmp320);
+                    ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").put("photo", v).build());
+
+                    String vthumb = Utils.encodeImage(ThumbnailUtils.extractThumbnail(bmp320, 84, 84));
+                    ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").put("thumb", vthumb).build());
+
+                    profilePhotoBitmap = bmp320;
+                    updateProfileAvatar();
+                    refreshDeleteButtonVisibility();
+
+                    Snackbar.make(contentView, "Photo changed", Snackbar.LENGTH_SHORT).show();
+                    activity.load();
+                    FriendTool.getInstance(context).requestUpdates();
+                })
+                .create();
+        dialogSetPhoto.setOnShowListener(d ->
+        {
+            dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+        });
+        dialogSetPhoto.show();
+    }
+
+    private void handlePickedVideo(final Uri uri) {
+        // thumbnail (320x320)
+        Bitmap thumb = extractVideoThumbnail(uri);
+        View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
+        ImageView preview = view.findViewById(R.id.imageView);
+        if (thumb != null) preview.setImageBitmap(thumb);
+        else preview.setImageResource(R.drawable.nophoto);
+
+        AlertDialog dialogSetVideo = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                .setTitle("Set Video Avatar")
+                .setView(view)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    // записуємо лише URI (string) + маленький thumb
+                    ItemDatabase.getInstance(getContext())
+                            .put(new Item.Builder("video", "", "").put("video", uri.toString()).build());
+
+                    if (thumb != null) {
+                        String vthumb = Utils.encodeImage(ThumbnailUtils.extractThumbnail(thumb, 84, 84));
+                        ItemDatabase.getInstance(getContext())
+                                .put(new Item.Builder("video_thumb", "", "").put("video_thumb", vthumb).build());
+                    }
+
+                    videoUriStr = uri.toString();
+                    profileVideoThumbBitmap = thumb;
+                    updateProfileAvatar();
+                    refreshDeleteButtonVisibility();
+                    if (address.isEmpty()) {
+                        configureDeleteButtonForVideo();
+                    }
+
+                    Snackbar.make(contentView, "Video avatar set", Snackbar.LENGTH_SHORT).show();
+                    activity.load();
+                    FriendTool.getInstance(context).requestUpdates();
+                })
+                .create();
+        dialogSetVideo.setOnShowListener(d ->
+        {
+            dialogSetVideo.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+        });
+        dialogSetVideo.show();
+    }
+
+    private static @Nullable String getMimeType(Context ctx, Uri uri) {
+        if (uri == null) return null;
+        String mime = null;
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            mime = ctx.getContentResolver().getType(uri);
+        } else {
+            String ext = android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+            if (ext != null)
+                mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext.toLowerCase());
+        }
+        return mime;
+    }
+
+    private boolean hasVideoPermissions() {
+        Context c = getContext();
+        boolean cam = ContextCompat.checkSelfPermission(c, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        boolean mic = ContextCompat.checkSelfPermission(c, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        return cam && mic;
+    }
+
+    private void requestVideoPermissions() {
+        ActivityCompat.requestPermissions(activity, new String[] {
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+        }, REQ_PERMS_VIDEO);
+    }
+
+    private boolean hasReadMediaPermission() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void requestReadMediaPermission() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.READ_MEDIA_VIDEO }, REQ_PERMS_READ_MEDIA);
+        } else {
+            ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE }, REQ_PERMS_READ_MEDIA);
+        }
+    }
 
 }
-
-
-
-
-
-
-
-
-
-

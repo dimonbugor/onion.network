@@ -43,13 +43,11 @@
                         app:strokeColor="?attr/colorOnBackground"
                         app:strokeWidth="1dp">
 
-                        <ImageView
+                        <onion.network.views.AvatarView
                             android:id="@+id/profilephoto"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/dp132"
-                            android:background="?selectableItemBackground"
-                            android:scaleType="fitCenter"
-                            android:src="@drawable/nophoto" />
+                            android:background="@color/colorBackgroundAlpha" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
@@ -169,6 +167,7 @@
         android:layout_gravity="center">
 
         <ProgressBar
+            android:id="@+id/loading"
             android:layout_width="@dimen/dp32"
             android:layout_height="@dimen/dp32"
             android:layout_gravity="center" />

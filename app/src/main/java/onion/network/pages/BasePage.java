@@ -147,4 +147,6 @@ public abstract class BasePage extends FrameLayout {
         activity.startActivityForResult(intent, id);
     }
 
+    protected void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    }
 }

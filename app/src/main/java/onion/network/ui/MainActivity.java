@@ -39,6 +39,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -146,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
 
     static void prefetchExtra(Context context, String address) {
         new ItemTask(context, address, "thumb").execute2();
+        new ItemTask(context, address, "video").execute2();
+        new ItemTask(context, address, "video_thumb").execute2();
     }
 
     public void blink(final int id) {
@@ -338,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager.setClipToPadding(false);
         viewPager.setPageMargin(20);
 
-        viewPager.setAdapter(new PagerAdapter() {
+        PagerAdapter pagerAdapter = new PagerAdapter() {
             @Override
             public int getCount() {
                 return pages.length;
@@ -361,9 +364,13 @@ public class MainActivity extends AppCompatActivity {
                 container.removeView((View) object);
             }
 
-        });
+        };
+
+        viewPager.setAdapter(pagerAdapter);
 
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            int previous = -1;
+
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 // Це викликається під час свайпу (між сторінками), якщо треба "в процесі"
@@ -373,6 +380,17 @@ public class MainActivity extends AppCompatActivity {
             public void onPageSelected(int position) {
                 // 🔹 Тут ти отримаєш swipe (перехід на сторінку)
                 Log.d("ViewPager", "Page selected: " + position);
+
+                // pause попередню
+                if (previous >= 0) {
+                    BasePage prev = pages[previous];
+                    if (prev instanceof ProfilePage) ((ProfilePage) prev).onPagePause();
+                }
+                // resume поточну
+                BasePage curr = pages[position];
+                if (curr instanceof ProfilePage) ((ProfilePage) curr).onPageResume();
+
+                previous = position;
 
                 fabvis();
                 togglePostMainMenu();
@@ -1415,6 +1433,29 @@ public class MainActivity extends AppCompatActivity {
                 lightboxHide();
             }
         });
+    }
+
+    public void lightboxVideo(Uri uri) {
+        final VideoView v = findViewById(R.id.lightboxVideo);
+
+        v.setVisibility(View.VISIBLE);
+        v.setVideoURI(uri);
+        v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
+
+        v.setOnPreparedListener(mp -> {
+            mp.setLooping(true);
+            mp.setVolume(0f, 0f); // або прибери, якщо хочеш звук
+            v.start();
+        });
+
+        v.setOnClickListener(vv -> lightboxVideoHide());
+    }
+
+    public void lightboxVideoHide() {
+        final VideoView v = findViewById(R.id.lightboxVideo);
+        if (v.isPlaying()) v.stopPlayback();
+        v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
+        v.postDelayed(() -> v.setVisibility(View.INVISIBLE), 250);
     }
 
     private void lightboxHide() {

@@ -117,6 +117,28 @@ public class Item {
                     }
                 }
 
+                {
+                    String video = ItemDatabase.getInstance(context).get("video", "", 1).one().json().optString("video");
+                    if (video != null && !video.trim().isEmpty()) {
+                        try {
+                            json.put("video", video);
+                        } catch (JSONException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+
+                {
+                    String videoThumb = ItemDatabase.getInstance(context).get("video_thumb", "", 1).one().json().optString("video_thumb");
+                    if (videoThumb != null && !videoThumb.trim().isEmpty()) {
+                        try {
+                            json.put("video_thumb", videoThumb);
+                        } catch (JSONException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+
             }
         }
 
@@ -145,6 +167,36 @@ public class Item {
                         json.put("name", name);
                     } catch (JSONException ex) {
                         throw new RuntimeException(ex);
+                    }
+                }
+            }
+
+            // video (looping avatar)
+            {
+                ItemResult rs = ItemCache.getInstance(context).get(json.optString("addr"), "video");
+                if (rs.size() > 0) {
+                    String video = rs.one().json().optString("video");
+                    if (video != null && !video.trim().isEmpty()) {
+                        try {
+                            json.put("video", video);
+                        } catch (JSONException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+            }
+
+            // video thumbnail for quick previews
+            {
+                ItemResult rs = ItemCache.getInstance(context).get(json.optString("addr"), "video_thumb");
+                if (rs.size() > 0) {
+                    String videoThumb = rs.one().json().optString("video_thumb");
+                    if (videoThumb != null && !videoThumb.trim().isEmpty()) {
+                        try {
+                            json.put("video_thumb", videoThumb);
+                        } catch (JSONException ex) {
+                            throw new RuntimeException(ex);
+                        }
                     }
                 }
             }
@@ -225,9 +277,6 @@ public class Item {
 
 
 }
-
-
-
 
 
 
