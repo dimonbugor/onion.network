@@ -1424,7 +1424,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void lightbox(Bitmap bitmap) {
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
+        final VideoView videoOverlay = findViewById(R.id.lightboxVideo);
+        if (videoOverlay.getVisibility() == View.VISIBLE) {
+            if (videoOverlay.isPlaying()) videoOverlay.stopPlayback();
+            videoOverlay.clearAnimation();
+            videoOverlay.setVisibility(View.INVISIBLE);
+        }
         v.setImageBitmap(bitmap);
+        v.bringToFront();
         v.setVisibility(View.VISIBLE);
         v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
         v.setOnClickListener(new View.OnClickListener() {
@@ -1437,7 +1444,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void lightboxVideo(Uri uri) {
         final VideoView v = findViewById(R.id.lightboxVideo);
+        final ImageView photoOverlay = findViewById(R.id.lightbox);
+        if (photoOverlay.getVisibility() == View.VISIBLE) {
+            photoOverlay.clearAnimation();
+            photoOverlay.setVisibility(View.GONE);
+        }
 
+        v.bringToFront();
         v.setVisibility(View.VISIBLE);
         v.setVideoURI(uri);
         v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
@@ -1480,6 +1493,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        final VideoView videoView = findViewById(R.id.lightboxVideo);
+        if (videoView.getVisibility() == View.VISIBLE) {
+            lightboxVideoHide();
+            return;
+        }
         final ImageView v = (ImageView) findViewById(R.id.lightbox);
         if (v.getVisibility() == View.VISIBLE) {
             lightboxHide();

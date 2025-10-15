@@ -6,6 +6,7 @@ import android.graphics.Outline;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
@@ -74,12 +75,29 @@ public class AvatarView extends FrameLayout {
         playerView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
         playerView.setAlpha(0f);
+        playerView.setClickable(false);
+        playerView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        playerView.setOnTouchListener((v, event) -> {
+            if (!hasOnClickListeners()) {
+                return false;
+            }
+            int action = event.getAction();
+            if (action == MotionEvent.ACTION_DOWN) {
+                return true;
+            }
+            if (action == MotionEvent.ACTION_UP) {
+                performClick();
+                return true;
+            }
+            return false;
+        });
         addView(playerView);
 
         imageView = new ImageView(context, attrs);
         imageView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         imageView.setImageResource(placeholderResId);
+        imageView.setClickable(false);
         addView(imageView);
     }
 

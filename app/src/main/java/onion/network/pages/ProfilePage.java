@@ -29,6 +29,8 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -51,6 +53,7 @@ import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
 import onion.network.views.AvatarView;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.File;
@@ -496,7 +499,7 @@ public class ProfilePage extends BasePage {
                                 final EditText textEdit = (EditText) dialogView.findViewById(R.id.text);
                                 textEdit.setText(val);
                                 textEdit.setInputType(row.type);
-                                AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.RoundedAlertDialog)
+                                AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                                         .setView(dialogView)
                                         .setTitle("Change " + label)
                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -627,23 +630,41 @@ public class ProfilePage extends BasePage {
     }
 
     private void showPickMediaDialog() {
-        new AlertDialog.Builder(getContext(), ThemeManager.getDialogThemeResId(getContext()))
+        ArrayAdapter<String> adapter = getStringArrayAdapter(new String[]{"Photo from gallery", "Video from gallery"});
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Choose media")
-                .setItems(new CharSequence[]{"Photo from gallery", "Video from gallery"}, (d, which) -> {
-                    if (which == 0) pickMedia(true);
-                    else pickMedia(false);
-                })
-                .show();
-    }
-
-    private void showCaptureMediaDialog() {
-        new AlertDialog.Builder(getContext(), ThemeManager.getDialogThemeResId(getContext()))
-                .setTitle("Capture")
-                .setItems(new CharSequence[]{"Take Photo", "Record Video (5s)"}, (d, which) -> {
+                .setAdapter(adapter, (dialog1, which) -> {
                     if (which == 0) capturePhoto();
                     else captureVideo();
                 })
-                .show();
+                .create();
+        dialog.show();
+    }
+
+    private void showCaptureMediaDialog() {
+        ArrayAdapter<String> adapter = getStringArrayAdapter(new String[]{"Take Photo", "Record Video (5s)"});
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                .setTitle("Capture")
+                .setAdapter(adapter, (dialog1, which) -> {
+                    if (which == 0) capturePhoto();
+                    else captureVideo();
+                })
+                .create();
+        dialog.show();
+    }
+
+    private ArrayAdapter<String> getStringArrayAdapter(final String[] items) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.dialog_list_item, items) {
+            @NonNull
+            @Override
+            public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = view.findViewById(android.R.id.text1);
+                textView.setTextColor(ThemeManager.getColor(getContext(), android.R.attr.textColorPrimary));
+                return view;
+            }
+        };
+        return adapter;
     }
 
     private void pickMedia(boolean photo) {
