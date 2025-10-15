@@ -54,4 +54,74 @@
         <item>2h</item>
     </string-array>
 
+    <string-array name="ui_call_fab_position_values">
+        <item>bottom_end</item>
+        <item>bottom_start</item>
+        <item>top_end</item>
+        <item>top_start</item>
+        <item>center_bottom</item>
+        <item>center_top</item>
+    </string-array>
+
+    <string-array name="ui_call_fab_position_labels">
+        <item>Bottom right</item>
+        <item>Bottom left</item>
+        <item>Top right</item>
+        <item>Top left</item>
+        <item>Bottom center</item>
+        <item>Top center</item>
+    </string-array>
+
+    <string-array name="ui_menu_button_position_values">
+        <item>bottom_left</item>
+        <item>bottom_center</item>
+        <item>bottom_right</item>
+    </string-array>
+
+    <string-array name="ui_menu_button_position_labels">
+        <item>Bottom left</item>
+        <item>Bottom center</item>
+        <item>Bottom right</item>
+    </string-array>
+
+    <string-array name="ui_chat_composer_style_values">
+        <item>default</item>
+        <item>compact</item>
+        <item>expanded</item>
+        <item>left_aligned</item>
+    </string-array>
+
+    <string-array name="ui_chat_composer_style_labels">
+        <item>Standard</item>
+        <item>Compact bubble</item>
+        <item>Expanded bubble</item>
+        <item>Left-aligned bubble</item>
+    </string-array>
+
+    <string-array name="ui_friend_card_style_values">
+        <item>default</item>
+        <item>compact</item>
+        <item>pill</item>
+    </string-array>
+
+    <string-array name="ui_friend_card_style_labels">
+        <item>Standard</item>
+        <item>Compact list</item>
+        <item>Pill cards</item>
+    </string-array>
+
+    <string-array name="ui_color_preset_values">
+        <item>system</item>
+        <item>midnight</item>
+        <item>forest</item>
+        <item>sunset</item>
+    </string-array>
+
+    <string-array name="ui_color_preset_labels">
+        <item>System default</item>
+        <item>Midnight</item>
+        <item>Forest</item>
+        <item>Sunset</item>
+    </string-array>
+
 </resources>

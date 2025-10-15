@@ -2,20 +2,33 @@
 
 package onion.network.pages;
 
+import android.content.res.ColorStateList;
 import android.database.Cursor;
-
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.graphics.drawable.GradientDrawable;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.res.ColorStateList;
+import android.graphics.drawable.GradientDrawable;
+import android.widget.ImageButton;
+
+import androidx.core.graphics.ColorUtils;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -24,14 +37,15 @@ import java.util.TimerTask;
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.helpers.ThemeManager;
-import onion.network.servers.ChatServer;
+import onion.network.helpers.UiCustomizationManager;
 import onion.network.models.Item;
-import onion.network.ui.MainActivity;
 import onion.network.R;
-import onion.network.settings.Settings;
 import onion.network.TorManager;
-import onion.network.services.UpdateScheduler;
 import onion.network.helpers.Utils;
+import onion.network.servers.ChatServer;
+import onion.network.services.UpdateScheduler;
+import onion.network.settings.Settings;
+import onion.network.ui.MainActivity;
 
 public class ChatPage extends BasePage
         implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
@@ -47,6 +61,10 @@ public class ChatPage extends BasePage
     Timer timer;
     long idLastLast = -1;
     Item nameItem = new Item();
+    private TextInputLayout textInputLayout;
+    private TextInputEditText editMessageView;
+    private ImageButton microButton;
+    private ImageButton sendButton;
 
     public ChatPage(final MainActivity activity) {
         super(activity);
@@ -63,16 +81,22 @@ public class ChatPage extends BasePage
         adapter = new ChatAdapter();
         recycler.setAdapter(adapter);
 
-        final View mic = findViewById(R.id.micro);
-        mic.setOnClickListener(new View.OnClickListener() {
+        textInputLayout = findViewById(R.id.text_input_layout);
+        editMessageView = findViewById(R.id.editmessage);
+        microButton = findViewById(R.id.micro);
+        sendButton = findViewById(R.id.send);
+
+        if (microButton != null) {
+            microButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
                 activity.snack("Available soon");
             }
         });
+        }
 
-        final View send = findViewById(R.id.send);
-        send.setOnClickListener(new View.OnClickListener() {
+        if (sendButton != null) {
+            sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String sender = torManager.getID();
@@ -82,7 +106,7 @@ public class ChatPage extends BasePage
                     return;
                 }
 
-                String message = ((EditText) findViewById(R.id.editmessage)).getText().toString();
+                String message = editMessageView != null ? editMessageView.getText().toString() : "";
                 message = message.trim();
                 if (message.equals("")) return;
 
@@ -92,7 +116,9 @@ public class ChatPage extends BasePage
                 chatDatabase.addMessage(sender, address, message, System.currentTimeMillis(), false, true);
                 Log.i(TAG, "sent");
 
-                ((EditText) findViewById(R.id.editmessage)).setText("");
+                if (editMessageView != null) {
+                    editMessageView.setText("");
+                }
 
                 sendPendingAndUpdate();
 
@@ -101,10 +127,52 @@ public class ChatPage extends BasePage
                 UpdateScheduler.getInstance(context).put(address);
             }
         });
+        }
 
         //load();
 
         sendPendingAndUpdate();
+        applyUiCustomizationFromHost();
+    }
+
+    public void applyUiCustomizationFromHost() {
+        UiCustomizationManager.ChatComposerConfig config = UiCustomizationManager.getChatComposerConfig(context);
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(context);
+
+        if (textInputLayout != null) {
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) textInputLayout.getLayoutParams();
+            if (lp != null) {
+                lp.setMargins(config.marginStartPx, lp.topMargin, config.marginEndPx, config.marginBottomPx);
+                lp.height = config.heightPx;
+                textInputLayout.setLayoutParams(lp);
+            }
+        }
+
+        if (editMessageView != null) {
+            editMessageView.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.textSizeSp);
+            editMessageView.setPadding(config.paddingHorizontalPx, editMessageView.getPaddingTop(),
+                    config.paddingHorizontalPx, editMessageView.getPaddingBottom());
+
+            GradientDrawable background = null;
+            if (editMessageView.getBackground() instanceof GradientDrawable) {
+                background = (GradientDrawable) editMessageView.getBackground().mutate();
+            }
+            if (background != null) {
+                background.setColor(preset.getSurfaceColor(context));
+                background.setStroke(UiCustomizationManager.dpToPx(context, 1), preset.getAccentColor(context));
+            }
+            int onSurface = preset.getOnSurfaceColor(context);
+            editMessageView.setTextColor(onSurface);
+            editMessageView.setHintTextColor(ColorStateList.valueOf(ColorUtils.setAlphaComponent(onSurface, 160)));
+        }
+
+        ColorStateList iconTint = ColorStateList.valueOf(preset.getOnSurfaceColor(context));
+        if (microButton != null) {
+            microButton.setImageTintList(iconTint);
+        }
+        if (sendButton != null) {
+            sendButton.setImageTintList(iconTint);
+        }
     }
 
     void log(String s) {
@@ -161,6 +229,7 @@ public class ChatPage extends BasePage
     @Override
     public void onResume() {
         super.onResume();
+        applyUiCustomizationFromHost();
         chatServer.addOnMessageReceivedListener(this);
         chatClient.addOnMessageSentListener(this);
         timer = new Timer();

@@ -1,0 +1,1 @@
+/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/2o38493e/obj/arm64-v8a

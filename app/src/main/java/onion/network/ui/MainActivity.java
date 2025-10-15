@@ -12,8 +12,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -25,6 +27,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Choreographer;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -95,6 +98,8 @@ import onion.network.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
 import onion.network.ui.views.RequestTool;
 import onion.network.helpers.ThemeManager;
+import onion.network.helpers.UiCustomizationManager;
+import onion.network.settings.Settings;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -118,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
     private View dimOverlay;
     public static int REQUEST_CAMERA = 24;
     public static int REQUEST_PICKER = 25;
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
 
     public static void addFriendItem(final Context context, String a, String name) {
 
@@ -272,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        setupPreferenceListener();
 
         address = getIntent().getStringExtra("address");
         handleIntent(getIntent());
@@ -443,6 +451,7 @@ public class MainActivity extends AppCompatActivity {
             arcButtonLayout.addButton(relativeLayout);
         }
 
+        applyUiCustomization();
         initTabs();
 
 
@@ -947,6 +956,109 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setupPreferenceListener() {
+        preferences = Settings.getPrefs(this);
+        preferenceListener = (sharedPreferences, key) -> {
+            if (!isUiCustomizationKey(key)) return;
+            runOnUiThread(() -> {
+                applyUiCustomization();
+                notifyPagesCustomizationChanged();
+            });
+        };
+        preferences.registerOnSharedPreferenceChangeListener(preferenceListener);
+    }
+
+    private boolean isUiCustomizationKey(String key) {
+        return key != null && key.startsWith("ui_");
+    }
+
+    private void notifyPagesCustomizationChanged() {
+        if (friendPage != null) {
+            friendPage.refreshAppearance();
+        }
+        if (chatPage != null) {
+            chatPage.applyUiCustomizationFromHost();
+        }
+    }
+
+    private void applyUiCustomization() {
+        UiCustomizationManager.FabPosition callPosition = UiCustomizationManager.getCallFabPosition(this);
+        applyFabPosition((FloatingActionButton) findViewById(R.id.wallFab), callPosition);
+        applyFabPosition((FloatingActionButton) findViewById(R.id.friendFab), callPosition);
+
+        UiCustomizationManager.FabPosition menuPosition = UiCustomizationManager.getMenuButtonPosition(this);
+        applyMenuFabPosition(menuPosition);
+
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(this);
+        applyFabPalette((FloatingActionButton) findViewById(R.id.wallFab), preset);
+        applyFabPalette((FloatingActionButton) findViewById(R.id.friendFab), preset);
+        applyFabPalette(menuFab, preset);
+
+        if (arcButtonLayout != null && pages != null) {
+            for (int i = 0; i < pages.length; i++) {
+                FloatingActionButton tabFab = arcButtonLayout.findViewById(100 + i);
+                applyFabPalette(tabFab, preset);
+            }
+        }
+    }
+
+    private void applyFabPalette(FloatingActionButton fab, UiCustomizationManager.ColorPreset preset) {
+        if (fab == null || preset == null) return;
+        ColorStateList backgroundTint = ColorStateList.valueOf(preset.getAccentColor(this));
+        ColorStateList iconTint = ColorStateList.valueOf(preset.getOnAccentColor(this));
+        fab.setBackgroundTintList(backgroundTint);
+        fab.setImageTintList(iconTint);
+    }
+
+    private void applyFabPosition(FloatingActionButton fab, UiCustomizationManager.FabPosition position) {
+        if (fab == null || position == null) return;
+        ViewGroup.LayoutParams lp = fab.getLayoutParams();
+        if (!(lp instanceof CoordinatorLayout.LayoutParams)) return;
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) lp;
+        int margin = UiCustomizationManager.dpToPx(this, 16);
+        params.setMargins(margin, margin, margin, margin);
+        switch (position) {
+            case TOP_START:
+                params.gravity = Gravity.TOP | Gravity.START;
+                break;
+            case TOP_END:
+                params.gravity = Gravity.TOP | Gravity.END;
+                break;
+            case CENTER_TOP:
+                params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                break;
+            case CENTER_BOTTOM:
+                params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                break;
+            case BOTTOM_START:
+                params.gravity = Gravity.BOTTOM | Gravity.START;
+                break;
+            case BOTTOM_END:
+            default:
+                params.gravity = Gravity.BOTTOM | Gravity.END;
+                break;
+        }
+        fab.setLayoutParams(params);
+    }
+
+    private void applyMenuFabPosition(UiCustomizationManager.FabPosition position) {
+        if (arcButtonLayout == null || position == null) return;
+        int mapped;
+        switch (position) {
+            case CENTER_BOTTOM:
+                mapped = 1;
+                break;
+            case BOTTOM_END:
+                mapped = 2;
+                break;
+            case BOTTOM_START:
+            default:
+                mapped = 0;
+                break;
+        }
+        arcButtonLayout.setFabPosition(mapped);
+    }
+
     boolean actionPhotoOption = false;
     boolean actionCameraOption = false;
     boolean actionBlogTitleOption = false;
@@ -1374,6 +1486,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        applyUiCustomization();
+        notifyPagesCustomizationChanged();
         for (BasePage page : pages) {
             page.onResume();
         }
@@ -1419,6 +1533,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (preferences != null && preferenceListener != null) {
+            preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener);
+        }
         TorManager.getInstance(this).stopTor();
     }
 

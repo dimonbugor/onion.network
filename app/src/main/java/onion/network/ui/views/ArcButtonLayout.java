@@ -67,6 +67,13 @@ public class ArcButtonLayout extends ViewGroup {
         });
     }
 
+    public void setFabPosition(int position) {
+        if (fabPosition != position) {
+            fabPosition = position;
+            requestLayout();
+        }
+    }
+
     public void addButton(RelativeLayout button) {
         buttons.add(button);
         addView(button);

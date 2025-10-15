@@ -37,4 +37,17 @@
     <color name="light_colorDialogBackgroundAlpha">#CCC5D7D7</color>
     <color name="light_white_50">#80000000</color>
     <color name="light_white_80">#CC000000</color>
+
+    <!-- UI custom presets -->
+    <color name="ui_preset_midnight_accent">#6C63FF</color>
+    <color name="ui_preset_midnight_surface">#1B2236</color>
+    <color name="ui_preset_midnight_on_surface">#F5F6FF</color>
+
+    <color name="ui_preset_forest_accent">#43A047</color>
+    <color name="ui_preset_forest_surface">#1D2A1D</color>
+    <color name="ui_preset_forest_on_surface">#E3F8E5</color>
+
+    <color name="ui_preset_sunset_accent">#FF7043</color>
+    <color name="ui_preset_sunset_surface">#3B1E24</color>
+    <color name="ui_preset_sunset_on_surface">#FFE0B2</color>
 </resources>

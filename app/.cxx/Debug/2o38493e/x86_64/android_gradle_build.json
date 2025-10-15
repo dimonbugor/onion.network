@@ -1,0 +1,48 @@
+{
+  "buildFiles": [
+    "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2o38493e/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2o38493e/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "tor-native::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "tor-native",
+      "output": "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/2o38493e/obj/x86_64/libtor-native.so",
+      "runtimeFiles": [
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libconjure.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libdnscrypt-proxy.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libi2pd.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libnflog.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libtor.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libobfs4proxy.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libsnowflake.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libwebtunnel.so",
+        "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/jniLibs/x86_64/libzmq.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

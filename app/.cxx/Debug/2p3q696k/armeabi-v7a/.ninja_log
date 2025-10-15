@@ -1,0 +1,9 @@
+# ninja log v5
+258	316	1755498767053840727	/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/2p3q696k/obj/armeabi-v7a/libtor-native.so	bd54213ca130ae8c
+0	6	0	clean	3df67c368f5434f3
+3	240	1755501452762605205	CMakeFiles/tor-native.dir/tor-native.cpp.o	efcfa869dbcee734
+0	62	1755934365766225367	build.ninja	3b81c2392e8a2abd
+3	629	1755934366449793135	CMakeFiles/tor-native.dir/tor-native.cpp.o	948601ac0202c99d
+629	795	1755934366617438531	/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/2p3q696k/obj/armeabi-v7a/libtor-native.so	ea9f4cba7464351
+4	692	1756292772434087469	CMakeFiles/tor-native.dir/tor-native.cpp.o	948601ac0202c99d
+692	887	1756292772632240531	/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/2p3q696k/obj/armeabi-v7a/libtor-native.so	ea9f4cba7464351

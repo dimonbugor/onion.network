@@ -1,22 +1,29 @@
 
 
 package onion.network.pages;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONObject;
 
+import androidx.core.graphics.ColorUtils;
+
+import com.google.android.material.card.MaterialCardView;
+
 import onion.network.helpers.ThemeManager;
+import onion.network.helpers.UiCustomizationManager;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemResult;
@@ -178,6 +185,7 @@ public class FriendPage extends BasePage {
                     }
 
                     contentView.addView(v);
+                    applyFriendItemStyle(v);
 
                 }
 
@@ -233,6 +241,73 @@ public class FriendPage extends BasePage {
             }
 
         }.execute2();
+    }
+
+    public void refreshAppearance() {
+        if (contentView == null) return;
+        for (int i = 0; i < contentView.getChildCount(); i++) {
+            View child = contentView.getChildAt(i);
+            if (child instanceof MaterialCardView) {
+                applyFriendItemStyle(child);
+            }
+        }
+    }
+
+    private void applyFriendItemStyle(View view) {
+        if (!(view instanceof MaterialCardView)) return;
+        UiCustomizationManager.FriendCardConfig config = UiCustomizationManager.getFriendCardConfig(getContext());
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
+
+        MaterialCardView card = (MaterialCardView) view;
+        card.setRadius(config.cornerRadiusPx);
+        card.setContentPadding(config.horizontalPaddingPx, config.verticalPaddingPx,
+                config.horizontalPaddingPx, config.verticalPaddingPx);
+        card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
+        card.setStrokeColor(preset.getAccentColor(getContext()));
+
+        if (preset == UiCustomizationManager.ColorPreset.SYSTEM) {
+            card.setCardBackgroundColor(ThemeManager.getColor(activity, com.google.android.material.R.attr.colorPrimaryContainer));
+        } else {
+            card.setCardBackgroundColor(preset.getSurfaceColor(getContext()));
+        }
+
+        ImageView avatar = card.findViewById(R.id.thumb);
+        if (avatar != null) {
+            View avatarContainer = (View) avatar.getParent();
+            if (avatarContainer != null) {
+                ViewGroup.LayoutParams params = avatarContainer.getLayoutParams();
+                if (params != null) {
+                    params.width = config.avatarSizePx;
+                    params.height = config.avatarSizePx;
+                    avatarContainer.setLayoutParams(params);
+                }
+            }
+        }
+
+        TextView name = card.findViewById(R.id.name);
+        TextView address = card.findViewById(R.id.address);
+        if (name != null) {
+            name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
+        }
+        if (address != null) {
+            address.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
+        }
+
+        if (name != null) {
+            if (preset == UiCustomizationManager.ColorPreset.SYSTEM) {
+                name.setTextColor(ThemeManager.getColor(activity, com.google.android.material.R.attr.colorOnBackground));
+            } else {
+                name.setTextColor(preset.getOnSurfaceColor(getContext()));
+            }
+        }
+        if (address != null) {
+            if (preset == UiCustomizationManager.ColorPreset.SYSTEM) {
+                address.setTextColor(ThemeManager.getColor(activity, R.attr.white_80));
+            } else {
+                int onSurface = preset.getOnSurfaceColor(getContext());
+                address.setTextColor(ColorUtils.setAlphaComponent(onSurface, 160));
+            }
+        }
     }
 
     void loadMore() {
