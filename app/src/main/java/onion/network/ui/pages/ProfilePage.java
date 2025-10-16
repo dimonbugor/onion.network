@@ -1,7 +1,6 @@
 package onion.network.ui.pages;
 
 import static onion.network.helpers.Const.REQUEST_CHOOSE_MEDIA;
-import static onion.network.helpers.Const.REQUEST_PHOTO;
 import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
 import static onion.network.helpers.Const.REQUEST_TAKE_VIDEO;
 
@@ -285,16 +284,6 @@ public class ProfilePage extends BasePage {
             return;
         }
 
-        // ======= 4) СТАРІ ГІЛКИ (REQUEST_PHOTO) =======
-        if (requestCode == REQUEST_PHOTO) {
-            Uri uri = data.getData();
-            Bitmap bmp = getActivityResultBitmap(data);
-            bmp = fixImageOrientation(bmp, uri);
-            if (bmp == null) return;
-            bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
-            showAndSavePhoto(bmp);
-            return;
-        }
     }
 
     @Override
