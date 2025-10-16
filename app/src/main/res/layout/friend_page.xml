@@ -7,28 +7,14 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ui.pages.FriendPage">
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/wallScroll"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/friendRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="@dimen/dp8"
-            android:paddingBottom="@dimen/dp64">
-
-            <LinearLayout
-                android:id="@+id/contentView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"></LinearLayout>
-
-            <include layout="@layout/wall_more" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/dp8"
+        android:paddingBottom="@dimen/dp64"
+        android:scrollbars="vertical" />
 
 <!--    <FrameLayout-->
 <!--        android:layout_width="match_parent"-->

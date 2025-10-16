@@ -4,20 +4,21 @@ package onion.network.ui.pages;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
-import android.util.Log;
+import android.net.Uri;
 import android.util.TypedValue;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.core.graphics.ColorUtils;
-import android.net.Uri;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 
@@ -35,52 +36,21 @@ import onion.network.ui.views.AvatarView;
 
 public class FriendPage extends BasePage {
 
-    String TAG = "FriendPage";
-
-    LinearLayout contentView;
+    RecyclerView recyclerView;
+    FriendAdapter friendAdapter;
+    final List<Item> friends = new ArrayList<>();
     int count = 8;
 
     String smore;
     int imore;
-    View vmore, fmore;
-
-    View wallScroll;
 
     public FriendPage(MainActivity activity) {
         super(activity);
         activity.getLayoutInflater().inflate(R.layout.friend_page, this, true);
-        contentView = (LinearLayout) findViewById(R.id.contentView);
-
-        wallScroll = findViewById(R.id.wallScroll);
-        wallScroll.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //if(vmore != null && vmore.getRe
-                Log.i(TAG, "onTouch wallScroll");
-                if (event.getAction() == MotionEvent.ACTION_DOWN && vmore != null) {
-                    int[] p = new int[]{0, 0};
-                    wallScroll.getLocationOnScreen(p);
-                    p[0] += (int) event.getX();
-                    p[1] += (int) event.getY();
-                    Rect rect = new Rect();
-                    vmore.getHitRect(rect);
-                    if (vmore.getGlobalVisibleRect(rect)) {
-                        Log.i(TAG, "onTouch: " + p[0] + " " + p[1]);
-                        Log.i(TAG, "onTouch: " + rect.left + " " + rect.top + " " + rect.right + " " + rect.bottom);
-                        if (rect.contains(p[0], p[1])) {
-                            Log.i(TAG, "onTouch: load more");
-                            loadMore();
-                            //contentView.requestDisallowInterceptTouchEvent(true);
-                        } else {
-                            Log.i(TAG, "onTouch: miss");
-                        }
-                    }
-                }
-                return false;
-            }
-        });
-        vmore = findViewById(R.id.wallLoadMore);
-        fmore = findViewById(R.id.wallLoadMoreFrame);
+        recyclerView = findViewById(R.id.friendRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        friendAdapter = new FriendAdapter();
+        recyclerView.setAdapter(friendAdapter);
     }
 
     @Override
@@ -108,141 +78,229 @@ public class FriendPage extends BasePage {
         activity.showAddFriend();
     }
 
-    void load(final int i, String s) {
-        new ItemTask(getContext(), address, "friend", s, count) {
-
-            void fill(ItemResult itemResult, boolean finished) {
-
-                if (contentView.getChildCount() > i) {
-                    contentView.removeViews(i, contentView.getChildCount() - i);
-                }
-
-                for (int i = 0; i < itemResult.size(); i++) {
-
-                    final Item item = itemResult.at(i);
-
-                    JSONObject o = item.json(context, address);
-
-                    View v = activity.getLayoutInflater().inflate(R.layout.friend_item, contentView, false);
-
-                    TextView address = ((TextView) v.findViewById(R.id.address));
-                    TextView name = ((TextView) v.findViewById(R.id.name));
-                    AvatarView thumb = (AvatarView) v.findViewById(R.id.thumb);
-                    View it = v.findViewById(R.id.item);
-
-                    final String addr = o.optString("addr");
-
-                    String n = o.optString("name");
-
-                    if (n == null || n.isEmpty()) {
-                        n = "Anonymous";
-                    }
-
-                    name.setText(n);
-                    address.setText(addr);
-
-                    it.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", addr));
-                        }
-                    });
-
-                    Bitmap photoThumb = item.bitmap("thumb");
-                    Bitmap videoThumb = item.bitmap("video_thumb");
-                    String storedVideoUri = o.optString("video_uri", "").trim();
-                    String videoData = o.optString("video", "").trim();
-                    Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), addr, storedVideoUri, videoData);
-                    thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
-
-                    if (activity.address.isEmpty()) {
-                        it.setOnLongClickListener(new OnLongClickListener() {
-                            @Override
-                            public boolean onLongClick(View v) {
-
-                                DialogHelper.showConfirm(
-                                        context,
-                                        R.string.dialog_delete_friend_title,
-                                        R.string.dialog_delete_friend_message,
-                                        R.string.dialog_button_delete,
-                                        () -> {
-                                            FriendTool.getInstance(context).unfriend(item.key());
-                                            load();
-                                        },
-                                        R.string.dialog_button_cancel,
-                                        null
-                                );
-
-                                return true;
-                            }
-                        });
-                    }
-
-                    contentView.addView(v);
-                    applyFriendItemStyle(v);
-
-                }
-
-                if (i == 0 && itemResult.size() == 0 && !itemResult.loading()) {
-                    View v = activity.getLayoutInflater().inflate(R.layout.friend_empty, contentView, false);
-                    contentView.addView(v);
-                }
-
-//                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
-                findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
-
-                smore = finished ? itemResult.more() : null;
-                imore = i + count;
-
-                {
-                    if (smore != null) {
-                        vmore.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.i(TAG, "onClick");
-                                loadMore();
-                            }
-                        });
-                        vmore.setOnTouchListener(new OnTouchListener() {
-                            @Override
-                            public boolean onTouch(View v, MotionEvent event) {
-                                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                    Log.i(TAG, "onTouch down");
-                                    loadMore();
-                                }
-                                return false;
-                            }
-                        });
-                        fmore.setVisibility(View.VISIBLE);
-                    } else {
-                        vmore.setOnClickListener(null);
-                        vmore.setOnTouchListener(null);
-                        fmore.setVisibility(View.INVISIBLE);
-                    }
-
-                }
-
-            }
+    void load(final int startIndex, String startKey) {
+        new ItemTask(getContext(), address, "friend", startKey, count) {
 
             @Override
             protected void onProgressUpdate(ItemResult... x) {
-                fill(x[0], false);
+                renderFriends(startIndex, safeFirst(x), false);
             }
 
             @Override
             protected void onPostExecute(ItemResult itemResult) {
-                fill(itemResult, true);
+                renderFriends(startIndex, itemResult, true);
+            }
+
+            private ItemResult safeFirst(ItemResult[] results) {
+                return results != null && results.length > 0 ? results[0] : null;
             }
 
         }.execute2();
     }
 
     public void refreshAppearance() {
-        if (contentView == null) return;
-        for (int i = 0; i < contentView.getChildCount(); i++) {
-            View child = contentView.getChildAt(i);
-            if (child instanceof MaterialCardView) {
-                applyFriendItemStyle(child);
+        if (friendAdapter != null) {
+            friendAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void renderFriends(int insertIndex, ItemResult itemResult, boolean finished) {
+        if (itemResult == null) {
+            return;
+        }
+
+        int insertionPoint = Math.min(insertIndex, friends.size());
+        if (insertionPoint < friends.size()) {
+            friends.subList(insertionPoint, friends.size()).clear();
+        }
+
+        for (int idx = 0; idx < itemResult.size(); idx++) {
+            Item friend = itemResult.at(idx);
+            if (friend == null) continue;
+            friends.add(friend);
+        }
+
+        findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
+
+        boolean showEmpty = insertionPoint == 0 && friends.isEmpty() && !itemResult.loading();
+        boolean showLoadMore = updatePaginationControls(insertIndex, itemResult, finished);
+
+        if (friendAdapter != null) {
+            friendAdapter.submit(friends, showLoadMore, showEmpty);
+        }
+    }
+
+    private void bindFriendItem(FriendAdapter.FriendViewHolder holder, Item item) {
+        JSONObject data = item.json(context, address);
+
+        final String friendAddress = data.optString("addr");
+        String displayName = data.optString("name");
+
+        if (displayName == null || displayName.isEmpty()) {
+            displayName = "Anonymous";
+        }
+
+        holder.name.setText(displayName);
+        holder.address.setText(friendAddress);
+
+        holder.itemRoot.setOnClickListener(v ->
+                getContext().startActivity(
+                        new Intent(getContext(), MainActivity.class).putExtra("address", friendAddress)
+                )
+        );
+
+        if (activity.address.isEmpty()) {
+            holder.itemRoot.setOnLongClickListener(v -> {
+                DialogHelper.showConfirm(
+                        context,
+                        R.string.dialog_delete_friend_title,
+                        R.string.dialog_delete_friend_message,
+                        R.string.dialog_button_delete,
+                        () -> {
+                            FriendTool.getInstance(context).unfriend(item.key());
+                            load();
+                        },
+                        R.string.dialog_button_cancel,
+                        null
+                );
+                return true;
+            });
+        } else {
+            holder.itemRoot.setOnLongClickListener(null);
+        }
+
+        Bitmap photoThumb = item.bitmap("thumb");
+        Bitmap videoThumb = item.bitmap("video_thumb");
+        String storedVideoUri = data.optString("video_uri", "").trim();
+        String videoData = data.optString("video", "").trim();
+        Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), friendAddress, storedVideoUri, videoData);
+        holder.thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
+
+        applyFriendItemStyle(holder.card);
+    }
+
+    private boolean updatePaginationControls(int insertIndex, ItemResult itemResult, boolean finished) {
+        smore = finished ? itemResult.more() : null;
+        imore = insertIndex + count;
+        return smore != null;
+    }
+
+    private final class FriendAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        private static final int TYPE_FRIEND = 0;
+        private static final int TYPE_LOAD_MORE = 1;
+        private static final int TYPE_EMPTY = 2;
+
+        private final List<Item> adapterItems = new ArrayList<>();
+        private boolean showLoadMore;
+        private boolean showEmpty;
+
+        void submit(List<Item> source, boolean displayLoadMore, boolean displayEmpty) {
+            adapterItems.clear();
+            adapterItems.addAll(source);
+            showEmpty = displayEmpty;
+            showLoadMore = showEmpty ? false : displayLoadMore;
+            notifyDataSetChanged();
+        }
+
+        void setLoadMoreVisible(boolean visible) {
+            boolean normalized = showEmpty ? false : visible;
+            if (showLoadMore != normalized) {
+                showLoadMore = normalized;
+                notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            if (showEmpty) {
+                return 1;
+            }
+            int total = adapterItems.size();
+            if (showLoadMore) {
+                total += 1;
+            }
+            return total;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (showEmpty) {
+                return TYPE_EMPTY;
+            }
+            if (position < adapterItems.size()) {
+                return TYPE_FRIEND;
+            }
+            return TYPE_LOAD_MORE;
+        }
+
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            if (viewType == TYPE_FRIEND) {
+                View view = inflater.inflate(R.layout.friend_item, parent, false);
+                return new FriendViewHolder(view);
+            } else if (viewType == TYPE_LOAD_MORE) {
+                View view = inflater.inflate(R.layout.friend_more, parent, false);
+                return new LoadMoreViewHolder(view);
+            } else {
+                View view = inflater.inflate(R.layout.friend_empty, parent, false);
+                return new EmptyViewHolder(view);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if (holder instanceof FriendViewHolder) {
+                Item item = adapterItems.get(position);
+                bindFriendItem((FriendViewHolder) holder, item);
+            } else if (holder instanceof LoadMoreViewHolder) {
+                ((LoadMoreViewHolder) holder).bind();
+            }
+        }
+
+        private class LoadMoreViewHolder extends RecyclerView.ViewHolder {
+            private final View button;
+
+            LoadMoreViewHolder(View itemView) {
+                super(itemView);
+                button = itemView.findViewById(R.id.card);
+                View.OnClickListener trigger = v -> loadMore();
+                itemView.setOnClickListener(trigger);
+                if (button != null) {
+                    button.setOnClickListener(trigger);
+                }
+            }
+
+            void bind() {
+                boolean enabled = smore != null;
+                itemView.setEnabled(enabled);
+                if (button != null) {
+                    button.setEnabled(enabled);
+                }
+            }
+        }
+
+        private class EmptyViewHolder extends RecyclerView.ViewHolder {
+            EmptyViewHolder(View itemView) {
+                super(itemView);
+            }
+        }
+
+        private class FriendViewHolder extends RecyclerView.ViewHolder {
+            final MaterialCardView card;
+            final View itemRoot;
+            final TextView name;
+            final TextView address;
+            final AvatarView thumb;
+
+            FriendViewHolder(View itemView) {
+                super(itemView);
+                card = (MaterialCardView) itemView;
+                itemRoot = itemView.findViewById(R.id.item);
+                name = itemView.findViewById(R.id.name);
+                address = itemView.findViewById(R.id.address);
+                thumb = itemView.findViewById(R.id.thumb);
             }
         }
     }
@@ -308,6 +366,9 @@ public class FriendPage extends BasePage {
         if (smore == null) return;
         String smore2 = smore;
         smore = null;
+        if (friendAdapter != null) {
+            friendAdapter.setLoadMoreVisible(false);
+        }
         load(imore, smore2);
     }
 
