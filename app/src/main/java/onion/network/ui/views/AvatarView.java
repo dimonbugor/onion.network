@@ -19,10 +19,11 @@ import androidx.annotation.Nullable;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.AspectRatioFrameLayout;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 
 import onion.network.R;
 
@@ -200,7 +201,12 @@ public class AvatarView extends FrameLayout {
                 .setBufferDurationsMs(1000, 3000, 250, 500)
                 .build();
 
+        DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(getContext())
+                .setEnableDecoderFallback(true)
+                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
+
         player = new ExoPlayer.Builder(getContext())
+                .setRenderersFactory(renderersFactory)
                 .setLoadControl(loadControl)
                 .build();
         player.addListener(playerListener);

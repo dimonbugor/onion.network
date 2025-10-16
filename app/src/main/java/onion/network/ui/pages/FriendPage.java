@@ -271,9 +271,9 @@ public class FriendPage extends BasePage {
             card.setCardBackgroundColor(preset.getSurfaceColor(getContext()));
         }
 
-        ImageView avatar = card.findViewById(R.id.thumb);
-        if (avatar != null) {
-            View avatarContainer = (View) avatar.getParent();
+        View avatarView = card.findViewById(R.id.thumb);
+        if (avatarView != null) {
+            View avatarContainer = (View) avatarView.getParent();
             if (avatarContainer != null) {
                 ViewGroup.LayoutParams params = avatarContainer.getLayoutParams();
                 if (params != null) {

@@ -56,6 +56,9 @@ import onion.network.ui.views.AvatarView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.EnumSet;
 import androidx.core.content.FileProvider;
 
@@ -809,8 +812,18 @@ public class ProfilePage extends BasePage {
             return;
         }
 
+        Uri persistedUri = persistVideo(uri);
+        if (persistedUri == null) {
+            deleteTempVideo(uri);
+            pendingVideoUri = null;
+            Snackbar.make(contentView, "Failed to save video", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        deleteTempVideo(uri);
+
         // thumbnail (320x320)
-        Bitmap thumb = extractVideoThumbnail(uri);
+        Bitmap thumb = extractVideoThumbnail(persistedUri);
         View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
         ImageView preview = view.findViewById(R.id.imageView);
         if (thumb != null) preview.setImageBitmap(thumb);
@@ -823,7 +836,7 @@ public class ProfilePage extends BasePage {
                 .setPositiveButton("OK", (dialog, which) -> {
                     // записуємо лише URI (string) + маленький thumb
                     ItemDatabase.getInstance(getContext())
-                            .put(new Item.Builder("video", "", "").put("video", uri.toString()).build());
+                            .put(new Item.Builder("video", "", "").put("video", persistedUri.toString()).build());
 
                     if (thumb != null) {
                         String vthumb = Utils.encodeImage(ThumbnailUtils.extractThumbnail(thumb, 84, 84));
@@ -831,7 +844,7 @@ public class ProfilePage extends BasePage {
                                 .put(new Item.Builder("video_thumb", "", "").put("video_thumb", vthumb).build());
                     }
 
-                    videoUriStr = uri.toString();
+                    videoUriStr = persistedUri.toString();
                     profileVideoThumbBitmap = thumb;
                     updateProfileAvatar();
                     refreshDeleteButtonVisibility();
@@ -851,10 +864,7 @@ public class ProfilePage extends BasePage {
             dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialogSetVideo.setOnDismissListener(d -> {
-            if (pendingVideoUri != null) {
-                deleteTempVideo(pendingVideoUri);
-                pendingVideoUri = null;
-            }
+        pendingVideoUri = null;
         });
         dialogSetVideo.show();
     }
@@ -865,6 +875,47 @@ public class ProfilePage extends BasePage {
             getContext().getContentResolver().delete(uri, null, null);
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private Uri persistVideo(@NonNull Uri source) {
+        InputStream in = null;
+        FileOutputStream out = null;
+        try {
+            in = getContext().getContentResolver().openInputStream(source);
+            if (in == null) return null;
+
+            File dir = new File(getContext().getFilesDir(), "avatar_video");
+            if (!dir.exists() && !dir.mkdirs()) {
+                return null;
+            }
+
+            File dest = new File(dir, "avatar.mp4");
+            out = new FileOutputStream(dest);
+            byte[] buffer = new byte[8192];
+            int read;
+            long total = 0;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+                total += read;
+                if (total > MAX_VIDEO_FILE_SIZE_BYTES) {
+                    return null;
+                }
+            }
+            out.flush();
+            return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", dest);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (in != null) in.close();
+            } catch (IOException ignore) {
+            }
+            try {
+                if (out != null) out.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 
