@@ -10,6 +10,8 @@
 
 package onion.network.ui;
 
+import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -39,7 +41,6 @@ public class PostActivity extends AppCompatActivity {
     ImageView image;
     Bitmap bitmap;
     Blog blog;
-    int REQUEST_PICKER = 25;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,7 +119,7 @@ public class PostActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_photo) {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             intent.setType("image/*");
-            startActivityForResult(intent, REQUEST_PICKER);
+            startActivityForResult(intent, REQUEST_CODE_MEDIA_PICKER);
             return true;
         }
 
@@ -137,7 +138,7 @@ public class PostActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //if (resultCode != RESULT_OK)
         //    return;
-        if (requestCode == REQUEST_PICKER) {
+        if (requestCode == REQUEST_CODE_MEDIA_PICKER) {
             bitmap = null;
             if (resultCode == RESULT_OK) {
                 try {

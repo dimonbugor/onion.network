@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".pages.ProfilePage">
+    tools:context=".ui.pages.ProfilePage">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,7 +43,7 @@
                         app:strokeColor="?attr/colorOnBackground"
                         app:strokeWidth="1dp">
 
-                        <onion.network.views.AvatarView
+                        <onion.network.ui.views.AvatarView
                             android:id="@+id/profilephoto"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/dp132"

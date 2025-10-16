@@ -1,4 +1,4 @@
-package onion.network.views;
+package onion.network.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;

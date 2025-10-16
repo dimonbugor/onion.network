@@ -1,4 +1,4 @@
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.graphics.Rect;
 import android.util.Log;
@@ -9,18 +9,18 @@ import android.widget.LinearLayout;
 import onion.network.ui.MainActivity;
 import onion.network.R;
 
-public class PrivacyPage extends BasePage {
+public class CloudPage extends BasePage {
 
-    String TAG = "PrivacyPage";
+    String TAG = "CloudPage";
 
     LinearLayout contentView;
     View vmore, fmore;
 
     View wallScroll;
 
-    public PrivacyPage(MainActivity activity) {
+    public CloudPage(MainActivity activity) {
         super(activity);
-        activity.getLayoutInflater().inflate(R.layout.privacy_page, this, true);
+        activity.getLayoutInflater().inflate(R.layout.cloud_page, this, true);
         contentView = (LinearLayout) findViewById(R.id.contentView);
 
         wallScroll = findViewById(R.id.wallScroll);
@@ -56,12 +56,12 @@ public class PrivacyPage extends BasePage {
 
     @Override
     public String getTitle() {
-        return "Privacy";
+        return "Cloud";
     }
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_privacy;
+        return R.drawable.ic_cloud;
     }
 
     @Override

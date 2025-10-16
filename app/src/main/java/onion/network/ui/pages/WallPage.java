@@ -1,6 +1,9 @@
 
 
-package onion.network.pages;
+package onion.network.ui.pages;
+
+import static onion.network.helpers.Const.REQUEST_PHOTO;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,7 +12,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -24,10 +26,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.EnumSet;
+
 import onion.network.helpers.ThemeManager;
+import onion.network.helpers.PermissionHelper;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
 import onion.network.R;
@@ -36,7 +43,7 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
-import onion.network.views.AvatarView;
+import onion.network.ui.views.AvatarView;
 
 public class WallPage extends BasePage {
 
@@ -44,13 +51,46 @@ public class WallPage extends BasePage {
     View wallScroll;
     int count = 5;
     String TAG = "WallPage";
-    int REQUEST_PHOTO = 74;
-    int REQUEST_TAKE_PHOTO = 9;
-    String postEditText = null;
+   String postEditText = null;
 
-    String smore;
-    int imore;
+   String smore;
+   int imore;
     View vmore, fmore;
+
+    private PermissionHelper permissionHelper;
+    private Runnable pendingPermissionGrantedAction;
+    private Runnable pendingPermissionDeniedAction;
+
+    private void requestPermissions(EnumSet<PermissionHelper.PermissionRequest> requests,
+                                    Runnable onGranted,
+                                    Runnable onDenied) {
+        pendingPermissionGrantedAction = onGranted;
+        pendingPermissionDeniedAction = onDenied;
+        permissionHelper = new PermissionHelper(activity, new PermissionHelper.PermissionListener() {
+            @Override
+            public void onPermissionsGranted() {
+                permissionHelper = null;
+                Runnable grantedAction = pendingPermissionGrantedAction;
+                pendingPermissionGrantedAction = null;
+                pendingPermissionDeniedAction = null;
+                if (grantedAction != null) {
+                    grantedAction.run();
+                }
+            }
+
+            @Override
+            public void onPermissionsDenied() {
+                permissionHelper = null;
+                Runnable deniedAction = pendingPermissionDeniedAction;
+                pendingPermissionGrantedAction = null;
+                pendingPermissionDeniedAction = null;
+                if (deniedAction != null) {
+                    deniedAction.run();
+                }
+            }
+        }, requests);
+        permissionHelper.requestPermissions();
+    }
 
     public WallPage(MainActivity activity) {
         super(activity);
@@ -194,14 +234,22 @@ public class WallPage extends BasePage {
         if (item == null) {
             dialogView.findViewById(R.id.take_photo).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                d.cancel();
+                requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+                        () -> {
+                            d.cancel();
+                            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                        },
+                        () -> activity.snack("Camera permission required"));
             });
             dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
-                startImageChooser(REQUEST_PHOTO);
-                d.cancel();
+                requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                        () -> {
+                            d.cancel();
+                            startImageChooser(REQUEST_PHOTO);
+                        },
+                        () -> activity.snack("Storage permission required"));
             });
         } else {
             dialogView.findViewById(R.id.take_photo).setVisibility(View.GONE);
@@ -509,6 +557,14 @@ public class WallPage extends BasePage {
         String smore2 = smore;
         smore = null;
         load(imore, smore2);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (permissionHelper != null) {
+            permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
 }

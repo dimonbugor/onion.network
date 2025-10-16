@@ -61,7 +61,7 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        permissionHelper.onRequestPermissionsResult(requestCode, grantResults);
+        permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     // Метод, що викликається після надання всіх дозволів

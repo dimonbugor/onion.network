@@ -1,6 +1,6 @@
 
 
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -30,7 +30,7 @@ import onion.network.models.ItemResult;
 import onion.network.models.ItemTask;
 import onion.network.ui.MainActivity;
 import onion.network.R;
-import onion.network.views.AvatarView;
+import onion.network.ui.views.AvatarView;
 
 public class FriendPage extends BasePage {
 

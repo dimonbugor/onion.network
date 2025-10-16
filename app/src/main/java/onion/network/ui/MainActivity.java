@@ -2,6 +2,9 @@
 
 package onion.network.ui;
 
+import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
+import static onion.network.helpers.Const.REQUEST_QR;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
 import static onion.network.helpers.ThemeManager.themeKeys;
 import static onion.network.helpers.ThemeManager.themes;
 
@@ -70,7 +73,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import onion.network.models.FriendTool;
-import onion.network.pages.BlogPage;
+import onion.network.ui.pages.BlogPage;
 import onion.network.services.HostService;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
@@ -86,15 +89,15 @@ import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
-import onion.network.pages.BasePage;
-import onion.network.pages.ChatPage;
-import onion.network.pages.CloudPage;
-import onion.network.pages.ConversationPage;
-import onion.network.pages.FriendPage;
-import onion.network.pages.PrivacyPage;
-import onion.network.pages.ProfilePage;
-import onion.network.pages.RequestPage;
-import onion.network.pages.WallPage;
+import onion.network.ui.pages.BasePage;
+import onion.network.ui.pages.ChatPage;
+import onion.network.ui.pages.CloudPage;
+import onion.network.ui.pages.ConversationPage;
+import onion.network.ui.pages.FriendPage;
+import onion.network.ui.pages.PrivacyPage;
+import onion.network.ui.pages.ProfilePage;
+import onion.network.ui.pages.RequestPage;
+import onion.network.ui.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
 import onion.network.ui.views.RequestTool;
 import onion.network.helpers.ThemeManager;
@@ -112,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
     WallPage wallPage;
     FriendPage friendPage;
     BasePage[] pages;
-    int REQUEST_QR = 12;
     String TAG = "Activity";
     Timer timer = null;
     ChatPage chatPage;
@@ -121,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton menuFab;
     private ViewPager viewPager;
     private View dimOverlay;
-    public static int REQUEST_CAMERA = 24;
-    public static int REQUEST_PICKER = 25;
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
 
@@ -1179,14 +1179,14 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_photo) {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             intent.setType("image/*");
-            startActivityForResult(Intent.createChooser(intent, "Complete action using"), REQUEST_PICKER);
+            startActivityForResult(Intent.createChooser(intent, "Complete action using"), REQUEST_CODE_MEDIA_PICKER);
             return true;
         }
         if (id == R.id.action_camera) {
             //getPackageManager().hasSystemFeature(CAME)
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             //takePictureIntent.resolveActivity(getPackageManager());
-            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             return true;
         }
         if (id == R.id.action_add_post) {

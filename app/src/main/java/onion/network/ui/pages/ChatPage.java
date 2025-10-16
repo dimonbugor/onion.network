@@ -1,6 +1,6 @@
 
 
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.content.res.ColorStateList;
 import android.database.Cursor;
@@ -10,7 +10,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,13 +17,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.res.ColorStateList;
-import android.graphics.drawable.GradientDrawable;
-import android.widget.ImageButton;
-
 import androidx.core.graphics.ColorUtils;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;

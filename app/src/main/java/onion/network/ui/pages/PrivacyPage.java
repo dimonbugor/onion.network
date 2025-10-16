@@ -1,4 +1,4 @@
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.graphics.Rect;
 import android.util.Log;
@@ -9,18 +9,18 @@ import android.widget.LinearLayout;
 import onion.network.ui.MainActivity;
 import onion.network.R;
 
-public class InfoPage extends BasePage {
+public class PrivacyPage extends BasePage {
 
-    String TAG = "InfoPage";
+    String TAG = "PrivacyPage";
 
     LinearLayout contentView;
     View vmore, fmore;
 
     View wallScroll;
 
-    public InfoPage(MainActivity activity) {
+    public PrivacyPage(MainActivity activity) {
         super(activity);
-        activity.getLayoutInflater().inflate(R.layout.info_page, this, true);
+        activity.getLayoutInflater().inflate(R.layout.privacy_page, this, true);
         contentView = (LinearLayout) findViewById(R.id.contentView);
 
         wallScroll = findViewById(R.id.wallScroll);
@@ -56,12 +56,12 @@ public class InfoPage extends BasePage {
 
     @Override
     public String getTitle() {
-        return "Info";
+        return "Privacy";
     }
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_info;
+        return R.drawable.ic_privacy;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.graphics.Rect;
 import android.util.Log;
@@ -9,18 +9,18 @@ import android.widget.LinearLayout;
 import onion.network.ui.MainActivity;
 import onion.network.R;
 
-public class CloudPage extends BasePage {
+public class InfoPage extends BasePage {
 
-    String TAG = "CloudPage";
+    String TAG = "InfoPage";
 
     LinearLayout contentView;
     View vmore, fmore;
 
     View wallScroll;
 
-    public CloudPage(MainActivity activity) {
+    public InfoPage(MainActivity activity) {
         super(activity);
-        activity.getLayoutInflater().inflate(R.layout.cloud_page, this, true);
+        activity.getLayoutInflater().inflate(R.layout.info_page, this, true);
         contentView = (LinearLayout) findViewById(R.id.contentView);
 
         wallScroll = findViewById(R.id.wallScroll);
@@ -56,12 +56,12 @@ public class CloudPage extends BasePage {
 
     @Override
     public String getTitle() {
-        return "Cloud";
+        return "Info";
     }
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_cloud;
+        return R.drawable.ic_info;
     }
 
     @Override

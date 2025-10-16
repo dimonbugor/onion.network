@@ -1,6 +1,10 @@
-package onion.network.pages;
+package onion.network.ui.pages;
 
-import android.Manifest;
+import static onion.network.helpers.Const.REQUEST_CHOOSE_MEDIA;
+import static onion.network.helpers.Const.REQUEST_PHOTO;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
+import static onion.network.helpers.Const.REQUEST_TAKE_VIDEO;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,20 +13,16 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 // media3
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 // для thumbnail
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -43,6 +43,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import onion.network.helpers.ThemeManager;
+import onion.network.helpers.PermissionHelper;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
@@ -51,12 +52,12 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
-import onion.network.views.AvatarView;
+import onion.network.ui.views.AvatarView;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.File;
+import java.util.EnumSet;
 import androidx.core.content.FileProvider;
 
 public class ProfilePage extends BasePage {
@@ -65,11 +66,43 @@ public class ProfilePage extends BasePage {
     private Bitmap profilePhotoBitmap;
     private Bitmap profileVideoThumbBitmap;
 
-    private static final int REQ_PERMS_VIDEO = 501;
-    private static final int REQ_PERMS_READ_MEDIA = 502;
-
     // збережені URI/дані
     private String videoUriStr = null;
+    private PermissionHelper activePermissionHelper;
+    private Runnable pendingPermissionGrantedAction;
+    private Runnable pendingPermissionDeniedAction;
+
+    private void requestPermissions(EnumSet<PermissionHelper.PermissionRequest> requests,
+                                    Runnable onGranted,
+                                    Runnable onDenied) {
+        pendingPermissionGrantedAction = onGranted;
+        pendingPermissionDeniedAction = onDenied;
+        activePermissionHelper = new PermissionHelper(activity, new PermissionHelper.PermissionListener() {
+            @Override
+            public void onPermissionsGranted() {
+                PermissionHelper helper = activePermissionHelper;
+                activePermissionHelper = null;
+                Runnable grantedAction = pendingPermissionGrantedAction;
+                pendingPermissionGrantedAction = null;
+                pendingPermissionDeniedAction = null;
+                if (grantedAction != null) {
+                    grantedAction.run();
+                }
+            }
+
+            @Override
+            public void onPermissionsDenied() {
+                activePermissionHelper = null;
+                Runnable deniedAction = pendingPermissionDeniedAction;
+                pendingPermissionGrantedAction = null;
+                pendingPermissionDeniedAction = null;
+                if (deniedAction != null) {
+                    deniedAction.run();
+                }
+            }
+        }, requests);
+        activePermissionHelper.requestPermissions();
+    }
 
     private void updateProfileAvatar() {
         if (profileAvatarView == null) return;
@@ -160,10 +193,6 @@ public class ProfilePage extends BasePage {
             new Row("bio", "Bio", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
     };
     LinearLayout contentView;
-    public static final int REQUEST_PHOTO = 3;
-    public static final int REQUEST_TAKE_PHOTO = 19;
-    public static final int REQUEST_CHOOSE_MEDIA = 30;
-    public static final int REQUEST_TAKE_VIDEO = 32;
 
     public ProfilePage(final MainActivity activity) {
         super(activity);
@@ -256,7 +285,7 @@ public class ProfilePage extends BasePage {
             return;
         }
 
-        // ======= 4) ТВОЇ СТАРІ ГІЛКИ (REQUEST_PHOTO) =======
+        // ======= 4) СТАРІ ГІЛКИ (REQUEST_PHOTO) =======
         if (requestCode == REQUEST_PHOTO) {
             Uri uri = data.getData();
             Bitmap bmp = getActivityResultBitmap(data);
@@ -288,23 +317,8 @@ public class ProfilePage extends BasePage {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_PERMS_VIDEO) {
-            boolean granted = true;
-            for (int r : grantResults) granted &= (r == PackageManager.PERMISSION_GRANTED);
-            if (granted) {
-                captureVideo();
-            } else {
-                Snackbar.make(contentView, "Camera & Mic permissions are required for video", Snackbar.LENGTH_LONG).show();
-            }
-        }
-        if (requestCode == REQ_PERMS_READ_MEDIA) {
-            boolean granted = true;
-            for (int r : grantResults) granted &= (r == PackageManager.PERMISSION_GRANTED);
-            if (granted) {
-                showPickMediaDialog();
-            } else {
-                Snackbar.make(contentView, "Storage permission required for video", Snackbar.LENGTH_LONG).show();
-            }
+        if (activePermissionHelper != null) {
+            activePermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -634,8 +648,8 @@ public class ProfilePage extends BasePage {
         AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
                 .setTitle("Choose media")
                 .setAdapter(adapter, (dialog1, which) -> {
-                    if (which == 0) capturePhoto();
-                    else captureVideo();
+                    if (which == 0) pickMedia(true);
+                    else pickMedia(false);
                 })
                 .create();
         dialog.show();
@@ -668,11 +682,12 @@ public class ProfilePage extends BasePage {
     }
 
     private void pickMedia(boolean photo) {
-        if (!photo && !hasReadMediaPermission()) {
-            requestReadMediaPermission();
-            return;
-        }
+        requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                () -> pickMediaInternal(photo),
+                () -> Snackbar.make(contentView, "Storage permission required", Snackbar.LENGTH_LONG).show());
+    }
 
+    private void pickMediaInternal(boolean photo) {
         prepareForCapture();
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -681,24 +696,14 @@ public class ProfilePage extends BasePage {
     }
 
     private void capturePhoto() {
-        // Твоя поточна логіка — маленький bitmap із camera app
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+        requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+                this::launchPhotoCapture,
+                () -> Snackbar.make(contentView, "Camera permission required", Snackbar.LENGTH_LONG).show());
     }
 
-    private boolean ensureReadMediaPermissionForVideo() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED) {
-                requestReadMediaPermission();
-                return false;
-            }
-        } else {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestReadMediaPermission();
-                return false;
-            }
-        }
-        return true;
+    private void launchPhotoCapture() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
     }
 
     private Uri pendingVideoUri;
@@ -719,8 +724,15 @@ public class ProfilePage extends BasePage {
     }
 
     private void captureVideo() {
-        if (!hasVideoPermissions()) { requestVideoPermissions(); return; }
-        if (!ensureReadMediaPermissionForVideo()) { return; }
+        requestPermissions(EnumSet.of(
+                        PermissionHelper.PermissionRequest.MEDIA,
+                        PermissionHelper.PermissionRequest.CAMERA,
+                        PermissionHelper.PermissionRequest.MICROPHONE),
+                this::launchVideoCapture,
+                () -> Snackbar.make(contentView, "Camera & Mic permissions are required for video", Snackbar.LENGTH_LONG).show());
+    }
+
+    private void launchVideoCapture() {
         prepareForCapture();
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -821,36 +833,6 @@ public class ProfilePage extends BasePage {
                 mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext.toLowerCase());
         }
         return mime;
-    }
-
-    private boolean hasVideoPermissions() {
-        Context c = getContext();
-        boolean cam = ContextCompat.checkSelfPermission(c, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
-        boolean mic = ContextCompat.checkSelfPermission(c, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        return cam && mic;
-    }
-
-    private void requestVideoPermissions() {
-        ActivityCompat.requestPermissions(activity, new String[] {
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
-        }, REQ_PERMS_VIDEO);
-    }
-
-    private boolean hasReadMediaPermission() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
-        } else {
-            return ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        }
-    }
-
-    private void requestReadMediaPermission() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.READ_MEDIA_VIDEO }, REQ_PERMS_READ_MEDIA);
-        } else {
-            ActivityCompat.requestPermissions(activity, new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE }, REQ_PERMS_READ_MEDIA);
-        }
     }
 
 }

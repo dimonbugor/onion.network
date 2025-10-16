@@ -1,6 +1,6 @@
 
 
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.content.Context;
 import android.content.Intent;

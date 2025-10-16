@@ -1,6 +1,6 @@
 
 
-package onion.network.pages;
+package onion.network.ui.pages;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,7 +20,7 @@ import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.servers.ChatServer;
 import onion.network.ui.MainActivity;
-import onion.network.views.AvatarView;
+import onion.network.ui.views.AvatarView;
 
 public class ConversationPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 

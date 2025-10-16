@@ -40,7 +40,7 @@
                         app:strokeColor="@color/colorAccentAlpha"
                         app:strokeWidth="1dp">
 
-                        <onion.network.views.AvatarView
+                        <onion.network.ui.views.AvatarView
                             android:id="@+id/thumb"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"

@@ -27,7 +27,7 @@ import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.cashes.SiteCache;
 import onion.network.databases.ItemDatabase;
-import onion.network.pages.ProfilePage;
+import onion.network.ui.pages.ProfilePage;
 import onion.network.helpers.Utils;
 
 public class Site {
