@@ -2,8 +2,8 @@
 
 package onion.network.ui.pages;
 
-import static onion.network.helpers.Const.REQUEST_PHOTO;
-import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
+import static onion.network.helpers.Const.REQUEST_PICK_IMAGE_POST;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -25,8 +25,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,40 +55,6 @@ public class WallPage extends BasePage {
    int imore;
     View vmore, fmore;
 
-    private PermissionHelper permissionHelper;
-    private Runnable pendingPermissionGrantedAction;
-    private Runnable pendingPermissionDeniedAction;
-
-    private void requestPermissions(EnumSet<PermissionHelper.PermissionRequest> requests,
-                                    Runnable onGranted,
-                                    Runnable onDenied) {
-        pendingPermissionGrantedAction = onGranted;
-        pendingPermissionDeniedAction = onDenied;
-        permissionHelper = new PermissionHelper(activity, new PermissionHelper.PermissionListener() {
-            @Override
-            public void onPermissionsGranted() {
-                permissionHelper = null;
-                Runnable grantedAction = pendingPermissionGrantedAction;
-                pendingPermissionGrantedAction = null;
-                pendingPermissionDeniedAction = null;
-                if (grantedAction != null) {
-                    grantedAction.run();
-                }
-            }
-
-            @Override
-            public void onPermissionsDenied() {
-                permissionHelper = null;
-                Runnable deniedAction = pendingPermissionDeniedAction;
-                pendingPermissionGrantedAction = null;
-                pendingPermissionDeniedAction = null;
-                if (deniedAction != null) {
-                    deniedAction.run();
-                }
-            }
-        }, requests);
-        permissionHelper.requestPermissions();
-    }
 
     public WallPage(MainActivity activity) {
         super(activity);
@@ -234,20 +198,22 @@ public class WallPage extends BasePage {
         if (item == null) {
             dialogView.findViewById(R.id.take_photo).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
-                requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+                PermissionHelper.runWithPermissions(activity,
+                        EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
                         () -> {
                             d.cancel();
                             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                            activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_POST);
                         },
                         () -> activity.snack("Camera permission required"));
             });
             dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
                 postEditText = textEdit.getText().toString();
-                requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                PermissionHelper.runWithPermissions(activity,
+                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
                         () -> {
                             d.cancel();
-                            startImageChooser(REQUEST_PHOTO);
+                            startImageChooser(REQUEST_PICK_IMAGE_POST);
                         },
                         () -> activity.snack("Storage permission required"));
             });
@@ -279,13 +245,13 @@ public class WallPage extends BasePage {
 
         Bitmap bmp = null;
 
-        if (requestCode == REQUEST_PHOTO) {
+        if (requestCode == REQUEST_PICK_IMAGE_POST) {
             Uri uri = data.getData();
             bmp = getActivityResultBitmap(data);
             bmp = fixImageOrientation(bmp, uri);
         }
 
-        if (requestCode == REQUEST_TAKE_PHOTO) {
+        if (requestCode == REQUEST_TAKE_PHOTO_POST) {
             bmp = (Bitmap) data.getExtras().get("data");
         }
 
@@ -312,6 +278,7 @@ public class WallPage extends BasePage {
         }
 
         writePost(postEditText, bmp);
+        postEditText = null;
     }
 
 
@@ -557,14 +524,6 @@ public class WallPage extends BasePage {
         String smore2 = smore;
         smore = null;
         load(imore, smore2);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (permissionHelper != null) {
-            permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
     }
 
 }

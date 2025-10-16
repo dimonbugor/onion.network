@@ -3,8 +3,6 @@ package onion.network.ui;
 import static android.view.View.VISIBLE;
 
 import android.content.Intent;
-
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,6 +11,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.EnumSet;
+
+import onion.network.R;
 import onion.network.databinding.ActivitySplashBinding;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
@@ -20,7 +21,6 @@ import onion.network.helpers.ThemeManager;
 public class SplashActivity extends AppCompatActivity {
 
     private ActivitySplashBinding binding;
-    private PermissionHelper permissionHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,38 +30,39 @@ public class SplashActivity extends AppCompatActivity {
         binding = ActivitySplashBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Ініціалізація PermissionHelper і передаємо callback для обробки дозволів
-        permissionHelper = new PermissionHelper(this, new PermissionHelper.PermissionListener() {
-            @Override
-            public void onPermissionsGranted() {
-                // Тут продовжуємо роботу після надання всіх дозволів
-                binding.webView.setVisibility(VISIBLE);
-                String htmlData = "<html><head><style>"
-                        + "body { margin:0; padding:0; background-color:#000; display:flex; justify-content:center; align-items:center; height:100vh; }"
-                        + "img { max-width:360px; max-height:360px; width:auto; height:auto; }"
-                        + "</style></head>"
-                        + "<body><img src='file:///android_asset/animation.gif'/></body></html>";
-                binding.webView.loadDataWithBaseURL("file:///android_asset/", htmlData, "text/html", "UTF-8", null);
-
-                proceedWithAppFunctionality();
-            }
-
-            @Override
-            public void onPermissionsDenied() {
-                // Якщо користувач відмовився надати дозволи
-                showDeniedMessage();
-            }
-        });
-
-        // Запит дозволів
-        permissionHelper.requestPermissions();
+        requestInitialPermissions();
     }
 
     // Обробка результатів запитів дозволів
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (PermissionHelper.handleOnRequestPermissionsResult(this, requestCode, permissions, grantResults)) {
+            return;
+        }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void requestInitialPermissions() {
+        CharSequence rationale = getString(R.string.permission_initial_message);
+        PermissionHelper.runWithPermissions(
+                this,
+                EnumSet.of(PermissionHelper.PermissionRequest.MEDIA, PermissionHelper.PermissionRequest.NOTIFICATIONS),
+                rationale,
+                this::onPermissionsGranted,
+                this::showDeniedMessage
+        );
+    }
+
+    private void onPermissionsGranted() {
+        binding.webView.setVisibility(VISIBLE);
+        String htmlData = "<html><head><style>"
+                + "body { margin:0; padding:0; background-color:#000; display:flex; justify-content:center; align-items:center; height:100vh; }"
+                + "img { max-width:360px; max-height:360px; width:auto; height:auto; }"
+                + "</style></head>"
+                + "<body><img src='file:///android_asset/animation.gif'/></body></html>";
+        binding.webView.loadDataWithBaseURL("file:///android_asset/", htmlData, "text/html", "UTF-8", null);
+
+        proceedWithAppFunctionality();
     }
 
     // Метод, що викликається після надання всіх дозволів

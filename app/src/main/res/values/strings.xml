@@ -124,4 +124,9 @@
         <item>Sunset</item>
     </string-array>
 
+    <string name="permission_required_title">Permissions required</string>
+    <string name="permission_required_positive">Continue</string>
+    <string name="permission_required_negative">Cancel</string>
+    <string name="permission_initial_message">We need access to your media files to let you share photos and videos, and permission to show notifications for new activity.</string>
+
 </resources>

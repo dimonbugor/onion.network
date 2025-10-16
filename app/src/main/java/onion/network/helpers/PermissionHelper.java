@@ -1,229 +1,198 @@
 package onion.network.helpers;
 
-import static onion.network.helpers.Const.REQUEST_CODE_RUNTIME_PERMISSIONS;
-
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import onion.network.R;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.EnumSet;
+public final class PermissionHelper {
 
-
-public class PermissionHelper {
-
-    private final Activity activity;
-    private final PermissionListener permissionListener;
-    private final EnumSet<PermissionRequest> permissionRequests;
-
-    public PermissionHelper(Activity activity, PermissionListener listener) {
-        this(activity, listener, EnumSet.of(PermissionRequest.MEDIA, PermissionRequest.NOTIFICATIONS));
+    private PermissionHelper() {
     }
 
-    public PermissionHelper(Activity activity, PermissionListener listener, EnumSet<PermissionRequest> requests) {
-        this.activity = activity;
-        this.permissionListener = listener;
-        this.permissionRequests = requests == null || requests.isEmpty()
-                ? EnumSet.of(PermissionRequest.MEDIA)
+    private static final AtomicInteger NEXT_REQUEST_CODE = new AtomicInteger(onion.network.helpers.Const.REQUEST_CODE_RUNTIME_PERMISSIONS);
+
+    private static final android.util.SparseArray<PendingRequest> pendingRequests = new android.util.SparseArray<>();
+
+    public static void runWithPermissions(@NonNull Activity activity,
+                                           @NonNull EnumSet<PermissionRequest> requests,
+                                           @NonNull Runnable onGranted,
+                                           @Nullable Runnable onDenied) {
+        runWithPermissions(activity, requests, null, onGranted, onDenied);
+    }
+
+    public static void runWithPermissions(@NonNull Activity activity,
+                                           @NonNull EnumSet<PermissionRequest> requests,
+                                           @Nullable CharSequence rationaleMessage,
+                                           @NonNull Runnable onGranted,
+                                           @Nullable Runnable onDenied) {
+        EnumSet<PermissionRequest> reqSet = requests.isEmpty()
+                ? EnumSet.noneOf(PermissionRequest.class)
                 : EnumSet.copyOf(requests);
-    }
 
-    public void requestPermissions() {
-        if (!shouldRequestRuntimePermissions()) {
-            permissionListener.onPermissionsGranted();
+        String[] missing = collectMissingPermissions(activity, reqSet);
+        if (missing.length == 0) {
+            onGranted.run();
             return;
         }
 
-        if (collectMissingPermissions().isEmpty()) {
-            permissionListener.onPermissionsGranted();
+        if (rationaleMessage != null) {
+            showRationaleDialog(activity, rationaleMessage, () -> requestInternal(activity, reqSet, missing, onGranted, onDenied), onDenied);
+        } else if (shouldShowRationale(activity, missing)) {
+            showRationaleDialog(activity, rationaleMessage, () -> requestInternal(activity, reqSet, missing, onGranted, onDenied), onDenied);
         } else {
-            showPermissionExplanationDialog();
+            requestInternal(activity, reqSet, missing, onGranted, onDenied);
         }
     }
 
-    private boolean hasAllMediaPermissions() {
-        if (!permissionRequests.contains(PermissionRequest.MEDIA)) {
-            return true;
+    private static void requestInternal(Activity activity,
+                                         EnumSet<PermissionRequest> requests,
+                                         String[] missing,
+                                         Runnable onGranted,
+                                         Runnable onDenied) {
+        int requestCode = NEXT_REQUEST_CODE.getAndIncrement();
+        synchronized (pendingRequests) {
+            pendingRequests.put(requestCode, new PendingRequest(activity, requests, onGranted, onDenied));
         }
-        for (String permission : requiredMediaPermissions()) {
-            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
+        ActivityCompat.requestPermissions(activity, missing, requestCode);
+    }
+
+    private static boolean shouldShowRationale(Activity activity, String[] permissions) {
+        for (String permission : permissions) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
-    private boolean hasNotificationPermission() {
-        if (!permissionRequests.contains(PermissionRequest.NOTIFICATIONS)) {
-            return true;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
-        }
-        return true;
-    }
-
-    private void showPermissionExplanationDialog() {
-        String message = buildRationaleMessage();
-        AlertDialog dialogPermissions = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Permissions required")
+    private static void showRationaleDialog(Activity activity,
+                                            CharSequence message,
+                                            Runnable onPositive,
+                                            @Nullable Runnable onNegative) {
+        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                .setTitle(R.string.permission_required_title)
                 .setMessage(message)
+                .setPositiveButton(R.string.permission_required_positive, (d, which) -> onPositive.run())
+                .setNegativeButton(R.string.permission_required_negative, (d, which) -> {
+                    if (onNegative != null) {
+                        onNegative.run();
+                    }
+                })
                 .setCancelable(false)
-                .setPositiveButton("Grant permissions", (dialog, which) -> requestPermissionsInternal())
-                .setNegativeButton("Refuse", (dialog, which) -> permissionListener.onPermissionsDenied())
                 .create();
-        dialogPermissions.setOnShowListener(d -> {
-            dialogPermissions.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialogPermissions.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                    .setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                    .setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
-        dialogPermissions.show();
+        dialog.show();
     }
 
-    private void requestPermissionsInternal() {
-        if (!shouldRequestRuntimePermissions()) {
-            permissionListener.onPermissionsGranted();
-            return;
+    public static boolean handleOnRequestPermissionsResult(@NonNull Activity activity,
+                                                            int requestCode,
+                                                            @NonNull String[] permissions,
+                                                            @NonNull int[] grantResults) {
+        PendingRequest pending;
+        synchronized (pendingRequests) {
+            pending = pendingRequests.get(requestCode);
+            if (pending == null) {
+                return false;
+            }
+            pendingRequests.remove(requestCode);
         }
 
-        List<String> permissions = collectMissingPermissions();
-        if (permissions.isEmpty()) {
-            permissionListener.onPermissionsGranted();
-            return;
+        boolean granted = grantResults.length > 0;
+        if (granted) {
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    granted = false;
+                    break;
+                }
+            }
         }
 
-        ActivityCompat.requestPermissions(activity,
-                permissions.toArray(new String[0]),
-                REQUEST_CODE_RUNTIME_PERMISSIONS);
+        if (granted) {
+            String[] stillMissing = collectMissingPermissions(activity, pending.requests);
+            if (stillMissing.length == 0) {
+                pending.onGranted.run();
+            } else {
+                if (pending.onDenied != null) {
+                    pending.onDenied.run();
+                }
+            }
+        } else if (pending.onDenied != null) {
+            pending.onDenied.run();
+        }
+        return true;
     }
 
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode != REQUEST_CODE_RUNTIME_PERMISSIONS) {
-            return;
-        }
-
-        if (arePermissionsGranted(grantResults) && collectMissingPermissions().isEmpty()) {
-            permissionListener.onPermissionsGranted();
-        } else {
-            showPermissionExplanationDialog();
-        }
-    }
-
-    private List<String> collectMissingPermissions() {
-        List<String> permissions = new ArrayList<>();
-        if (!hasAllMediaPermissions()) {
-            Collections.addAll(permissions, requiredMediaPermissions());
-        }
-        if (permissionRequests.contains(PermissionRequest.CAMERA)) {
-            addIfMissing(permissions, Manifest.permission.CAMERA);
-        }
-        if (permissionRequests.contains(PermissionRequest.MICROPHONE)) {
-            addIfMissing(permissions, Manifest.permission.RECORD_AUDIO);
-        }
-        if (permissionRequests.contains(PermissionRequest.NOTIFICATIONS)
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                && !hasNotificationPermission()) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS);
-        }
-        return permissions;
-    }
-
-    private String[] requiredMediaPermissions() {
-        if (!permissionRequests.contains(PermissionRequest.MEDIA)) {
+    private static String[] collectMissingPermissions(Activity activity, EnumSet<PermissionRequest> requests) {
+        if (requests.isEmpty()) {
             return new String[0];
         }
+        List<String> missing = new ArrayList<>();
+        if (requests.contains(PermissionRequest.MEDIA)) {
+            addMediaPermissions(activity, missing);
+        }
+        if (requests.contains(PermissionRequest.CAMERA)) {
+            addIfMissing(activity, missing, android.Manifest.permission.CAMERA);
+        }
+        if (requests.contains(PermissionRequest.MICROPHONE)) {
+            addIfMissing(activity, missing, android.Manifest.permission.RECORD_AUDIO);
+        }
+        if (requests.contains(PermissionRequest.NOTIFICATIONS) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            addIfMissing(activity, missing, android.Manifest.permission.POST_NOTIFICATIONS);
+        }
+        return missing.toArray(new String[0]);
+    }
+
+    private static void addMediaPermissions(Activity activity, List<String> missing) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return new String[]{
-                    Manifest.permission.READ_MEDIA_IMAGES,
-                    Manifest.permission.READ_MEDIA_VIDEO
-            };
+            addIfMissing(activity, missing, android.Manifest.permission.READ_MEDIA_IMAGES);
+            addIfMissing(activity, missing, android.Manifest.permission.READ_MEDIA_VIDEO);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-            };
+            addIfMissing(activity, missing, android.Manifest.permission.READ_EXTERNAL_STORAGE);
         } else {
-            return new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-            };
+            addIfMissing(activity, missing, android.Manifest.permission.READ_EXTERNAL_STORAGE);
+            addIfMissing(activity, missing, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
     }
 
-    private boolean arePermissionsGranted(int[] grantResults) {
-        for (int result : grantResults) {
-            if (result != PackageManager.PERMISSION_GRANTED) {
-                return false;
+    private static void addIfMissing(Activity activity, List<String> missing, String permission) {
+        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+            if (!missing.contains(permission)) {
+                missing.add(permission);
             }
         }
-        return true;
     }
 
-    private void addIfMissing(List<String> permissions, String permission) {
-        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED
-                && !permissions.contains(permission)) {
-            permissions.add(permission);
-        }
-    }
+    private static final class PendingRequest {
+        final EnumSet<PermissionRequest> requests;
+        final Runnable onGranted;
+        final @Nullable Runnable onDenied;
 
-    private boolean shouldRequestRuntimePermissions() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-    }
-
-    private String buildRationaleMessage() {
-        List<String> reasons = new ArrayList<>();
-        if (permissionRequests.contains(PermissionRequest.MEDIA)) {
-            reasons.add("access your media files");
+        PendingRequest(Activity activity,
+                       EnumSet<PermissionRequest> requests,
+                       Runnable onGranted,
+                       Runnable onDenied) {
+            this.requests = requests;
+            this.onGranted = () -> activity.runOnUiThread(onGranted);
+            this.onDenied = onDenied == null ? null : () -> activity.runOnUiThread(onDenied);
         }
-        if (permissionRequests.contains(PermissionRequest.CAMERA)) {
-            reasons.add("use the camera");
-        }
-        if (permissionRequests.contains(PermissionRequest.MICROPHONE)) {
-            reasons.add("record audio");
-        }
-        if (permissionRequests.contains(PermissionRequest.NOTIFICATIONS) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            reasons.add("show notifications");
-        }
-
-        if (reasons.isEmpty()) {
-            return "This permission is required.";
-        }
-
-        if (reasons.size() == 1) {
-            return "This app requires permission to " + reasons.get(0) + '.';
-        }
-
-        StringBuilder builder = new StringBuilder("This app requires permission to ");
-        for (int i = 0; i < reasons.size(); i++) {
-            if (i == reasons.size() - 1) {
-                builder.append("and ");
-            }
-            builder.append(reasons.get(i));
-            if (i < reasons.size() - 2) {
-                builder.append(", ");
-            } else if (i == reasons.size() - 2) {
-                builder.append(' ');
-            }
-        }
-        builder.append('.');
-        return builder.toString();
-    }
-
-    // Інтерфейс для зворотного виклику (callback)
-    public interface PermissionListener {
-        void onPermissionsGranted();
-
-        void onPermissionsDenied();
     }
 
     public enum PermissionRequest {

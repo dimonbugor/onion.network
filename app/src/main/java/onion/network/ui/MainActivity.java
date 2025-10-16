@@ -4,7 +4,7 @@ package onion.network.ui;
 
 import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
 import static onion.network.helpers.Const.REQUEST_QR;
-import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_BLOG;
 import static onion.network.helpers.ThemeManager.themeKeys;
 import static onion.network.helpers.ThemeManager.themes;
 
@@ -47,6 +47,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -68,6 +69,7 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -100,6 +102,7 @@ import onion.network.ui.pages.RequestPage;
 import onion.network.ui.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
 import onion.network.ui.views.RequestTool;
+import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.settings.Settings;
@@ -922,6 +925,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PermissionHelper.handleOnRequestPermissionsResult(this, requestCode, permissions, grantResults);
+    }
+
     public BasePage currentPage() {
         if (viewPager == null) return null;
         Object o = viewPager.getCurrentItem();
@@ -1183,10 +1192,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_camera) {
-            //getPackageManager().hasSystemFeature(CAME)
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            //takePictureIntent.resolveActivity(getPackageManager());
-            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            PermissionHelper.runWithPermissions(
+                    this,
+                    EnumSet.of(PermissionHelper.PermissionRequest.CAMERA, PermissionHelper.PermissionRequest.MEDIA),
+                    () -> {
+                        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_BLOG);
+                    },
+                    () -> snack("Camera permission required")
+            );
             return true;
         }
         if (id == R.id.action_add_post) {

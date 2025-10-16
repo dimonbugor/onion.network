@@ -1,7 +1,7 @@
 package onion.network.ui.pages;
 
 import static onion.network.helpers.Const.REQUEST_CHOOSE_MEDIA;
-import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_PROFILE;
 import static onion.network.helpers.Const.REQUEST_TAKE_VIDEO;
 
 import android.annotation.SuppressLint;
@@ -61,47 +61,22 @@ import androidx.core.content.FileProvider;
 
 public class ProfilePage extends BasePage {
 
+    private static final long MAX_VIDEO_DURATION_MS = 5_500; // 5.5 seconds to allow camera rounding
+    private static final long MAX_VIDEO_FILE_SIZE_BYTES = 6L * 1024 * 1024; // ~6MB cap to avoid OOM
+
     private AvatarView profileAvatarView;
     private Bitmap profilePhotoBitmap;
     private Bitmap profileVideoThumbBitmap;
 
     // збережені URI/дані
     private String videoUriStr = null;
-    private PermissionHelper activePermissionHelper;
-    private Runnable pendingPermissionGrantedAction;
-    private Runnable pendingPermissionDeniedAction;
-
-    private void requestPermissions(EnumSet<PermissionHelper.PermissionRequest> requests,
-                                    Runnable onGranted,
-                                    Runnable onDenied) {
-        pendingPermissionGrantedAction = onGranted;
-        pendingPermissionDeniedAction = onDenied;
-        activePermissionHelper = new PermissionHelper(activity, new PermissionHelper.PermissionListener() {
-            @Override
-            public void onPermissionsGranted() {
-                PermissionHelper helper = activePermissionHelper;
-                activePermissionHelper = null;
-                Runnable grantedAction = pendingPermissionGrantedAction;
-                pendingPermissionGrantedAction = null;
-                pendingPermissionDeniedAction = null;
-                if (grantedAction != null) {
-                    grantedAction.run();
-                }
-            }
-
-            @Override
-            public void onPermissionsDenied() {
-                activePermissionHelper = null;
-                Runnable deniedAction = pendingPermissionDeniedAction;
-                pendingPermissionGrantedAction = null;
-                pendingPermissionDeniedAction = null;
-                if (deniedAction != null) {
-                    deniedAction.run();
-                }
-            }
-        }, requests);
-        activePermissionHelper.requestPermissions();
-    }
+    private static final EnumSet<PermissionHelper.PermissionRequest> PERMS_MEDIA_ONLY = EnumSet.of(PermissionHelper.PermissionRequest.MEDIA);
+    private static final EnumSet<PermissionHelper.PermissionRequest> PERMS_CAMERA_ONLY = EnumSet.of(PermissionHelper.PermissionRequest.CAMERA);
+    private static final EnumSet<PermissionHelper.PermissionRequest> PERMS_VIDEO = EnumSet.of(
+            PermissionHelper.PermissionRequest.MEDIA,
+            PermissionHelper.PermissionRequest.CAMERA,
+            PermissionHelper.PermissionRequest.MICROPHONE
+    );
 
     private void updateProfileAvatar() {
         if (profileAvatarView == null) return;
@@ -230,7 +205,7 @@ public class ProfilePage extends BasePage {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) return;
-        if (data == null && requestCode != REQUEST_TAKE_PHOTO) return;
+        if (data == null && requestCode != REQUEST_TAKE_PHOTO_PROFILE) return;
 
         // ======= 1) PICK MEDIA (галерея) =======
         if (requestCode == REQUEST_CHOOSE_MEDIA) {
@@ -264,7 +239,7 @@ public class ProfilePage extends BasePage {
         }
 
         // ======= 2) TAKE PHOTO (камера фото) =======
-        if (requestCode == REQUEST_TAKE_PHOTO) {
+        if (requestCode == REQUEST_TAKE_PHOTO_PROFILE) {
             Bitmap bmp = (Bitmap) data.getExtras().get("data"); // мініатюра
             if (bmp == null) return;
             bmp = ThumbnailUtils.extractThumbnail(bmp, 320, 320);
@@ -300,14 +275,6 @@ public class ProfilePage extends BasePage {
         super.onDetachedFromWindow();
         if (profileAvatarView != null) {
             profileAvatarView.release();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (activePermissionHelper != null) {
-            activePermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -632,6 +599,71 @@ public class ProfilePage extends BasePage {
         }
     }
 
+    private boolean validateSelectedVideo(@NonNull Uri uri) {
+        long durationMs = getVideoDuration(uri);
+        if (durationMs > MAX_VIDEO_DURATION_MS) {
+            Snackbar.make(contentView, "Video must be 5 seconds or shorter", Snackbar.LENGTH_LONG).show();
+            return false;
+        }
+
+        long fileSize = getVideoFileSize(uri);
+        if (fileSize > MAX_VIDEO_FILE_SIZE_BYTES) {
+            Snackbar.make(contentView, "Video file is too large for an avatar", Snackbar.LENGTH_LONG).show();
+            return false;
+        }
+
+        return true;
+    }
+
+    private long getVideoDuration(@NonNull Uri uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(getContext(), uri);
+            String durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (durationStr == null) return 0L;
+            return Long.parseLong(durationStr);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return 0L;
+        } finally {
+            try {
+                retriever.release();
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private long getVideoFileSize(@NonNull Uri uri) {
+        try (android.database.Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE);
+                if (sizeIndex >= 0) {
+                    return cursor.getLong(sizeIndex);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        try (java.io.InputStream inputStream = getContext().getContentResolver().openInputStream(uri)) {
+            if (inputStream == null) return 0L;
+            long total = 0;
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                total += read;
+                if (total > MAX_VIDEO_FILE_SIZE_BYTES) {
+                    break;
+                }
+            }
+            return total;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return 0L;
+    }
+
     private void showPickMediaDialog() {
         ArrayAdapter<String> adapter = getStringArrayAdapter(new String[]{"Photo from gallery", "Video from gallery"});
         AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
@@ -671,7 +703,8 @@ public class ProfilePage extends BasePage {
     }
 
     private void pickMedia(boolean photo) {
-        requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+        PermissionHelper.runWithPermissions(activity,
+                PERMS_MEDIA_ONLY,
                 () -> pickMediaInternal(photo),
                 () -> Snackbar.make(contentView, "Storage permission required", Snackbar.LENGTH_LONG).show());
     }
@@ -685,14 +718,15 @@ public class ProfilePage extends BasePage {
     }
 
     private void capturePhoto() {
-        requestPermissions(EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+        PermissionHelper.runWithPermissions(activity,
+                PERMS_CAMERA_ONLY,
                 this::launchPhotoCapture,
                 () -> Snackbar.make(contentView, "Camera permission required", Snackbar.LENGTH_LONG).show());
     }
 
     private void launchPhotoCapture() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+        activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_PROFILE);
     }
 
     private Uri pendingVideoUri;
@@ -713,10 +747,8 @@ public class ProfilePage extends BasePage {
     }
 
     private void captureVideo() {
-        requestPermissions(EnumSet.of(
-                        PermissionHelper.PermissionRequest.MEDIA,
-                        PermissionHelper.PermissionRequest.CAMERA,
-                        PermissionHelper.PermissionRequest.MICROPHONE),
+        PermissionHelper.runWithPermissions(activity,
+                PERMS_VIDEO,
                 this::launchVideoCapture,
                 () -> Snackbar.make(contentView, "Camera & Mic permissions are required for video", Snackbar.LENGTH_LONG).show());
     }
@@ -726,7 +758,8 @@ public class ProfilePage extends BasePage {
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 5);
-        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
+        intent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
 
         pendingVideoUri = createVideoOutputUri();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingVideoUri);
@@ -768,6 +801,12 @@ public class ProfilePage extends BasePage {
     }
 
     private void handlePickedVideo(final Uri uri) {
+        if (!validateSelectedVideo(uri)) {
+            deleteTempVideo(uri);
+            pendingVideoUri = null;
+            return;
+        }
+
         // thumbnail (320x320)
         Bitmap thumb = extractVideoThumbnail(uri);
         View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
@@ -809,6 +848,25 @@ public class ProfilePage extends BasePage {
             dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialogSetVideo.show();
+    }
+
+    private void deleteTempVideo(@Nullable Uri uri) {
+        if (uri == null) return;
+        try {
+            getContext().getContentResolver().delete(uri, null, null);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            try {
+                if ("file".equals(uri.getScheme())) {
+                    File f = new File(uri.getPath());
+                    if (f.exists()) {
+                        //noinspection ResultOfMethodCallIgnored
+                        f.delete();
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
     }
 
     private static @Nullable String getMimeType(Context ctx, Uri uri) {
