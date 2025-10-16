@@ -5,6 +5,7 @@ package onion.network.ui.pages;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -21,6 +22,9 @@ import onion.network.databases.ChatDatabase;
 import onion.network.servers.ChatServer;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
+import onion.network.helpers.VideoCacheManager;
+
+import org.json.JSONObject;
 
 public class ConversationPage extends BasePage implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
 
@@ -165,8 +169,12 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             ItemCache cache = ItemCache.getInstance(activity);
             Bitmap photoThumb = cache.get(remoteAddress, "thumb").one().bitmap("thumb");
             Bitmap videoThumb = cache.get(remoteAddress, "video_thumb").one().bitmap("video_thumb");
-            String videoUri = cache.get(remoteAddress, "video").one().json().optString("video", "").trim();
-            holder.thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
+            JSONObject videoJson = cache.get(remoteAddress, "video").one().json();
+            Uri playableVideo = VideoCacheManager.ensureVideoUri(activity,
+                    remoteAddress,
+                    videoJson.optString("video_uri", "").trim(),
+                    videoJson.optString("video", "").trim());
+            holder.thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
 
             holder.name.setText(ItemCache.getInstance(activity).get(remoteAddress, "name").one().json().optString("name", "Anonymous"));
 

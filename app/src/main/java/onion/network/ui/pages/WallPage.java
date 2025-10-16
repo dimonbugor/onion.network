@@ -44,6 +44,7 @@ import onion.network.R;
 import onion.network.TorManager;
 import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
+import onion.network.helpers.VideoCacheManager;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
@@ -351,11 +352,6 @@ public class WallPage extends BasePage {
                     AvatarView thumb = (AvatarView) v.findViewById(R.id.thumb);
                     ImageView image = ((ImageView) v.findViewById(R.id.image));
 
-                    Bitmap photoThumb = item.bitmap("thumb");
-                    Bitmap videoThumb = item.bitmap("video_thumb");
-                    String videoUri = o.optString("video", "").trim();
-                    thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
-
                     image.setVisibility(View.GONE);
                     try {
                         String str = o.optString("img");
@@ -379,6 +375,14 @@ public class WallPage extends BasePage {
                     }
 
                     final String postAddress = o.optString("addr");
+
+                    Bitmap photoThumb = item.bitmap("thumb");
+                    Bitmap videoThumb = item.bitmap("video_thumb");
+                    String storedVideoUri = o.optString("video_uri", "").trim();
+                    String videoData = o.optString("video", "").trim();
+                    String ownerKey = (postAddress == null || postAddress.isEmpty()) ? myAddress : postAddress;
+                    Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, storedVideoUri, videoData);
+                    thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
 
                     String n = postAddress;
 

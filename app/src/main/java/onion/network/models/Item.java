@@ -5,6 +5,7 @@ package onion.network.models;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import org.json.JSONException;
@@ -129,6 +130,17 @@ public class Item {
                 }
 
                 {
+                    String videoUri = ItemDatabase.getInstance(context).get("video", "", 1).one().json().optString("video_uri");
+                    if (!TextUtils.isEmpty(videoUri)) {
+                        try {
+                            json.put("video_uri", videoUri);
+                        } catch (JSONException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                }
+
+                {
                     String videoThumb = ItemDatabase.getInstance(context).get("video_thumb", "", 1).one().json().optString("video_thumb");
                     if (videoThumb != null && !videoThumb.trim().isEmpty()) {
                         try {
@@ -144,6 +156,8 @@ public class Item {
 
         // update friend
         if ("friend".equals(_type)) {
+
+            json.remove("video_uri");
 
             // thumb
             {
@@ -277,7 +291,6 @@ public class Item {
 
 
 }
-
 
 
 

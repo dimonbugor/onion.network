@@ -19,11 +19,13 @@ import android.widget.TextView;
 import org.json.JSONObject;
 
 import androidx.core.graphics.ColorUtils;
+import android.net.Uri;
 
 import com.google.android.material.card.MaterialCardView;
 
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
+import onion.network.helpers.VideoCacheManager;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemResult;
@@ -149,8 +151,10 @@ public class FriendPage extends BasePage {
 
                     Bitmap photoThumb = item.bitmap("thumb");
                     Bitmap videoThumb = item.bitmap("video_thumb");
-                    String videoUri = o.optString("video", "").trim();
-                    thumb.bind(photoThumb, videoThumb, videoUri.isEmpty() ? null : videoUri);
+                    String storedVideoUri = o.optString("video_uri", "").trim();
+                    String videoData = o.optString("video", "").trim();
+                    Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), addr, storedVideoUri, videoData);
+                    thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
 
                     if (activity.address.isEmpty()) {
                         it.setOnLongClickListener(new OnLongClickListener() {

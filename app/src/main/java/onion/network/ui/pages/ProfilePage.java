@@ -43,6 +43,8 @@ import org.json.JSONObject;
 
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.PermissionHelper;
+import onion.network.helpers.VideoCacheManager;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
@@ -56,6 +58,7 @@ import onion.network.ui.views.AvatarView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -527,8 +530,13 @@ public class ProfilePage extends BasePage {
             protected void onProgressUpdate(ItemResult... values) {
                 try {
                     ItemResult itemResult = values[0];
-                    String v = itemResult.one().json().optString("video", "").trim();
-                    videoUriStr = v.isEmpty() ? null : v;
+                    JSONObject json = itemResult.one().json();
+                    Uri playableUri = VideoCacheManager.ensureVideoUri(
+                            getContext(),
+                            address.isEmpty() ? activity.getID() : address,
+                            json.optString("video_uri", "").trim(),
+                            json.optString("video", "").trim());
+                    videoUriStr = playableUri != null ? playableUri.toString() : null;
                 } catch (Exception e) {
                     e.printStackTrace();
                     videoUriStr = null;
@@ -812,11 +820,27 @@ public class ProfilePage extends BasePage {
             return;
         }
 
-        Uri persistedUri = persistVideo(uri);
-        if (persistedUri == null) {
+        File persistedFile;
+        try {
+            persistedFile = persistVideoToInternal(uri);
+        } catch (IOException ex) {
+            ex.printStackTrace();
             deleteTempVideo(uri);
             pendingVideoUri = null;
             Snackbar.make(contentView, "Failed to save video", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        Uri persistedUri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", persistedFile);
+
+        String videoBase64;
+        try {
+            videoBase64 = encodeFileToBase64(persistedFile);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            deleteTempVideo(uri);
+            pendingVideoUri = null;
+            Snackbar.make(contentView, "Failed to prepare video", Snackbar.LENGTH_LONG).show();
             return;
         }
 
@@ -836,7 +860,10 @@ public class ProfilePage extends BasePage {
                 .setPositiveButton("OK", (dialog, which) -> {
                     // записуємо лише URI (string) + маленький thumb
                     ItemDatabase.getInstance(getContext())
-                            .put(new Item.Builder("video", "", "").put("video", persistedUri.toString()).build());
+                            .put(new Item.Builder("video", "", "")
+                                    .put("video_uri", persistedUri.toString())
+                                    .put("video", videoBase64)
+                                    .build());
 
                     if (thumb != null) {
                         String vthumb = Utils.encodeImage(ThumbnailUtils.extractThumbnail(thumb, 84, 84));
@@ -864,7 +891,10 @@ public class ProfilePage extends BasePage {
             dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
         });
         dialogSetVideo.setOnDismissListener(d -> {
-        pendingVideoUri = null;
+            if (pendingVideoUri != null) {
+                deleteTempVideo(pendingVideoUri);
+                pendingVideoUri = null;
+            }
         });
         dialogSetVideo.show();
     }
@@ -878,20 +908,16 @@ public class ProfilePage extends BasePage {
         }
     }
 
-    private Uri persistVideo(@NonNull Uri source) {
-        InputStream in = null;
-        FileOutputStream out = null;
-        try {
-            in = getContext().getContentResolver().openInputStream(source);
-            if (in == null) return null;
+    private File persistVideoToInternal(@NonNull Uri source) throws IOException {
+        File dir = new File(getContext().getFilesDir(), "avatar_video");
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new IOException("Unable to create avatar directory");
+        }
 
-            File dir = new File(getContext().getFilesDir(), "avatar_video");
-            if (!dir.exists() && !dir.mkdirs()) {
-                return null;
-            }
-
-            File dest = new File(dir, "avatar.mp4");
-            out = new FileOutputStream(dest);
+        File dest = new File(dir, "avatar.mp4");
+        try (InputStream in = getContext().getContentResolver().openInputStream(source);
+             FileOutputStream out = new FileOutputStream(dest, false)) {
+            if (in == null) throw new IOException("Empty video data");
             byte[] buffer = new byte[8192];
             int read;
             long total = 0;
@@ -899,23 +925,18 @@ public class ProfilePage extends BasePage {
                 out.write(buffer, 0, read);
                 total += read;
                 if (total > MAX_VIDEO_FILE_SIZE_BYTES) {
-                    return null;
+                    throw new IOException("Video exceeds size limit");
                 }
             }
             out.flush();
-            return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", dest);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
-        } finally {
-            try {
-                if (in != null) in.close();
-            } catch (IOException ignore) {
-            }
-            try {
-                if (out != null) out.close();
-            } catch (IOException ignore) {
-            }
+        }
+        return dest;
+    }
+
+    private String encodeFileToBase64(@NonNull File file) throws IOException {
+        try (FileInputStream in = new FileInputStream(file)) {
+            byte[] data = Utils.readInputStream(in);
+            return Ed25519Signature.base64Encode(data);
         }
     }
 
