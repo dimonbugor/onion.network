@@ -34,6 +34,7 @@ import java.net.URL;
 
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.Utils;
 import onion.network.models.Blog;
@@ -69,25 +70,23 @@ public class BlogPage extends BasePage {
             public void delete(final String id) {
                 if (id == null) return;
                 activity.runOnUiThread(() -> {
-                    AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                            .setTitle("Remove Post?")
-                            .setMessage("Do you really want to remove this post?")
-                            .setPositiveButton("Yes", (dialog2, which) -> {
+                    DialogHelper.showConfirm(
+                            activity,
+                            R.string.dialog_remove_post_title,
+                            R.string.dialog_remove_post_message,
+                            R.string.dialog_button_yes,
+                            () -> {
                                 try {
                                     blog.deletePost(id);
-                                    Snackbar.make(webView, "Post removed.", Snackbar.LENGTH_SHORT).show();
+                                    Snackbar.make(webView, activity.getString(R.string.snackbar_post_removed), Snackbar.LENGTH_SHORT).show();
                                 } catch (Exception ex) {
-                                    Snackbar.make(webView, "Failed to remove post.", Snackbar.LENGTH_SHORT).show();
+                                    Snackbar.make(webView, activity.getString(R.string.snackbar_post_remove_failed), Snackbar.LENGTH_SHORT).show();
                                 }
                                 webView.reload();
-                            })
-                            .setNegativeButton("No", (dialog1, which) -> {
-                            }).create();
-                    dialog.setOnShowListener(d -> {
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                    });
-                    dialog.show();
+                            },
+                            R.string.dialog_button_no,
+                            null
+                    );
                 });
             }
 
@@ -249,24 +248,20 @@ public class BlogPage extends BasePage {
     public void editTitle() {
         final View view = activity.getLayoutInflater().inflate(R.layout.dialog_title, null);
         ((EditText) view.findViewById(R.id.title)).setText(blog.getTitle());
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Change Blog Title")
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_change_blog_title)
                 .setView(view)
-                .setPositiveButton("Publish", (dialog1, which) -> {
+                .setPositiveButton(R.string.dialog_button_publish, (dialog1, which) -> {
                     blog.setTitle(((EditText) view.findViewById(R.id.title)).getText().toString());
                     update();
                     //hidekey();
-                    Snackbar.make(webView, "Title changed.", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(webView, activity.getString(R.string.snackbar_title_changed), Snackbar.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Cancel", (dialog2, which) -> {
+                .setNegativeButton(R.string.dialog_button_cancel, (dialog2, which) -> {
                     //hidekey();
                 })
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
     public void addPost() {
         activity.startActivity(new Intent(activity, PostActivity.class));
@@ -288,7 +283,7 @@ public class BlogPage extends BasePage {
         view.findViewById(R.id.clearcopy).setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(CLIPBOARD_SERVICE);
             clipboard.setPrimaryClip(ClipData.newPlainText("", "http://" + domain + ".to"));
-            Toast.makeText(activity, "Clearnet link copied to clipboard", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, activity.getString(R.string.toast_clearnet_link_copied), Toast.LENGTH_SHORT).show();
         });
         view.findViewById(R.id.clearview).setOnClickListener(v -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + domain + ".to"))));
         view.findViewById(R.id.clearsend).setOnClickListener(v -> {
@@ -304,7 +299,7 @@ public class BlogPage extends BasePage {
             public void onClick(View v) {
                 ClipboardManager clipboard = (ClipboardManager) activity.getSystemService(CLIPBOARD_SERVICE);
                 clipboard.setPrimaryClip(ClipData.newPlainText("", "http://" + domain));
-                Toast.makeText(activity, "Darknet link copied to clipboard", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, activity.getString(R.string.toast_darknet_link_copied), Toast.LENGTH_SHORT).show();
             }
         });
         view.findViewById(R.id.darkview).setOnClickListener(v -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + domain))));
@@ -316,9 +311,7 @@ public class BlogPage extends BasePage {
             activity.startActivity(intent);
         });
 
-        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setView(view)
-                .show();
+        DialogHelper.show(DialogHelper.themedBuilder(activity).setView(view));
     }
     public void showAbout() {
         String versionName = "";
@@ -328,19 +321,14 @@ public class BlogPage extends BasePage {
         } catch (PackageManager.NameNotFoundException e) {
             throw new RuntimeException(e);
         }
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
                 .setTitle(activity.getString(R.string.app_name))
                 //.setMessage(BuildConfig.APPLICATION_ID + "\n\nVersion: " + BuildConfig.VERSION_NAME)
-                .setMessage("Version: " + versionName)
-                .setNeutralButton("Libraries", (d, which) -> showLibraries())
-                .setPositiveButton("OK", (d, which) -> {
+                .setMessage(activity.getString(R.string.dialog_about_version_message, versionName))
+                .setNeutralButton(R.string.dialog_button_libraries, (d, which) -> showLibraries())
+                .setPositiveButton(R.string.dialog_button_ok, (d, which) -> {
                 }).create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
     void showLibraries() {
         final String[] items;
@@ -349,10 +337,10 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Third party software used in this app (click to view license)")
+        DialogHelper.show(DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_third_party_software_title)
                 .setItems(items, (dialog, which) -> showLicense(items[which]))
-                .show();
+        );
     }
     void showLicense(String name) {
         String text;
@@ -361,27 +349,22 @@ public class BlogPage extends BasePage {
         } catch (IOException ex) {
             throw new Error(ex);
         }
-        new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+        DialogHelper.show(DialogHelper.themedBuilder(activity)
                 .setTitle(name)
                 .setMessage(text)
-                .show();
+        );
     }
     public void selectStyle() {
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Choose Style")
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_choose_style_title)
                 .setSingleChoiceItems(blog.getStyles(), blog.getStyleIndex(), (d, which) -> {
                     blog.setStyle(which);
                     update();
                     d.cancel();
                 })
-                .setNegativeButton("OK", (d, which) -> {
+                .setNegativeButton(R.string.dialog_button_ok, (d, which) -> {
                 })
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 }

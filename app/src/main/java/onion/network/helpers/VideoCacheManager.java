@@ -24,24 +24,16 @@ public final class VideoCacheManager {
                                      @Nullable String ownerKey,
                                      @Nullable String storedUri,
                                      @Nullable String videoDataBase64) {
+        Uri decodedUri = decodeToCacheIfNeeded(context, ownerKey, videoDataBase64);
+        if (decodedUri != null) {
+            return decodedUri;
+        }
+
         Uri uri = tryParsePlayableUri(storedUri);
         if (isUriReadable(context, uri)) {
             return uri;
         }
-        if (TextUtils.isEmpty(videoDataBase64)) {
-            return null;
-        }
-        try {
-            byte[] data = Ed25519Signature.base64Decode(videoDataBase64);
-            File file = writeCacheFile(context, ownerKey, data);
-            if (file == null) return null;
-            return FileProvider.getUriForFile(context,
-                    context.getPackageName() + ".fileprovider",
-                    file);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
+        return null;
     }
 
     @Nullable
@@ -80,6 +72,32 @@ public final class VideoCacheManager {
             return pfd != null;
         } catch (Exception ex) {
             return false;
+        }
+    }
+
+    @Nullable
+    private static Uri decodeToCacheIfNeeded(Context context,
+                                             @Nullable String ownerKey,
+                                             @Nullable String videoDataBase64) {
+        if (TextUtils.isEmpty(videoDataBase64)) {
+            return null;
+        }
+        try {
+            byte[] data = Ed25519Signature.base64Decode(videoDataBase64);
+            if (data == null || data.length == 0) {
+                return null;
+            }
+            File file = writeCacheFile(context, ownerKey, data);
+            if (file == null) {
+                return null;
+            }
+            return FileProvider.getUriForFile(
+                    context,
+                    context.getPackageName() + ".fileprovider",
+                    file);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
         }
     }
 }

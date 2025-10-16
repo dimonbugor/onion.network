@@ -20,6 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.io.IOException;
 
 import onion.network.R;
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.models.WallBot;
 import onion.network.cashes.ItemCache;
@@ -93,24 +94,20 @@ public class SettingsActivity extends AppCompatActivity {
             getPreferenceManager().findPreference("clearcache").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
-                            .setTitle("Clear Cache")
-                            .setMessage("Remove all cache data?")
-                            .setNegativeButton("No", null)
-                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
+                            .setTitle(R.string.dialog_clear_cache_title)
+                            .setMessage(R.string.dialog_clear_cache_message)
+                            .setNegativeButton(R.string.dialog_button_no, null)
+                            .setPositiveButton(R.string.dialog_button_yes, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     ItemCache.getInstance(getActivity()).clearCache();
                                     SiteCache.getInstance(getActivity()).clearCache();
-                                    Snackbar.make(getView(), "Cache cleared.", Snackbar.LENGTH_SHORT).show();
+                                    Snackbar.make(getView(), R.string.snackbar_cache_cleared, Snackbar.LENGTH_SHORT).show();
                                 }
                             })
                             .create();
-                    dialog.setOnShowListener(d -> {
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-                    });
-                    dialog.show();
+                    DialogHelper.show(dialog);
                     return true;
                 }
             });
@@ -132,8 +129,8 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
-                    .setTitle("Third party software used by this app (click to view license)")
+            AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
+                    .setTitle(R.string.dialog_third_party_software_title)
                     .setItems(items, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -141,11 +138,7 @@ public class SettingsActivity extends AppCompatActivity {
                         }
                     })
                     .create();
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-            });
-            dialog.show();
+            DialogHelper.show(dialog);
         }
 
         void showLicense(String name) {
@@ -155,15 +148,11 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 throw new Error(ex);
             }
-            AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.RoundedAlertDialog)
+            AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
                     .setTitle(name)
                     .setMessage(text)
                     .create();
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(getContext(), android.R.attr.actionMenuTextColor));
-            });
-            dialog.show();
+            DialogHelper.show(dialog);
         }
 
     }

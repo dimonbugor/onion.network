@@ -89,6 +89,7 @@ import onion.network.models.WallBot;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.pages.BasePage;
@@ -599,26 +600,22 @@ public class MainActivity extends AppCompatActivity {
     void showEnterId() {
         View dialogView = getLayoutInflater().inflate(R.layout.friend_dialog, null);
         final EditText addressEdit = (EditText) dialogView.findViewById(R.id.address);
-        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this, ThemeManager.getDialogThemeResId(MainActivity.this))
-                .setTitle("Enter ID")
+        AlertDialog dialog = DialogHelper.themedBuilder(MainActivity.this)
+                .setTitle(R.string.dialog_enter_id_title)
                 .setView(dialogView)
-                .setNegativeButton("Cancel", (d, which) -> {
+                .setNegativeButton(R.string.dialog_button_cancel, (d, which) -> {
                 })
-                .setPositiveButton("Open", (d, which) -> {
+                .setPositiveButton(R.string.dialog_button_open, (d, which) -> {
                     final String address = addressEdit.getText().toString().trim().toLowerCase();
                     if (address.length() > 56) {
-                        snack("Invalid ID");
+                        snack(getString(R.string.snackbar_invalid_id));
                         return;
                     }
                     startActivity(new Intent(MainActivity.this, MainActivity.class).putExtra("address", address));
 
                 })
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     public void initTabs() {
@@ -647,18 +644,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAddFriend() {
-        String[] menuItems = new String[]{
-                "Scan QR",
-                "Show QR",
-                "Enter ID",
-                "Show ID",
-                "Address",
-                "Invite friends",
-        };
+        String[] menuItems = getResources().getStringArray(R.array.dialog_add_friend_options);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_single_item, menuItems);
 
-        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
-                .setTitle("Add Friend")
+        AlertDialog dialog = DialogHelper.themedBuilder(this)
+                .setTitle(R.string.dialog_add_friend_title)
                 .setSingleChoiceItems(adapter, 0, (dialog1, which) -> {
                     if (which == 0) scanQR();
                     if (which == 1) showQR();
@@ -671,11 +661,7 @@ public class MainActivity extends AppCompatActivity {
                     if (which == 5) inviteFriend();
                 })
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     void scanQR() {
@@ -715,14 +701,14 @@ public class MainActivity extends AppCompatActivity {
                 String[] tokens = str.split(" ", 3);
 
                 if (tokens.length < 2 || !tokens[0].equals("network.onion")) {
-                    snack("QR Code Invalid, incompatible ID");
+                    snack(getString(R.string.snackbar_qr_invalid_incompatible));
                     return;
                 }
 
                 String id = tokens[1].toLowerCase();
 
                 if (id.length() != 16) {
-                    snack("QR Code Invalid");
+                    snack(getString(R.string.snackbar_qr_invalid));
                     return;
                 }
 
@@ -736,7 +722,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
 
             } catch (Exception ex) {
-                snack("QR Code Invalid");
+                snack(getString(R.string.snackbar_qr_invalid));
                 ex.printStackTrace();
             }
         }
@@ -752,14 +738,14 @@ public class MainActivity extends AppCompatActivity {
         boolean isFriend = db.hasKey("friend", id);
 
         if (name.isEmpty()) {
-            name = "Anonymous";
+            name = getString(R.string.label_anonymous);
         }
 
         if (isFriend) {
-            name += "  (friend)";
+            name += getString(R.string.dialog_contact_friend_suffix);
         }
 
-        AlertDialog.Builder a = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
+        AlertDialog.Builder a = DialogHelper.themedBuilder(this)
                 .setTitle(name)
                 .setMessage(id);
 
@@ -769,7 +755,7 @@ public class MainActivity extends AppCompatActivity {
         final String i = id;
 
         if (!isFriend) {
-            a.setPositiveButton("Add Friend", new DialogInterface.OnClickListener() {
+            a.setPositiveButton(R.string.dialog_button_add_friend, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     addFriend(i, n);
@@ -779,16 +765,16 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        a.setNeutralButton("Close", null);
+        a.setNeutralButton(R.string.dialog_button_close, null);
 
-        a.setNegativeButton("View Profile", new DialogInterface.OnClickListener() {
+        a.setNegativeButton(R.string.dialog_button_view_profile, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 startActivity(new Intent(MainActivity.this, MainActivity.class).putExtra("address", i));
             }
         });
 
-        a.show();
+        DialogHelper.show(a);
     }
 
     public String getID() {
@@ -820,14 +806,10 @@ public class MainActivity extends AppCompatActivity {
         int s = (int) (Math.min(displayRectangle.width(), displayRectangle.height()) * 0.9);
         view.setMinimumWidth(s);
         view.setMinimumHeight(s);
-        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
+        AlertDialog dialog = DialogHelper.themedBuilder(this)
                 .setView(view)
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     public void addFriend(final String address, String name) {
@@ -1247,28 +1229,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_friends) {
-            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
-                    .setTitle("Friends")
-                    .setMessage("You are friends with this user")
-                    .setNeutralButton("Remove friend", new DialogInterface.OnClickListener() {
+            AlertDialog dialog = DialogHelper.themedBuilder(this)
+                    .setTitle(R.string.dialog_friends_title)
+                    .setMessage(R.string.dialog_friends_message)
+                    .setNeutralButton(R.string.dialog_button_remove_friend, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             FriendTool.getInstance(MainActivity.this).unfriend(address);
                             load();
-                            snack("Contact removed.");
+                            snack(getString(R.string.snackbar_contact_removed));
                         }
                     })
                     .create();
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            });
-            dialog.show();
+            DialogHelper.show(dialog);
             return true;
         }
         if (id == R.id.action_add_friend) {
             addFriend(address, name);
-            snack("Added friend");
+            snack(getString(R.string.snackbar_friend_added));
             return true;
         }
         if (id == R.id.action_refresh) {
@@ -1317,8 +1295,8 @@ public class MainActivity extends AppCompatActivity {
             }
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_single_choice_item, themes);
 
-            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
-                    .setTitle("Choose a theme")
+            AlertDialog dialog = DialogHelper.themedBuilder(this)
+                    .setTitle(R.string.dialog_choose_theme_title)
                     .setSingleChoiceItems(adapter, selectedIndex, (d, which) -> {
                         // Показуємо overlay
                         dimOverlay.setVisibility(View.VISIBLE);
@@ -1334,32 +1312,23 @@ public class MainActivity extends AppCompatActivity {
 
                     })
                     .create();
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            });
-            dialog.show();
+            DialogHelper.show(dialog);
             return true;
         }
         if (id == R.id.action_clear_chat) {
-            AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
-                    .setTitle("Clear chat")
-                    .setMessage("Do you really want to delete all messages exchanged with this contact?")
-                    .setNegativeButton("No", null)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            ChatDatabase.getInstance(MainActivity.this).clearChat(address);
-                            toast("Chat cleared");
-                            chatPage.load();
-                        }
-                    })
-                    .create();
-            dialog.setOnShowListener(d -> {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            });
-            dialog.show();
+            DialogHelper.showConfirm(
+                    this,
+                    R.string.dialog_clear_chat_title,
+                    R.string.dialog_clear_chat_message,
+                    R.string.dialog_button_yes,
+                    () -> {
+                        ChatDatabase.getInstance(MainActivity.this).clearChat(address);
+                        toast(getString(R.string.toast_chat_cleared));
+                        chatPage.load();
+                    },
+                    R.string.dialog_button_no,
+                    null
+            );
         }
 
         return super.onOptionsItemSelected(item);
@@ -1375,34 +1344,30 @@ public class MainActivity extends AppCompatActivity {
             }
             startActivity(intent);
         } catch (Throwable t) {
-            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.toast_error), Toast.LENGTH_SHORT).show();
         }
     }
 
     public void showId() {
         final String id = getID();
-        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
-                .setTitle("ID: " + id)
-                .setNegativeButton("Copy", new DialogInterface.OnClickListener() {
+        AlertDialog dialog = DialogHelper.themedBuilder(this)
+                .setTitle(getString(R.string.dialog_show_id_title, id))
+                .setNegativeButton(R.string.dialog_button_copy, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                         clipboard.setText(id);
-                        snack("ID copied to clipboard.");
+                        snack(getString(R.string.snackbar_id_copied));
                     }
                 })
-                .setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.dialog_button_send, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, id).setType("text/plain"));
                     }
                 })
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     void showUrl() {
@@ -1417,7 +1382,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                     clipboard.setText(onionLink);
-                    toast("Link copied to clipboard.");
+                    toast(getString(R.string.toast_link_copied));
                 }
             });
             v.findViewById(R.id.onion_link_share).setOnClickListener(new View.OnClickListener() {
@@ -1442,7 +1407,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                     clipboard.setText(clearnetLink);
-                    toast("Link copied to clipboard.");
+                    toast(getString(R.string.toast_link_copied));
                 }
             });
             v.findViewById(R.id.clearnet_link_share).setOnClickListener(new View.OnClickListener() {
@@ -1459,14 +1424,10 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(this, ThemeManager.getDialogThemeResId(this))
+        AlertDialog dialog = DialogHelper.themedBuilder(this)
                 .setView(v)
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
 
     }
 

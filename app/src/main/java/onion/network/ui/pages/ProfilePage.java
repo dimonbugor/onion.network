@@ -41,6 +41,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.VideoCacheManager;
@@ -104,50 +105,46 @@ public class ProfilePage extends BasePage {
     private void configureDeleteButtonForPhoto() {
         View deleteBtn = findViewById(R.id.delete_photo);
         if (deleteBtn == null) return;
-        deleteBtn.setOnClickListener(v -> {
-            AlertDialog dialogDeletePhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                    .setTitle("Delete Photo")
-                    .setMessage("Do you really want to delete this photo?")
-                    .setNegativeButton("No", null)
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").build());
-                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").build());
-                        activity.load();
-                        FriendTool.getInstance(context).requestUpdates();
-                    })
-                    .create();
-            dialogDeletePhoto.setOnShowListener(d -> {
-                dialogDeletePhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                dialogDeletePhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            });
-            dialogDeletePhoto.show();
-        });
+        deleteBtn.setOnClickListener(v ->
+                DialogHelper.showConfirm(
+                        activity,
+                        R.string.dialog_delete_photo_title,
+                        R.string.dialog_delete_photo_message,
+                        R.string.dialog_button_yes,
+                        () -> {
+                            ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").build());
+                            ItemDatabase.getInstance(getContext()).put(new Item.Builder("thumb", "", "").build());
+                            activity.load();
+                            FriendTool.getInstance(context).requestUpdates();
+                        },
+                        R.string.dialog_button_no,
+                        null
+                )
+        );
     }
 
     private void configureDeleteButtonForVideo() {
         View deleteBtn = findViewById(R.id.delete_photo);
         if (deleteBtn == null) return;
-        deleteBtn.setOnClickListener(vbtn -> {
-            AlertDialog dlg = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                    .setTitle("Delete Video")
-                    .setMessage("Do you really want to delete this video?")
-                    .setNegativeButton("No", null)
-                    .setPositiveButton("Yes", (d, which) -> {
-                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("video", "", "").build());
-                        ItemDatabase.getInstance(getContext()).put(new Item.Builder("video_thumb", "", "").build());
-                        videoUriStr = null;
-                        profileVideoThumbBitmap = null;
-                        updateProfileAvatar();
-                        activity.load();
-                        FriendTool.getInstance(context).requestUpdates();
-                    })
-                    .create();
-            dlg.setOnShowListener(d2 -> {
-                dlg.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                dlg.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            });
-            dlg.show();
-        });
+        deleteBtn.setOnClickListener(vbtn ->
+                DialogHelper.showConfirm(
+                        activity,
+                        R.string.dialog_delete_video_title,
+                        R.string.dialog_delete_video_message,
+                        R.string.dialog_button_yes,
+                        () -> {
+                            ItemDatabase.getInstance(getContext()).put(new Item.Builder("video", "", "").build());
+                            ItemDatabase.getInstance(getContext()).put(new Item.Builder("video_thumb", "", "").build());
+                            videoUriStr = null;
+                            profileVideoThumbBitmap = null;
+                            updateProfileAvatar();
+                            activity.load();
+                            FriendTool.getInstance(context).requestUpdates();
+                        },
+                        R.string.dialog_button_no,
+                        null
+                )
+        );
     }
 
     private void refreshDeleteButtonVisibility() {
@@ -475,21 +472,21 @@ public class ProfilePage extends BasePage {
                                 final EditText textEdit = (EditText) dialogView.findViewById(R.id.text);
                                 textEdit.setText(val);
                                 textEdit.setInputType(row.type);
-                                AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+                                AlertDialog dialog = DialogHelper.themedBuilder(activity)
                                         .setView(dialogView)
-                                        .setTitle("Change " + label)
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                        .setTitle(activity.getString(R.string.dialog_change_field_title, label))
+                                        .setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
                                             }
                                         })
-                                        .setPositiveButton("Publish", new DialogInterface.OnClickListener() {
+                                        .setPositiveButton(R.string.dialog_button_publish, new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
                                                 save(o, key, textEdit.getText().toString());
                                             }
                                         })
-                                        .setNeutralButton("Clear", new DialogInterface.OnClickListener() {
+                                        .setNeutralButton(R.string.dialog_button_clear, new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
                                                 clear(o, key);
@@ -503,12 +500,7 @@ public class ProfilePage extends BasePage {
                                             }
                                         })
                                         .create();
-                                dialog.setOnShowListener(d -> {
-                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                    dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                });
-                                dialog.show();
+                                DialogHelper.show(dialog);
 
                             }
                         });
@@ -676,27 +668,27 @@ public class ProfilePage extends BasePage {
     }
 
     private void showPickMediaDialog() {
-        ArrayAdapter<String> adapter = getStringArrayAdapter(new String[]{"Photo from gallery", "Video from gallery"});
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Choose media")
+        ArrayAdapter<String> adapter = getStringArrayAdapter(getResources().getStringArray(R.array.dialog_choose_media_options));
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_choose_media_title)
                 .setAdapter(adapter, (dialog1, which) -> {
                     if (which == 0) pickMedia(true);
                     else pickMedia(false);
                 })
                 .create();
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     private void showCaptureMediaDialog() {
-        ArrayAdapter<String> adapter = getStringArrayAdapter(new String[]{"Take Photo", "Record Video (5s)"});
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Capture")
+        ArrayAdapter<String> adapter = getStringArrayAdapter(getResources().getStringArray(R.array.dialog_capture_media_options));
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_capture_media_title)
                 .setAdapter(adapter, (dialog1, which) -> {
                     if (which == 0) capturePhoto();
                     else captureVideo();
                 })
                 .create();
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     private ArrayAdapter<String> getStringArrayAdapter(final String[] items) {
@@ -717,7 +709,7 @@ public class ProfilePage extends BasePage {
         PermissionHelper.runWithPermissions(activity,
                 PERMS_MEDIA_ONLY,
                 () -> pickMediaInternal(photo),
-                () -> Snackbar.make(contentView, "Storage permission required", Snackbar.LENGTH_LONG).show());
+                () -> Snackbar.make(contentView, R.string.snackbar_storage_permission_required, Snackbar.LENGTH_LONG).show());
     }
 
     private void pickMediaInternal(boolean photo) {
@@ -785,11 +777,11 @@ public class ProfilePage extends BasePage {
         View view = activity.getLayoutInflater().inflate(R.layout.profile_photo_dialog, null);
         ((ImageView) view.findViewById(R.id.imageView)).setImageBitmap(bmp320);
 
-        AlertDialog dialogSetPhoto = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
-                .setTitle("Set Photo")
+        AlertDialog dialogSetPhoto = DialogHelper.themedBuilder(activity)
+                .setTitle(R.string.dialog_set_photo_title)
                 .setView(view)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("OK", (dialog, which) -> {
+                .setNegativeButton(R.string.dialog_button_cancel, null)
+                .setPositiveButton(R.string.dialog_button_ok, (dialog, which) -> {
                     String v = Utils.encodeImage(bmp320);
                     ItemDatabase.getInstance(getContext()).put(new Item.Builder("photo", "", "").put("photo", v).build());
 
@@ -800,17 +792,12 @@ public class ProfilePage extends BasePage {
                     updateProfileAvatar();
                     refreshDeleteButtonVisibility();
 
-                    Snackbar.make(contentView, "Photo changed", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(contentView, R.string.snackbar_photo_changed, Snackbar.LENGTH_SHORT).show();
                     activity.load();
                     FriendTool.getInstance(context).requestUpdates();
                 })
                 .create();
-        dialogSetPhoto.setOnShowListener(d ->
-        {
-            dialogSetPhoto.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialogSetPhoto.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
-        dialogSetPhoto.show();
+        DialogHelper.show(dialogSetPhoto);
     }
 
     private void handlePickedVideo(final Uri uri) {
@@ -853,7 +840,7 @@ public class ProfilePage extends BasePage {
         if (thumb != null) preview.setImageBitmap(thumb);
         else preview.setImageResource(R.drawable.nophoto);
 
-        AlertDialog dialogSetVideo = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+        AlertDialog dialogSetVideo = DialogHelper.themedBuilder(activity)
                 .setTitle("Set Video Avatar")
                 .setView(view)
                 .setNegativeButton("Cancel", null)
@@ -885,18 +872,13 @@ public class ProfilePage extends BasePage {
                     pendingVideoUri = null;
                 })
                 .create();
-        dialogSetVideo.setOnShowListener(d ->
-        {
-            dialogSetVideo.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
         dialogSetVideo.setOnDismissListener(d -> {
             if (pendingVideoUri != null) {
                 deleteTempVideo(pendingVideoUri);
                 pendingVideoUri = null;
             }
         });
-        dialogSetVideo.show();
+        DialogHelper.show(dialogSetVideo);
     }
 
     private void deleteTempVideo(@Nullable Uri uri) {

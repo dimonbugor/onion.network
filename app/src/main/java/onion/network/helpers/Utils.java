@@ -118,18 +118,14 @@ public class Utils {
             ClickableSpan clickableSpan = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-                    AlertDialog dialogOpenLink = new AlertDialog.Builder(context, ThemeManager.getDialogThemeResId(context))
+                    AlertDialog dialogOpenLink = DialogHelper.themedBuilder(context)
                             .setTitle(url.getURL())
                             .setMessage("Open link in external app?")
                             .setNegativeButton("No", null)
                             .setPositiveButton("Yes", (dialog, which) ->
                                     context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url.getURL()))))
                             .create();
-                    dialogOpenLink.setOnShowListener(d -> {
-                        dialogOpenLink.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(context, android.R.attr.actionMenuTextColor));
-                        dialogOpenLink.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(context, android.R.attr.actionMenuTextColor));
-                    });
-                    dialogOpenLink.show();
+                    DialogHelper.show(dialogOpenLink);
                 }
             };
             spannable.setSpan(clickableSpan, start, end, spannable.getSpanFlags(url));

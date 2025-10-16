@@ -129,4 +129,88 @@
     <string name="permission_required_negative">Cancel</string>
     <string name="permission_initial_message">We need access to your media files to let you share photos and videos, and permission to show notifications for new activity.</string>
 
+    <string name="dialog_button_delete">Delete</string>
+    <string name="dialog_button_yes">Yes</string>
+    <string name="dialog_button_no">No</string>
+    <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_ok">OK</string>
+    <string name="dialog_button_publish">Publish</string>
+    <string name="dialog_button_libraries">Libraries</string>
+    <string name="dialog_button_clear">Clear</string>
+    <string name="dialog_button_open">Open</string>
+    <string name="dialog_button_add_friend">Add Friend</string>
+    <string name="dialog_button_close">Close</string>
+    <string name="dialog_button_view_profile">View Profile</string>
+    <string name="dialog_button_remove_friend">Remove friend</string>
+    <string name="dialog_button_copy">Copy</string>
+    <string name="dialog_button_send">Send</string>
+    <string name="dialog_choose_theme_title">Choose a theme</string>
+    <string name="dialog_delete_friend_title">Delete Friend?</string>
+    <string name="dialog_delete_friend_message">Do you really want to delete this friend?</string>
+    <string name="dialog_delete_post_title">Delete Post?</string>
+    <string name="dialog_delete_post_message">Do you really want to delete this post?</string>
+    <string name="dialog_delete_photo_title">Delete Photo</string>
+    <string name="dialog_delete_photo_message">Do you really want to delete this photo?</string>
+    <string name="dialog_delete_video_title">Delete Video</string>
+    <string name="dialog_delete_video_message">Do you really want to delete this video?</string>
+    <string name="dialog_remove_post_title">Remove Post?</string>
+    <string name="dialog_remove_post_message">Do you really want to remove this post?</string>
+    <string name="dialog_clear_chat_title">Clear chat</string>
+    <string name="dialog_clear_chat_message">Do you really want to delete all messages exchanged with this contact?</string>
+    <string name="dialog_clear_cache_title">Clear Cache</string>
+    <string name="dialog_clear_cache_message">Remove all cache data?</string>
+    <string name="dialog_third_party_software_title">Third party software used by this app (click to view license)</string>
+    <string name="dialog_change_blog_title">Change Blog Title</string>
+    <string name="dialog_choose_style_title">Choose Style</string>
+    <string name="dialog_about_version_message">Version: %1$s</string>
+    <string name="dialog_enter_id_title">Enter ID</string>
+    <string name="dialog_add_friend_title">Add Friend</string>
+    <string name="dialog_friends_title">Friends</string>
+    <string name="dialog_friends_message">You are friends with this user</string>
+    <string name="dialog_show_id_title">ID: %1$s</string>
+    <string name="dialog_change_field_title">Change %1$s</string>
+
+    <string name="snackbar_post_removed">Post removed.</string>
+    <string name="snackbar_post_remove_failed">Failed to remove post.</string>
+    <string name="toast_chat_cleared">Chat cleared</string>
+    <string name="snackbar_cache_cleared">Cache cleared.</string>
+    <string name="snackbar_title_changed">Title changed.</string>
+    <string name="toast_clearnet_link_copied">Clearnet link copied to clipboard</string>
+    <string name="toast_darknet_link_copied">Darknet link copied to clipboard</string>
+    <string name="snackbar_invalid_id">Invalid ID</string>
+    <string name="snackbar_qr_invalid_incompatible">QR Code Invalid, incompatible ID</string>
+    <string name="snackbar_qr_invalid">QR Code Invalid</string>
+    <string name="snackbar_contact_removed">Contact removed.</string>
+    <string name="snackbar_friend_added">Added friend</string>
+    <string name="snackbar_id_copied">ID copied to clipboard.</string>
+    <string name="toast_link_copied">Link copied to clipboard.</string>
+    <string name="toast_error">Error</string>
+    <string name="snackbar_post_republished">Post republished</string>
+    <string name="snackbar_camera_permission_required">Camera permission required</string>
+    <string name="dialog_contact_friend_suffix">  (friend)</string>
+    <string name="label_anonymous">Anonymous</string>
+    <string name="snackbar_storage_permission_required">Storage permission required</string>
+
+    <string-array name="dialog_add_friend_options">
+        <item>Scan QR</item>
+        <item>Show QR</item>
+        <item>Enter ID</item>
+        <item>Show ID</item>
+        <item>Address</item>
+        <item>Invite friends</item>
+    </string-array>
+    <string-array name="dialog_choose_media_options">
+        <item>Photo from gallery</item>
+        <item>Video from gallery</item>
+    </string-array>
+    <string-array name="dialog_capture_media_options">
+        <item>Take Photo</item>
+        <item>Record Video (5s)</item>
+    </string-array>
+
+    <string name="dialog_choose_media_title">Choose media</string>
+    <string name="dialog_capture_media_title">Capture</string>
+    <string name="dialog_set_photo_title">Set Photo</string>
+    <string name="snackbar_photo_changed">Photo changed</string>
+
 </resources>

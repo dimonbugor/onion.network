@@ -8,7 +8,6 @@ import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Base64;
 import android.util.Log;
@@ -31,12 +31,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
 
-import onion.network.helpers.ThemeManager;
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.PermissionHelper;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
@@ -46,9 +45,10 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.Utils;
 import onion.network.helpers.VideoCacheManager;
 import onion.network.models.ItemResult;
+import onion.network.cashes.ItemCache;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
-import androidx.annotation.NonNull;
+
 import androidx.core.content.FileProvider;
 
 public class WallPage extends BasePage {
@@ -185,7 +185,7 @@ public class WallPage extends BasePage {
             dialogView.findViewById(R.id.image).setVisibility(View.GONE);
         }
 
-        AlertDialog.Builder b = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity)).setView(dialogView);
+        AlertDialog.Builder b = DialogHelper.themedBuilder(activity).setView(dialogView);
 
         final Bitmap bmp = bitmap;
 
@@ -311,241 +311,24 @@ public class WallPage extends BasePage {
     }
 
 
-    void load(final int i, String s) {
+    void load(final int startIndex, String startKey) {
 
         Log.i(TAG, "load: ");
 
-        new ItemTask(getContext(), address, "post", s, count) {
-
-            void fill(ItemResult itemResult, boolean finished) {
-
-                String myAddress = TorManager.getInstance(context).getID();
-
-                String wallAddress = address;
-                if (wallAddress.isEmpty()) wallAddress = myAddress;
-
-                if (contentView.getChildCount() > i) {
-                    contentView.removeViews(i, contentView.getChildCount() - i);
-                }
-
-                for (int i = 0; i < itemResult.size(); i++) {
-
-                    final Item item = itemResult.at(i);
-
-                    Log.i("Item", item.text());
-
-                    final JSONObject o = item.json(getContext(), address);
-
-                    View v = activity.getLayoutInflater().inflate(R.layout.wall_item, contentView, false);
-
-                    View link = v.findViewById(R.id.link);
-                    View thumblink = v.findViewById(R.id.thumblink);
-                    TextView address = ((TextView) v.findViewById(R.id.address));
-                    TextView name = ((TextView) v.findViewById(R.id.name));
-                    TextView date = ((TextView) v.findViewById(R.id.date));
-                    TextView text = ((TextView) v.findViewById(R.id.text));
-                    ImageView like = ((ImageView) v.findViewById(R.id.like));
-                    ImageView comments = ((ImageView) v.findViewById(R.id.comments));
-                    ImageView share = ((ImageView) v.findViewById(R.id.share));
-                    ImageView delete = ((ImageView) v.findViewById(R.id.delete));
-                    ImageView edit = ((ImageView) v.findViewById(R.id.edit));
-                    AvatarView thumb = (AvatarView) v.findViewById(R.id.thumb);
-                    ImageView image = ((ImageView) v.findViewById(R.id.image));
-
-                    image.setVisibility(View.GONE);
-                    try {
-                        String str = o.optString("img");
-                        str = str.trim();
-                        if (!str.isEmpty()) {
-                            byte[] photodata = Base64.decode(str, Base64.DEFAULT);
-                            if (photodata.length > 0) {
-                                final Bitmap bitmap = BitmapFactory.decodeByteArray(photodata, 0, photodata.length);
-                                image.setImageBitmap(bitmap);
-                                image.setVisibility(View.VISIBLE);
-                                image.setOnClickListener(new OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        activity.lightbox(bitmap);
-                                    }
-                                });
-                            }
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-
-                    final String postAddress = o.optString("addr");
-
-                    Bitmap photoThumb = item.bitmap("thumb");
-                    Bitmap videoThumb = item.bitmap("video_thumb");
-                    String storedVideoUri = o.optString("video_uri", "").trim();
-                    String videoData = o.optString("video", "").trim();
-                    String ownerKey = (postAddress == null || postAddress.isEmpty()) ? myAddress : postAddress;
-                    Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, storedVideoUri, videoData);
-                    thumb.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
-
-                    String n = postAddress;
-
-
-                    String m = o.optString("name", "");
-                    if (!m.isEmpty()) name.setText(m);
-
-                    address.setText(n);
-
-                    text.setMovementMethod(LinkMovementMethod.getInstance());
-
-                    String t = o.optString("text");
-                    text.setText(Utils.linkify(context, t));
-                    if (t.isEmpty()) text.setVisibility(View.GONE);
-
-                    String datestr = Utils.formatDate(o.optString("date"));
-                    date.setText(datestr);
-
-                    if (!postAddress.equals(wallAddress)) {
-                        address.setPaintFlags(address.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-                        name.setPaintFlags(address.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-                        link.setClickable(true);
-                        link.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
-                            }
-                        });
-                        thumblink.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
-                            }
-                        });
-                    }
-
-                    like.setClickable(true);
-                    like.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            activity.snack("Available soon");
-                        }
-                    });
-
-                    comments.setClickable(true);
-                    comments.setOnClickListener(new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            activity.snack("Available soon");
-                        }
-                    });
-
-                    if (wallAddress.equals(myAddress)) {
-                        delete.setClickable(true);
-                        delete.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                AlertDialog dialogDeletePost = new AlertDialog.Builder(context, ThemeManager.getDialogThemeResId(context))
-                                        .setTitle("Delete Post?")
-                                        .setMessage("Do you really want to delete this post?")
-                                        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                ItemDatabase.getInstance(context).delete(item.type(), item.key());
-                                                load();
-                                            }
-                                        })
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                            }
-                                        })
-                                        .create();
-                                dialogDeletePost.setOnShowListener(d -> {
-                                    dialogDeletePost.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                    dialogDeletePost.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                });
-                                dialogDeletePost.show();
-                            }
-                        });
-                        delete.setVisibility(View.VISIBLE);
-                    } else {
-                        delete.setVisibility(View.GONE);
-                    }
-
-                    if (wallAddress.equals(myAddress) && postAddress.equals(myAddress)) {
-                        edit.setClickable(true);
-                        edit.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                editPost(item);
-                            }
-                        });
-                        edit.setVisibility(View.VISIBLE);
-                    } else {
-                        edit.setVisibility(View.GONE);
-                    }
-
-                    if (!wallAddress.equals(myAddress) && !postAddress.equals(myAddress) && "".equals(o.optString("access"))) {
-                        share.setVisibility(View.VISIBLE);
-                        share.setClickable(true);
-                        share.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                activity.sharePost(o);
-                            }
-                        });
-                    } else {
-                        share.setVisibility(View.GONE);
-                    }
-
-                    contentView.addView(v);
-                }
-
-                if (i == 0 && itemResult.size() == 0 && !itemResult.loading()) {
-                    View v = activity.getLayoutInflater().inflate(R.layout.wall_empty, contentView, false);
-                    contentView.addView(v);
-                }
-
-//                findViewById(R.id.offline).setVisibility(!itemResult.ok() && !itemResult.loading() ? View.VISIBLE : View.GONE);
-                findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
-
-                smore = finished ? itemResult.more() : null;
-                imore = i + count;
-
-                {
-                    if (smore != null) {
-                        vmore.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.i(TAG, "onClick");
-                                loadMore();
-                            }
-                        });
-                        vmore.setOnTouchListener(new OnTouchListener() {
-                            @Override
-                            public boolean onTouch(View v, MotionEvent event) {
-                                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                    Log.i(TAG, "onTouch down");
-                                    loadMore();
-                                }
-                                return false;
-                            }
-                        });
-                        fmore.setVisibility(View.VISIBLE);
-                    } else {
-                        vmore.setOnClickListener(null);
-                        vmore.setOnTouchListener(null);
-                        fmore.setVisibility(View.INVISIBLE);
-                    }
-
-                }
-
-            }
+        new ItemTask(getContext(), address, "post", startKey, count) {
 
             @Override
-            protected void onProgressUpdate(ItemResult... x) {
-                fill(x[0], false);
+            protected void onProgressUpdate(ItemResult... results) {
+                renderPosts(startIndex, safeFirst(results), false);
             }
 
             @Override
             protected void onPostExecute(ItemResult itemResult) {
-                fill(itemResult, true);
+                renderPosts(startIndex, itemResult, true);
+            }
+
+            private ItemResult safeFirst(ItemResult[] results) {
+                return results != null && results.length > 0 ? results[0] : null;
             }
 
         }.execute2();
@@ -556,6 +339,394 @@ public class WallPage extends BasePage {
         String smore2 = smore;
         smore = null;
         load(imore, smore2);
+    }
+
+    private void renderPosts(int insertIndex, ItemResult itemResult, boolean finished) {
+        if (itemResult == null) {
+            return;
+        }
+
+        String myAddress = TorManager.getInstance(context).getID();
+        String wallOwner = TextUtils.isEmpty(address) ? myAddress : address;
+
+        clearContentFrom(insertIndex);
+
+        for (int pos = 0; pos < itemResult.size(); pos++) {
+            Item item = itemResult.at(pos);
+            if (item == null) continue;
+            JSONObject rawData = parseJsonSafe(item.text());
+            JSONObject data = item.json(getContext(), address);
+            View postView = buildPostView(item, rawData, data, wallOwner, myAddress);
+            contentView.addView(postView);
+        }
+
+        handleEmptyState(insertIndex, itemResult);
+        findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
+        updatePaginationControls(insertIndex, itemResult, finished);
+    }
+
+    private void clearContentFrom(int insertIndex) {
+        int childCount = contentView.getChildCount();
+        if (insertIndex < childCount) {
+            contentView.removeViews(insertIndex, childCount - insertIndex);
+        }
+    }
+
+    private View buildPostView(Item item, JSONObject rawData, JSONObject data, String wallOwner, String myAddress) {
+        View view = activity.getLayoutInflater().inflate(R.layout.wall_item, contentView, false);
+        PostViewHolder holder = new PostViewHolder(view);
+
+        bindInlineImage(holder.image, data);
+
+        String postAddress = firstNonEmpty(rawData.optString("addr"), data.optString("addr"));
+        PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
+        String ownerKey = resolveOwnerKey(postAddress, wallOwner, myAddress, item);
+        bindAvatar(holder.thumb, assets, ownerKey);
+
+        bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
+        bindPostActions(holder, item, data, wallOwner, myAddress, postAddress);
+
+        return view;
+    }
+
+    private void bindInlineImage(ImageView imageView, JSONObject data) {
+        imageView.setVisibility(View.GONE);
+        try {
+            String encoded = data.optString("img", "").trim();
+            if (encoded.isEmpty()) {
+                return;
+            }
+            byte[] photoData = Base64.decode(encoded, Base64.DEFAULT);
+            if (photoData.length == 0) {
+                return;
+            }
+            final Bitmap bitmap = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
+            imageView.setImageBitmap(bitmap);
+            imageView.setVisibility(View.VISIBLE);
+            imageView.setOnClickListener(v -> activity.lightbox(bitmap));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            imageView.setVisibility(View.GONE);
+        }
+    }
+
+    private void bindAvatar(AvatarView avatarView, PostAssets assets, String ownerKey) {
+        Uri playableVideo = VideoCacheManager.ensureVideoUri(
+                getContext(),
+                ownerKey,
+                assets.storedVideoUri,
+                assets.videoData
+        );
+        avatarView.bind(assets.photoThumb, assets.videoThumb, playableVideo != null ? playableVideo.toString() : null);
+    }
+
+    private void bindPostTexts(PostViewHolder holder,
+                               JSONObject data,
+                               String displayName,
+                               String postAddress,
+                               String wallOwner) {
+        if (!TextUtils.isEmpty(displayName)) {
+            holder.name.setText(displayName);
+        }
+        holder.address.setText(postAddress);
+
+        holder.text.setMovementMethod(LinkMovementMethod.getInstance());
+        String textValue = data.optString("text");
+        holder.text.setText(Utils.linkify(context, textValue));
+        holder.text.setVisibility(textValue.isEmpty() ? View.GONE : View.VISIBLE);
+
+        holder.date.setText(Utils.formatDate(data.optString("date")));
+
+        boolean isForeignPost = !TextUtils.isEmpty(postAddress) && !postAddress.equals(wallOwner);
+        if (isForeignPost) {
+            holder.address.setPaintFlags(holder.address.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            holder.name.setPaintFlags(holder.name.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            View.OnClickListener openProfile = v ->
+                    getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
+            holder.link.setOnClickListener(openProfile);
+            holder.thumblink.setOnClickListener(openProfile);
+        } else {
+            holder.address.setPaintFlags(holder.address.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
+            holder.name.setPaintFlags(holder.name.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
+            holder.link.setOnClickListener(null);
+            holder.thumblink.setOnClickListener(null);
+        }
+    }
+
+    private void bindPostActions(PostViewHolder holder,
+                                 Item item,
+                                 JSONObject data,
+                                 String wallOwner,
+                                 String myAddress,
+                                 String postAddress) {
+
+        holder.like.setOnClickListener(v -> activity.snack("Available soon"));
+        holder.comments.setOnClickListener(v -> activity.snack("Available soon"));
+
+        boolean isMyWall = wallOwner.equals(myAddress);
+        boolean isMyPost = myAddress.equals(postAddress);
+
+        if (isMyWall) {
+            holder.delete.setVisibility(View.VISIBLE);
+            holder.delete.setOnClickListener(v -> DialogHelper.showConfirm(
+                    context,
+                    R.string.dialog_delete_post_title,
+                    R.string.dialog_delete_post_message,
+                    R.string.dialog_button_delete,
+                    () -> {
+                        ItemDatabase.getInstance(context).delete(item.type(), item.key());
+                        load();
+                    },
+                    R.string.dialog_button_cancel,
+                    null
+            ));
+        } else {
+            holder.delete.setVisibility(View.GONE);
+            holder.delete.setOnClickListener(null);
+        }
+
+        if (isMyWall && isMyPost) {
+            holder.edit.setVisibility(View.VISIBLE);
+            holder.edit.setOnClickListener(v -> editPost(item));
+        } else {
+            holder.edit.setVisibility(View.GONE);
+            holder.edit.setOnClickListener(null);
+        }
+
+        boolean canShare = !isMyWall
+                && !isMyPost
+                && TextUtils.isEmpty(data.optString("access"));
+        if (canShare) {
+            holder.share.setVisibility(View.VISIBLE);
+            holder.share.setOnClickListener(v -> activity.sharePost(data));
+        } else {
+            holder.share.setVisibility(View.GONE);
+            holder.share.setOnClickListener(null);
+        }
+    }
+
+    private PostAssets resolvePostAssets(Item item,
+                                         JSONObject rawData,
+                                         JSONObject data,
+                                         String wallOwner,
+                                         String myAddress,
+                                         String postAddress) {
+        PostAssets assets = new PostAssets();
+        assets.photoThumb = decodeBitmapBase64(rawData.optString("thumb", ""));
+        if (assets.photoThumb == null) {
+            assets.photoThumb = item.bitmap("thumb");
+            if (assets.photoThumb == null) {
+                assets.photoThumb = decodeBitmapBase64(data.optString("thumb", ""));
+            }
+        }
+        assets.videoThumb = decodeBitmapBase64(rawData.optString("video_thumb", ""));
+        if (assets.videoThumb == null) {
+            assets.videoThumb = item.bitmap("video_thumb");
+            if (assets.videoThumb == null) {
+                assets.videoThumb = decodeBitmapBase64(data.optString("video_thumb", ""));
+            }
+        }
+        assets.storedVideoUri = firstNonEmpty(data.optString("video_uri", "").trim(), rawData.optString("video_uri", "").trim());
+        assets.videoData = firstNonEmpty(rawData.optString("video", "").trim(), data.optString("video", "").trim());
+        assets.displayName = firstNonEmpty(rawData.optString("name", ""), data.optString("name", ""));
+
+        boolean belongsToFriend = !TextUtils.isEmpty(postAddress) && !postAddress.equals(myAddress);
+        if (belongsToFriend) {
+            ItemCache cache = ItemCache.getInstance(getContext());
+            if (assets.photoThumb == null) {
+                ItemResult thumbResult = cache.get(postAddress, "thumb");
+                if (thumbResult.size() > 0) {
+                    assets.photoThumb = thumbResult.one().bitmap("thumb");
+                }
+            }
+            if (assets.videoThumb == null) {
+                ItemResult videoThumbResult = cache.get(postAddress, "video_thumb");
+                if (videoThumbResult.size() > 0) {
+                    assets.videoThumb = videoThumbResult.one().bitmap("video_thumb");
+                }
+            }
+            if (TextUtils.isEmpty(assets.videoData)) {
+                ItemResult videoResult = cache.get(postAddress, "video");
+                if (videoResult.size() > 0) {
+                    assets.videoData = videoResult.one().json().optString("video", "").trim();
+                }
+            }
+            if (TextUtils.isEmpty(assets.displayName)) {
+                ItemResult nameResult = cache.get(postAddress, "name");
+                if (nameResult.size() > 0) {
+                    String cachedName = nameResult.one().json().optString("name", "");
+                    if (!TextUtils.isEmpty(cachedName)) {
+                        assets.displayName = cachedName;
+                    }
+                }
+            }
+            if (assets.photoThumb == null || TextUtils.isEmpty(assets.displayName) || (TextUtils.isEmpty(assets.videoData) && assets.videoThumb == null)) {
+                Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
+                if (friendItem != null) {
+                    if (assets.photoThumb == null) {
+                        assets.photoThumb = friendItem.bitmap("thumb");
+                    }
+                    if (assets.videoThumb == null) {
+                        assets.videoThumb = friendItem.bitmap("video_thumb");
+                    }
+                    if (TextUtils.isEmpty(assets.videoData)) {
+                        assets.videoData = friendItem.json().optString("video", "").trim();
+                    }
+                    if (TextUtils.isEmpty(assets.displayName)) {
+                        String friendName = friendItem.json().optString("name", "");
+                        if (!TextUtils.isEmpty(friendName)) {
+                            assets.displayName = friendName;
+                        }
+                    }
+                }
+            }
+        }
+
+        boolean isWallOwner = !TextUtils.isEmpty(postAddress)
+                && postAddress.equals(wallOwner)
+                && !postAddress.equals(myAddress);
+        if (isWallOwner) {
+            Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
+            if (friendItem != null) {
+                Bitmap friendThumb = friendItem.bitmap("thumb");
+                if (friendThumb != null) {
+                    assets.photoThumb = friendThumb;
+                }
+                Bitmap friendVideoThumb = friendItem.bitmap("video_thumb");
+                if (friendVideoThumb != null) {
+                    assets.videoThumb = friendVideoThumb;
+                }
+                String friendVideo = friendItem.json().optString("video", "").trim();
+                if (!TextUtils.isEmpty(friendVideo)) {
+                    assets.videoData = friendVideo;
+                }
+                String friendName = friendItem.json().optString("name", "");
+                if (!TextUtils.isEmpty(friendName)) {
+                    assets.displayName = friendName;
+                }
+            }
+        }
+        return assets;
+    }
+
+    private void handleEmptyState(int insertIndex, ItemResult itemResult) {
+        if (insertIndex == 0 && itemResult.size() == 0 && !itemResult.loading()) {
+            View emptyView = activity.getLayoutInflater().inflate(R.layout.wall_empty, contentView, false);
+            contentView.addView(emptyView);
+        }
+    }
+
+    private void updatePaginationControls(int insertIndex, ItemResult itemResult, boolean finished) {
+        smore = finished ? itemResult.more() : null;
+        imore = insertIndex + count;
+
+        if (smore != null) {
+            View.OnClickListener loadMoreListener = v -> {
+                Log.i(TAG, "load more");
+                loadMore();
+            };
+            vmore.setOnClickListener(loadMoreListener);
+            vmore.setOnTouchListener((v, event) -> {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.i(TAG, "load more touch");
+                    loadMore();
+                }
+                return false;
+            });
+            fmore.setVisibility(View.VISIBLE);
+        } else {
+            vmore.setOnClickListener(null);
+            vmore.setOnTouchListener(null);
+            fmore.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private JSONObject parseJsonSafe(String data) {
+        try {
+            return data == null ? new JSONObject() : new JSONObject(data);
+        } catch (JSONException ex) {
+            return new JSONObject();
+        }
+    }
+
+    private static Bitmap decodeBitmapBase64(String encoded) {
+        if (TextUtils.isEmpty(encoded)) {
+            return null;
+        }
+        try {
+            byte[] bytes = Base64.decode(encoded.trim(), Base64.DEFAULT);
+            if (bytes.length == 0) {
+                return null;
+            }
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private static String firstNonEmpty(String... values) {
+        if (values == null) return "";
+        for (String value : values) {
+            if (!TextUtils.isEmpty(value)) {
+                return value;
+            }
+        }
+        return "";
+    }
+
+    private String resolveOwnerKey(String postAddress, String wallOwner, String myAddress, Item item) {
+        if (!TextUtils.isEmpty(postAddress)) {
+            return postAddress;
+        }
+        if (!TextUtils.isEmpty(wallOwner) && !wallOwner.equals(myAddress)) {
+            return wallOwner;
+        }
+        if (!TextUtils.isEmpty(myAddress)) {
+            return myAddress;
+        }
+        return "post_" + item.key();
+    }
+
+    private static final class PostAssets {
+        Bitmap photoThumb;
+        Bitmap videoThumb;
+        String storedVideoUri;
+        String videoData;
+        String displayName;
+    }
+
+    private static final class PostViewHolder {
+        final View root;
+        final View link;
+        final View thumblink;
+        final TextView address;
+        final TextView name;
+        final TextView date;
+        final TextView text;
+        final ImageView like;
+        final ImageView comments;
+        final ImageView share;
+        final ImageView delete;
+        final ImageView edit;
+        final AvatarView thumb;
+        final ImageView image;
+
+        PostViewHolder(View root) {
+            this.root = root;
+            link = root.findViewById(R.id.link);
+            thumblink = root.findViewById(R.id.thumblink);
+            address = root.findViewById(R.id.address);
+            name = root.findViewById(R.id.name);
+            date = root.findViewById(R.id.date);
+            text = root.findViewById(R.id.text);
+            like = root.findViewById(R.id.like);
+            comments = root.findViewById(R.id.comments);
+            share = root.findViewById(R.id.share);
+            delete = root.findViewById(R.id.delete);
+            edit = root.findViewById(R.id.edit);
+            thumb = root.findViewById(R.id.thumb);
+            image = root.findViewById(R.id.image);
+        }
     }
 
     private Uri createPhotoOutputUri() throws IOException {
@@ -570,47 +741,6 @@ public class WallPage extends BasePage {
         }
         return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
     }
-
-//    private Bitmap decodeCapturedPhoto(@NonNull Uri uri) {
-//        final int maxDimension = 2048;
-//        BitmapFactory.Options options = new BitmapFactory.Options();
-//        options.inJustDecodeBounds = true;
-//        try (InputStream is = getContext().getContentResolver().openInputStream(uri)) {
-//            BitmapFactory.decodeStream(is, null, options);
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//            return null;
-//        }
-//
-//        options.inSampleSize = calculateInSampleSize(options, maxDimension, maxDimension);
-//        options.inJustDecodeBounds = false;
-//        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-//
-//        try (InputStream is = getContext().getContentResolver().openInputStream(uri)) {
-//            return BitmapFactory.decodeStream(is, null, options);
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
-//        return null;
-//    }
-
-    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        int height = options.outHeight;
-        int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-        return Math.max(1, inSampleSize);
-    }
-
     private void deleteTempPhoto() {
         if (pendingPhotoUri == null) return;
         try {

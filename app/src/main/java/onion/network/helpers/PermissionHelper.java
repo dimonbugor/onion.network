@@ -82,7 +82,7 @@ public final class PermissionHelper {
                                             CharSequence message,
                                             Runnable onPositive,
                                             @Nullable Runnable onNegative) {
-        AlertDialog dialog = new AlertDialog.Builder(activity, ThemeManager.getDialogThemeResId(activity))
+        AlertDialog dialog = DialogHelper.themedBuilder(activity)
                 .setTitle(R.string.permission_required_title)
                 .setMessage(message)
                 .setPositiveButton(R.string.permission_required_positive, (d, which) -> onPositive.run())
@@ -93,13 +93,7 @@ public final class PermissionHelper {
                 })
                 .setCancelable(false)
                 .create();
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                    .setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                    .setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-        });
-        dialog.show();
+        DialogHelper.show(dialog);
     }
 
     public static boolean handleOnRequestPermissionsResult(@NonNull Activity activity,

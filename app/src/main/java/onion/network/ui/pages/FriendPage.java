@@ -2,8 +2,6 @@
 
 package onion.network.ui.pages;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -23,6 +21,7 @@ import android.net.Uri;
 
 import com.google.android.material.card.MaterialCardView;
 
+import onion.network.helpers.DialogHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.helpers.VideoCacheManager;
@@ -161,27 +160,18 @@ public class FriendPage extends BasePage {
                             @Override
                             public boolean onLongClick(View v) {
 
-                                AlertDialog dialogDeleteFriend = new AlertDialog.Builder(context, ThemeManager.getDialogThemeResId(context))
-                                        .setTitle("Delete Friend?")
-                                        .setMessage("Do you really want to delete this friend?")
-                                        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                FriendTool.getInstance(context).unfriend(item.key());
-                                                load();
-                                            }
-                                        })
-                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                            }
-                                        })
-                                        .create();
-                                dialogDeleteFriend.setOnShowListener(d -> {
-                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                    dialogDeleteFriend.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
-                                });
-                                dialogDeleteFriend.show();
+                                DialogHelper.showConfirm(
+                                        context,
+                                        R.string.dialog_delete_friend_title,
+                                        R.string.dialog_delete_friend_message,
+                                        R.string.dialog_button_delete,
+                                        () -> {
+                                            FriendTool.getInstance(context).unfriend(item.key());
+                                            load();
+                                        },
+                                        R.string.dialog_button_cancel,
+                                        null
+                                );
 
                                 return true;
                             }
