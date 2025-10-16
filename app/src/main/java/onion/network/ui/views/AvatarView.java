@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.AspectRatioFrameLayout;
@@ -195,7 +196,13 @@ public class AvatarView extends FrameLayout {
 
     private void ensurePlayer() {
         if (player != null) return;
-        player = new ExoPlayer.Builder(getContext()).build();
+        DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+                .setBufferDurationsMs(1000, 3000, 250, 500)
+                .build();
+
+        player = new ExoPlayer.Builder(getContext())
+                .setLoadControl(loadControl)
+                .build();
         player.addListener(playerListener);
         player.setRepeatMode(Player.REPEAT_MODE_ALL);
         player.setVolume(0f);

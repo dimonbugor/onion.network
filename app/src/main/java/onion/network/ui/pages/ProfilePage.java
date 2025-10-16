@@ -62,7 +62,7 @@ import androidx.core.content.FileProvider;
 public class ProfilePage extends BasePage {
 
     private static final long MAX_VIDEO_DURATION_MS = 5_500; // 5.5 seconds to allow camera rounding
-    private static final long MAX_VIDEO_FILE_SIZE_BYTES = 6L * 1024 * 1024; // ~6MB cap to avoid OOM
+    private static final long MAX_VIDEO_FILE_SIZE_BYTES = 2L * 1024 * 1024; // ~2MB cap for avatar video
 
     private AvatarView profileAvatarView;
     private Bitmap profilePhotoBitmap;
@@ -757,9 +757,11 @@ public class ProfilePage extends BasePage {
         prepareForCapture();
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 5);
+        int maxSeconds = (int) Math.max(1, (MAX_VIDEO_DURATION_MS / 1000));
+        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, maxSeconds);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
         intent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
+        intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, MAX_VIDEO_FILE_SIZE_BYTES);
 
         pendingVideoUri = createVideoOutputUri();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingVideoUri);
@@ -840,12 +842,19 @@ public class ProfilePage extends BasePage {
                     Snackbar.make(contentView, "Video avatar set", Snackbar.LENGTH_SHORT).show();
                     activity.load();
                     FriendTool.getInstance(context).requestUpdates();
+                    pendingVideoUri = null;
                 })
                 .create();
         dialogSetVideo.setOnShowListener(d ->
         {
             dialogSetVideo.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
             dialogSetVideo.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ThemeManager.getColor(activity, android.R.attr.actionMenuTextColor));
+        });
+        dialogSetVideo.setOnDismissListener(d -> {
+            if (pendingVideoUri != null) {
+                deleteTempVideo(pendingVideoUri);
+                pendingVideoUri = null;
+            }
         });
         dialogSetVideo.show();
     }
@@ -856,16 +865,6 @@ public class ProfilePage extends BasePage {
             getContext().getContentResolver().delete(uri, null, null);
         } catch (Exception ex) {
             ex.printStackTrace();
-            try {
-                if ("file".equals(uri.getScheme())) {
-                    File f = new File(uri.getPath());
-                    if (f.exists()) {
-                        //noinspection ResultOfMethodCallIgnored
-                        f.delete();
-                    }
-                }
-            } catch (Exception ignore) {
-            }
         }
     }
 

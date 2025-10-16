@@ -29,6 +29,11 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.EnumSet;
 
 import onion.network.helpers.ThemeManager;
@@ -42,6 +47,8 @@ import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
+import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
 public class WallPage extends BasePage {
 
@@ -54,6 +61,7 @@ public class WallPage extends BasePage {
    String smore;
    int imore;
     View vmore, fmore;
+    private Uri pendingPhotoUri;
 
 
     public WallPage(MainActivity activity) {
@@ -201,8 +209,18 @@ public class WallPage extends BasePage {
                 PermissionHelper.runWithPermissions(activity,
                         EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
                         () -> {
-                            d.cancel();
+                            try {
+                                pendingPhotoUri = createPhotoOutputUri();
+                            } catch (IOException ex) {
+                                pendingPhotoUri = null;
+                                activity.snack("Unable to create photo file");
+                                return;
+                            }
+
                             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
+                            takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            d.cancel();
                             activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_POST);
                         },
                         () -> activity.snack("Camera permission required"));
@@ -240,8 +258,10 @@ public class WallPage extends BasePage {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK)
+        if (resultCode != Activity.RESULT_OK) {
+            deleteTempPhoto();
             return;
+        }
 
         Bitmap bmp = null;
 
@@ -252,10 +272,17 @@ public class WallPage extends BasePage {
         }
 
         if (requestCode == REQUEST_TAKE_PHOTO_POST) {
-            bmp = (Bitmap) data.getExtras().get("data");
+            Uri uri = pendingPhotoUri;
+            if (uri != null) {
+//                bmp = decodeCapturedPhoto(uri);
+                bmp = fixImageOrientation(bmp, uri);
+            } else if (data != null && data.getExtras() != null) {
+                bmp = (Bitmap) data.getExtras().get("data");
+            }
         }
 
         if (bmp == null) {
+            deleteTempPhoto();
             return;
         }
 
@@ -279,6 +306,7 @@ public class WallPage extends BasePage {
 
         writePost(postEditText, bmp);
         postEditText = null;
+        deleteTempPhoto();
     }
 
 
@@ -524,6 +552,70 @@ public class WallPage extends BasePage {
         String smore2 = smore;
         smore = null;
         load(imore, smore2);
+    }
+
+    private Uri createPhotoOutputUri() throws IOException {
+        File dir = new File(getContext().getExternalCacheDir(), "camera");
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new IOException("Unable to create directory for photo capture");
+        }
+        String name = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+        File file = new File(dir, name);
+        if (!file.createNewFile()) {
+            throw new IOException("Unable to create photo file");
+        }
+        return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
+    }
+
+//    private Bitmap decodeCapturedPhoto(@NonNull Uri uri) {
+//        final int maxDimension = 2048;
+//        BitmapFactory.Options options = new BitmapFactory.Options();
+//        options.inJustDecodeBounds = true;
+//        try (InputStream is = getContext().getContentResolver().openInputStream(uri)) {
+//            BitmapFactory.decodeStream(is, null, options);
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//            return null;
+//        }
+//
+//        options.inSampleSize = calculateInSampleSize(options, maxDimension, maxDimension);
+//        options.inJustDecodeBounds = false;
+//        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+//
+//        try (InputStream is = getContext().getContentResolver().openInputStream(uri)) {
+//            return BitmapFactory.decodeStream(is, null, options);
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//        return null;
+//    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        return Math.max(1, inSampleSize);
+    }
+
+    private void deleteTempPhoto() {
+        if (pendingPhotoUri == null) return;
+        try {
+            getContext().getContentResolver().delete(pendingPhotoUri, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pendingPhotoUri = null;
+        }
     }
 
 }
