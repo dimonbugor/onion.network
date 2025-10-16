@@ -1,10 +1,9 @@
-
-
 package onion.network.models;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -13,21 +12,18 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.clients.HttpClient;
 import onion.network.databases.ItemDatabase;
 
-public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
+public class ItemTask {
 
-    private static Executor executor = new Executor() {
-        @Override
-        public void execute(Runnable command) {
-            new Thread(command).start();
-        }
-    };
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     ItemDatabase database;
     Context context;
     String address;
@@ -84,7 +80,6 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
         return "http://" + address + ".onion/a?t=" + type + "&i=" + index + "&n=" + (count + 1);
     }
 
-    @Override
     protected ItemResult doInBackground(Void... params) {
 
         if (address == null || address.equals(TorManager.getInstance(context).getID())) {
@@ -104,7 +99,6 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
                 Thread.sleep(50);
             } catch (Exception ex) {
             }
-
 
             publishProgress(result);
 
@@ -161,8 +155,38 @@ public class ItemTask extends AsyncTask<Void, ItemResult, ItemResult> {
     }
 
     public void execute2() {
-        //executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        executeOnExecutor(executor);
+        final Void[] params = new Void[0];
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                final ItemResult result = doInBackground(params);
+                postResult(result);
+            }
+        });
+    }
+
+    protected void publishProgress(final ItemResult... values) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                onProgressUpdate(values);
+            }
+        });
+    }
+
+    protected void onProgressUpdate(ItemResult... values) {
+    }
+
+    protected void onPostExecute(ItemResult itemResult) {
+    }
+
+    private void postResult(final ItemResult result) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                onPostExecute(result);
+            }
+        });
     }
 
 }

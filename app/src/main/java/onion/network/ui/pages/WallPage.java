@@ -12,18 +12,17 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Base64;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -34,6 +33,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import onion.network.helpers.DialogHelper;
 import onion.network.helpers.PermissionHelper;
@@ -50,58 +51,32 @@ import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
 
 import androidx.core.content.FileProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class WallPage extends BasePage {
 
-    LinearLayout contentView;
-    View wallScroll;
+    RecyclerView recyclerView;
+    WallAdapter wallAdapter;
+    final List<Item> posts = new ArrayList<>();
     int count = 5;
     String TAG = "WallPage";
-   String postEditText = null;
+    String postEditText = null;
 
-   String smore;
-   int imore;
-    View vmore, fmore;
+    String smore;
+    int imore;
+    String currentWallOwner = "";
+    String currentMyAddress = "";
     private Uri pendingPhotoUri;
 
 
     public WallPage(MainActivity activity) {
         super(activity);
         activity.getLayoutInflater().inflate(R.layout.wall_page, this, true);
-        contentView = (LinearLayout) findViewById(R.id.contentView);
-        //load();
-
-        wallScroll = findViewById(R.id.wallScroll);
-        wallScroll.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                //if(vmore != null && vmore.getRe
-                Log.i(TAG, "onTouch wallScroll");
-                if (event.getAction() == MotionEvent.ACTION_DOWN && vmore != null) {
-                    int[] p = new int[]{0, 0};
-                    wallScroll.getLocationOnScreen(p);
-                    p[0] += (int) event.getX();
-                    p[1] += (int) event.getY();
-                    Rect rect = new Rect();
-                    vmore.getHitRect(rect);
-                    if (vmore.getGlobalVisibleRect(rect)) {
-                        Log.i(TAG, "onTouch: " + p[0] + " " + p[1]);
-                        Log.i(TAG, "onTouch: " + rect.left + " " + rect.top + " " + rect.right + " " + rect.bottom);
-                        if (rect.contains(p[0], p[1])) {
-                            Log.i(TAG, "onTouch: load more");
-                            loadMore();
-                            //contentView.requestDisallowInterceptTouchEvent(true);
-                        } else {
-                            Log.i(TAG, "onTouch: miss");
-                        }
-                    }
-                }
-                return false;
-            }
-        });
-        vmore = findViewById(R.id.wallLoadMore);
-        fmore = findViewById(R.id.wallLoadMoreFrame);
-
+        recyclerView = findViewById(R.id.wallRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        wallAdapter = new WallAdapter();
+        recyclerView.setAdapter(wallAdapter);
     }
 
     @Override
@@ -338,6 +313,9 @@ public class WallPage extends BasePage {
         if (smore == null) return;
         String smore2 = smore;
         smore = null;
+        if (wallAdapter != null) {
+            wallAdapter.setLoadMoreVisible(false);
+        }
         load(imore, smore2);
     }
 
@@ -346,35 +324,33 @@ public class WallPage extends BasePage {
             return;
         }
 
-        String myAddress = TorManager.getInstance(context).getID();
-        String wallOwner = TextUtils.isEmpty(address) ? myAddress : address;
+        currentMyAddress = TorManager.getInstance(context).getID();
+        currentWallOwner = TextUtils.isEmpty(address) ? currentMyAddress : address;
 
-        clearContentFrom(insertIndex);
+        int insertionPoint = Math.min(insertIndex, posts.size());
+        if (insertionPoint < posts.size()) {
+            posts.subList(insertionPoint, posts.size()).clear();
+        }
 
         for (int pos = 0; pos < itemResult.size(); pos++) {
             Item item = itemResult.at(pos);
             if (item == null) continue;
-            JSONObject rawData = parseJsonSafe(item.text());
-            JSONObject data = item.json(getContext(), address);
-            View postView = buildPostView(item, rawData, data, wallOwner, myAddress);
-            contentView.addView(postView);
+            posts.add(item);
         }
 
-        handleEmptyState(insertIndex, itemResult);
         findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
-        updatePaginationControls(insertIndex, itemResult, finished);
-    }
 
-    private void clearContentFrom(int insertIndex) {
-        int childCount = contentView.getChildCount();
-        if (insertIndex < childCount) {
-            contentView.removeViews(insertIndex, childCount - insertIndex);
+        boolean showEmpty = insertionPoint == 0 && posts.isEmpty() && !itemResult.loading();
+        boolean showLoadMore = updatePaginationControls(insertIndex, itemResult, finished);
+
+        if (wallAdapter != null) {
+            wallAdapter.submit(posts, showLoadMore, showEmpty);
         }
     }
 
-    private View buildPostView(Item item, JSONObject rawData, JSONObject data, String wallOwner, String myAddress) {
-        View view = activity.getLayoutInflater().inflate(R.layout.wall_item, contentView, false);
-        PostViewHolder holder = new PostViewHolder(view);
+    private void bindPostView(PostViewHolder holder, Item item, String wallOwner, String myAddress) {
+        JSONObject rawData = parseJsonSafe(item.text());
+        JSONObject data = item.json(getContext(), address);
 
         bindInlineImage(holder.image, data);
 
@@ -385,8 +361,6 @@ public class WallPage extends BasePage {
 
         bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
         bindPostActions(holder, item, data, wallOwner, myAddress, postAddress);
-
-        return view;
     }
 
     private void bindInlineImage(ImageView imageView, JSONObject data) {
@@ -609,36 +583,11 @@ public class WallPage extends BasePage {
         return assets;
     }
 
-    private void handleEmptyState(int insertIndex, ItemResult itemResult) {
-        if (insertIndex == 0 && itemResult.size() == 0 && !itemResult.loading()) {
-            View emptyView = activity.getLayoutInflater().inflate(R.layout.wall_empty, contentView, false);
-            contentView.addView(emptyView);
-        }
-    }
-
-    private void updatePaginationControls(int insertIndex, ItemResult itemResult, boolean finished) {
+    private boolean updatePaginationControls(int insertIndex, ItemResult itemResult, boolean finished) {
         smore = finished ? itemResult.more() : null;
         imore = insertIndex + count;
 
-        if (smore != null) {
-            View.OnClickListener loadMoreListener = v -> {
-                Log.i(TAG, "load more");
-                loadMore();
-            };
-            vmore.setOnClickListener(loadMoreListener);
-            vmore.setOnTouchListener((v, event) -> {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    Log.i(TAG, "load more touch");
-                    loadMore();
-                }
-                return false;
-            });
-            fmore.setVisibility(View.VISIBLE);
-        } else {
-            vmore.setOnClickListener(null);
-            vmore.setOnTouchListener(null);
-            fmore.setVisibility(View.INVISIBLE);
-        }
+        return smore != null;
     }
 
     private JSONObject parseJsonSafe(String data) {
@@ -687,6 +636,103 @@ public class WallPage extends BasePage {
         return "post_" + item.key();
     }
 
+    private final class WallAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        private static final int TYPE_POST = 0;
+        private static final int TYPE_LOAD_MORE = 1;
+        private static final int TYPE_EMPTY = 2;
+
+        private final List<Item> adapterItems = new ArrayList<>();
+        private boolean showLoadMore;
+        private boolean showEmpty;
+
+        void submit(List<Item> source, boolean displayLoadMore, boolean displayEmpty) {
+            adapterItems.clear();
+            adapterItems.addAll(source);
+            showEmpty = displayEmpty;
+            showLoadMore = showEmpty ? false : displayLoadMore;
+            notifyDataSetChanged();
+        }
+
+        void setLoadMoreVisible(boolean visible) {
+            boolean normalized = showEmpty ? false : visible;
+            if (showLoadMore != normalized) {
+                showLoadMore = normalized;
+                notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            if (showEmpty) {
+                return 1;
+            }
+            int total = adapterItems.size();
+            if (showLoadMore) {
+                total += 1;
+            }
+            return total;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (showEmpty) {
+                return TYPE_EMPTY;
+            }
+            if (position < adapterItems.size()) {
+                return TYPE_POST;
+            }
+            return TYPE_LOAD_MORE;
+        }
+
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            if (viewType == TYPE_POST) {
+                View view = inflater.inflate(R.layout.wall_item, parent, false);
+                return new PostViewHolder(view);
+            } else if (viewType == TYPE_LOAD_MORE) {
+                View view = inflater.inflate(R.layout.wall_more, parent, false);
+                return new LoadMoreViewHolder(view);
+            } else {
+                View view = inflater.inflate(R.layout.wall_empty, parent, false);
+                return new EmptyViewHolder(view);
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if (holder instanceof PostViewHolder) {
+                Item item = adapterItems.get(position);
+                bindPostView((PostViewHolder) holder, item, currentWallOwner, currentMyAddress);
+            } else if (holder instanceof LoadMoreViewHolder) {
+                ((LoadMoreViewHolder) holder).bind();
+            }
+        }
+
+        private class LoadMoreViewHolder extends RecyclerView.ViewHolder {
+            private final View button;
+
+            LoadMoreViewHolder(View itemView) {
+                super(itemView);
+                button = itemView.findViewById(R.id.wallLoadMore);
+                button.setOnClickListener(v -> loadMore());
+                itemView.setOnClickListener(v -> loadMore());
+            }
+
+            void bind() {
+                button.setEnabled(smore != null);
+                itemView.setEnabled(smore != null);
+            }
+        }
+
+        private class EmptyViewHolder extends RecyclerView.ViewHolder {
+            EmptyViewHolder(View itemView) {
+                super(itemView);
+            }
+        }
+    }
+
     private static final class PostAssets {
         Bitmap photoThumb;
         Bitmap videoThumb;
@@ -695,8 +741,7 @@ public class WallPage extends BasePage {
         String displayName;
     }
 
-    private static final class PostViewHolder {
-        final View root;
+    private static final class PostViewHolder extends RecyclerView.ViewHolder {
         final View link;
         final View thumblink;
         final TextView address;
@@ -712,7 +757,7 @@ public class WallPage extends BasePage {
         final ImageView image;
 
         PostViewHolder(View root) {
-            this.root = root;
+            super(root);
             link = root.findViewById(R.id.link);
             thumblink = root.findViewById(R.id.thumblink);
             address = root.findViewById(R.id.address);

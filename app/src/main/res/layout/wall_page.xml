@@ -7,27 +7,13 @@
     tools:context=".ui.pages.WallPage"
     android:orientation="vertical">
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/wallScroll"
-        android:scrollbars="vertical"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/wallRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
-            android:paddingBottom="@dimen/dp64"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:id="@+id/contentView"
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"></LinearLayout>
-
-            <include layout="@layout/wall_more" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/dp64"
+        android:scrollbars="vertical" />
 
 <!--    <FrameLayout-->
 <!--        android:layout_gravity="bottom"-->
