@@ -190,6 +190,10 @@
     <string name="dialog_contact_friend_suffix">  (friend)</string>
     <string name="label_anonymous">Anonymous</string>
     <string name="snackbar_storage_permission_required">Storage permission required</string>
+    <string name="tor_loading_default">Loading...</string>
+    <string name="notification_tor_title">Tor Service</string>
+    <string name="notification_tor_initial">Starting Tor...</string>
+    <string name="notification_tor_ready">Tor is ready</string>
 
     <string-array name="dialog_add_friend_options">
         <item>Scan QR</item>

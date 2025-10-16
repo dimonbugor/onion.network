@@ -10,11 +10,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.helpers.TorStatusFormatter;
 
 public class TorStatusView extends LinearLayout implements TorManager.LogListener {
 
@@ -51,25 +49,25 @@ public class TorStatusView extends LinearLayout implements TorManager.LogListene
     @Override
     public void onTorLog(String line) {
         String status = (line == null) ? "" : line.trim();
+        TorStatusFormatter.Status parsed = TorStatusFormatter.parse(status);
+        if (!parsed.hasChanged()) {
+            return;
+        }
 
         Handler mainHandler = new Handler(Looper.getMainLooper());
         mainHandler.post(() -> {
             TextView view = findViewById(R.id.status);
 
-            if (status.toLowerCase().contains("starting")) {
-                setVisibility(VISIBLE);
-            }
-
-            if (status.contains("Bootstrapped 100%")) {
+            if (parsed.isReady()) {
                 setVisibility(View.GONE);
-            } else if (status.contains("Bootstrapped ")) {
-                final Pattern pattern = Pattern.compile(".\\d%", Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(status);
-                while (matcher.find()) {
-                    view.setText("Loading " + matcher.group(0));
+            } else {
+                setVisibility(View.VISIBLE);
+                String message = parsed.getMessage();
+                if (message != null) {
+                    view.setText(message);
+                } else if (view.length() == 0) {
+                    view.setText(R.string.tor_loading_default);
                 }
-            } else if (view.length() == 0) {
-                view.setText("Loading...");
             }
         });
     }

@@ -7,12 +7,15 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.IBinder;
 import android.os.PowerManager;
 
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -22,17 +25,39 @@ import onion.network.R;
 import onion.network.TorManager;
 import onion.network.models.WallBot;
 import onion.network.clients.ChatClient;
+import onion.network.helpers.TorStatusFormatter;
 import onion.network.servers.BlogServer;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;
 
 public class HostService extends Service {
+    private static final int NOTIFICATION_ID = 1;
+    private static final String CHANNEL_ID = "service_channel";
+    private static final String CHANNEL_NAME = "Service Channel";
     private static final String TAG = "onion.network:HostService";
     private Timer timer;
     private TorManager torManager;
     private Server server;
     private BlogServer blogServer;
     private PowerManager.WakeLock wakeLock;
+    private NotificationCompat.Builder notificationBuilder;
+    private NotificationManagerCompat notificationManager;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private String lastNotificationText = "";
+    private final TorManager.LogListener torLogListener = line -> {
+        TorStatusFormatter.Status status = TorStatusFormatter.parse(line);
+        if (!status.hasChanged()) {
+            return;
+        }
+        if (status.isReady()) {
+            postNotificationUpdate(getString(R.string.notification_tor_ready));
+        } else {
+            String message = status.getMessage();
+            if (message != null) {
+                postNotificationUpdate(message);
+            }
+        }
+    };
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -44,32 +69,34 @@ public class HostService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundServiceWithNotification();
         } else {
-            startForeground(1, createNotification());
+            startForeground(NOTIFICATION_ID, createNotification());
         }
         server = Server.getInstance(this);
         blogServer = BlogServer.getInstance(this);
         torManager = TorManager.getInstance(this);
+        if (torManager.isReady()) {
+            postNotificationUpdate(getString(R.string.notification_tor_ready));
+        }
         return START_STICKY;
     }
 
     private void startForegroundServiceWithNotification() {
         Notification notification = createNotification();
-        startForeground(1, notification);
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     private Notification createNotification() {
-        NotificationChannel channel = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            channel = new NotificationChannel(
-                    "service_channel", "Service Channel", NotificationManager.IMPORTANCE_DEFAULT);
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
+        ensureNotificationChannel();
+        if (notificationBuilder == null) {
+            notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle(getString(R.string.notification_tor_title))
+                    .setContentText(getString(R.string.notification_tor_initial))
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true);
+            lastNotificationText = getString(R.string.notification_tor_initial);
         }
-        return new NotificationCompat.Builder(this, "service_channel")
-                .setContentTitle("Service Running")
-                .setContentText("Tor service is active")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .build();
+        return notificationBuilder.build();
     }
 
     @Override
@@ -77,9 +104,16 @@ public class HostService extends Service {
         super.onCreate();
         log("Service created");
 
+        notificationManager = NotificationManagerCompat.from(this);
+        ensureNotificationChannel();
+
         server = Server.getInstance(this);
         blogServer = BlogServer.getInstance(this);
         torManager = TorManager.getInstance(this);
+        torManager.addLogListener(torLogListener);
+        if (torManager.isReady()) {
+            postNotificationUpdate(getString(R.string.notification_tor_ready));
+        }
 
         // Ініціалізуємо таймер для періодичних задач
         timer = new Timer();
@@ -122,11 +156,46 @@ public class HostService extends Service {
             wakeLock.release();
             wakeLock = null;
         }
+        if (torManager != null) {
+            torManager.removeLogListener(torLogListener);
+        }
 
         super.onDestroy();
     }
 
     private void log(String message) {
         Log.i(getClass().getName(), message); // Логування з унікальним тегом
+    }
+
+    private void ensureNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                NotificationChannel existing = manager.getNotificationChannel(CHANNEL_ID);
+                if (existing == null) {
+                    NotificationChannel channel = new NotificationChannel(
+                            CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+                    manager.createNotificationChannel(channel);
+                }
+            }
+        }
+    }
+
+    private void postNotificationUpdate(String text) {
+        if (text == null || text.isEmpty()) {
+            return;
+        }
+        mainHandler.post(() -> updateNotificationText(text));
+    }
+
+    private void updateNotificationText(String text) {
+        if (notificationBuilder == null || text.equals(lastNotificationText)) {
+            return;
+        }
+        lastNotificationText = text;
+        notificationBuilder.setContentText(text);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        }
     }
 }

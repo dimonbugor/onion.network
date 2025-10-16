@@ -197,7 +197,8 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="fontFamily" value="Futura" />
+                                                <entry key="fontFamily" value="Gill Sans" />
+                                                <entry key="paddingPercent" value="10" />
                                                 <entry key="text" value="Blck" />
                                               </map>
                                             </option>
@@ -210,7 +211,8 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="fontFamily" value="Futura" />
+                                                <entry key="fontFamily" value="Gill Sans" />
+                                                <entry key="paddingPercent" value="10" />
                                                 <entry key="text" value="Blck" />
                                               </map>
                                             </option>
@@ -222,6 +224,7 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="TEXT" />
+                                      <entry key="outputName" value="ic_notification" />
                                     </map>
                                   </option>
                                 </PersistentState>
