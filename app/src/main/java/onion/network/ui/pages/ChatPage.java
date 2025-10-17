@@ -8,9 +8,11 @@ import android.graphics.drawable.GradientDrawable;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -165,6 +167,10 @@ public class ChatPage extends BasePage
         }
         if (sendButton != null) {
             sendButton.setImageTintList(iconTint);
+        }
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
         }
     }
 
@@ -342,6 +348,8 @@ public class ChatPage extends BasePage
         public View left, right;
         public MaterialCardView card;
         public View abort;
+        public LinearLayout cardContent;
+        public LinearLayout metaRow;
 
         public ChatHolder(View v) {
             super(v);
@@ -352,6 +360,8 @@ public class ChatPage extends BasePage
             right = v.findViewById(R.id.right);
             card = (MaterialCardView) v.findViewById(R.id.card);
             abort = v.findViewById(R.id.abort);
+            cardContent = v.findViewById(R.id.cardContent);
+            metaRow = v.findViewById(R.id.metaRow);
         }
     }
 
@@ -435,6 +445,8 @@ public class ChatPage extends BasePage
             holder.message.setMovementMethod(LinkMovementMethod.getInstance());
             holder.message.setText(Utils.linkify(context, content));
 
+            applyMessageStyle(holder, tx);
+
             holder.time.setText(time);
 
             holder.status.setText(status);
@@ -443,6 +455,71 @@ public class ChatPage extends BasePage
         @Override
         public int getItemCount() {
             return cursor != null ? cursor.getCount() : 0;
+        }
+
+        private void applyMessageStyle(ChatHolder holder, boolean outgoing) {
+            UiCustomizationManager.ChatComposerConfig config = UiCustomizationManager.getChatComposerConfig(context);
+
+            holder.message.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.messageTextSizeSp);
+            holder.message.setLineSpacing(0f, config.messageLineSpacingMultiplier);
+
+            holder.status.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
+            holder.time.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
+
+            holder.status.setGravity(config.metadataAlignStart ? Gravity.START : Gravity.BOTTOM);
+            holder.time.setGravity(config.metadataAlignStart ? Gravity.START : Gravity.END | Gravity.BOTTOM);
+
+            if (holder.cardContent != null) {
+                holder.cardContent.setPadding(
+                        config.bubblePaddingHorizontalPx,
+                        config.bubblePaddingVerticalPx,
+                        config.bubblePaddingHorizontalPx,
+                        config.bubblePaddingVerticalPx);
+            }
+
+            if (holder.metaRow != null) {
+                holder.metaRow.setOrientation(config.metadataStacked ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+                holder.metaRow.setGravity(config.metadataAlignStart ? Gravity.START : Gravity.BOTTOM);
+
+                if (config.metadataStacked) {
+                    holder.metaRow.setPadding(
+                            config.bubblePaddingHorizontalPx,
+                            config.bubblePaddingVerticalPx,
+                            config.bubblePaddingHorizontalPx,
+                            config.bubblePaddingVerticalPx);
+                } else {
+                    holder.metaRow.setPadding(
+                            config.bubblePaddingHorizontalPx,
+                            config.bubblePaddingVerticalPx / 2,
+                            config.bubblePaddingHorizontalPx,
+                            config.bubblePaddingVerticalPx / 2);
+                }
+
+                LinearLayout.LayoutParams statusLp;
+                LinearLayout.LayoutParams timeLp;
+
+                if (config.metadataStacked) {
+                    statusLp = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    statusLp.gravity = Gravity.START;
+
+                    timeLp = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    timeLp.gravity = Gravity.START;
+                    timeLp.topMargin = config.metadataSpacingVerticalPx;
+                } else {
+                    statusLp = new LinearLayout.LayoutParams(
+                            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                    statusLp.gravity = config.metadataAlignStart ? Gravity.START : Gravity.BOTTOM;
+
+                    timeLp = new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    timeLp.gravity = config.metadataAlignStart ? Gravity.START : Gravity.END | Gravity.BOTTOM;
+                }
+
+                holder.status.setLayoutParams(statusLp);
+                holder.time.setLayoutParams(timeLp);
+            }
         }
 
     }

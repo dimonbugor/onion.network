@@ -105,15 +105,36 @@ public final class UiCustomizationManager {
         public final int marginBottomPx;
         public final int paddingHorizontalPx;
         public final float textSizeSp;
+        public final int bubblePaddingHorizontalPx;
+        public final int bubblePaddingVerticalPx;
+        public final float messageTextSizeSp;
+        public final float metadataTextSizeSp;
+        public final float messageLineSpacingMultiplier;
+        public final boolean metadataStacked;
+        public final boolean metadataAlignStart;
+        public final int metadataSpacingVerticalPx;
 
         private ChatComposerConfig(int heightPx, int marginStartPx, int marginEndPx, int marginBottomPx,
-                                   int paddingHorizontalPx, float textSizeSp) {
+                                   int paddingHorizontalPx, float textSizeSp,
+                                   int bubblePaddingHorizontalPx, int bubblePaddingVerticalPx,
+                                   float messageTextSizeSp, float metadataTextSizeSp,
+                                   float messageLineSpacingMultiplier,
+                                   boolean metadataStacked, boolean metadataAlignStart,
+                                   int metadataSpacingVerticalPx) {
             this.heightPx = heightPx;
             this.marginStartPx = marginStartPx;
             this.marginEndPx = marginEndPx;
             this.marginBottomPx = marginBottomPx;
             this.paddingHorizontalPx = paddingHorizontalPx;
             this.textSizeSp = textSizeSp;
+            this.bubblePaddingHorizontalPx = bubblePaddingHorizontalPx;
+            this.bubblePaddingVerticalPx = bubblePaddingVerticalPx;
+            this.messageTextSizeSp = messageTextSizeSp;
+            this.metadataTextSizeSp = metadataTextSizeSp;
+            this.messageLineSpacingMultiplier = messageLineSpacingMultiplier;
+            this.metadataStacked = metadataStacked;
+            this.metadataAlignStart = metadataAlignStart;
+            this.metadataSpacingVerticalPx = metadataSpacingVerticalPx;
         }
     }
 
@@ -121,18 +142,34 @@ public final class UiCustomizationManager {
         ChatComposerStyle style = getChatComposerStyle(context);
         switch (style) {
             case COMPACT:
-                return new ChatComposerConfig(dpToPx(context, 48), dpToPx(context, 72), dpToPx(context, 12),
-                        dpToPx(context, 12), dpToPx(context, 10), 11.5f);
+                return new ChatComposerConfig(
+                        dpToPx(context, 44), dpToPx(context, 64), dpToPx(context, 10),
+                        dpToPx(context, 10), dpToPx(context, 8), 10.8f,
+                        dpToPx(context, 8), dpToPx(context, 4),
+                        11f, 8.5f, 0.96f,
+                        false, false, dpToPx(context, 1));
             case EXPANDED:
-                return new ChatComposerConfig(dpToPx(context, 72), dpToPx(context, 48), dpToPx(context, 12),
-                        dpToPx(context, 20), dpToPx(context, 16), 14.5f);
+                return new ChatComposerConfig(
+                        dpToPx(context, 72), dpToPx(context, 48), dpToPx(context, 12),
+                        dpToPx(context, 20), dpToPx(context, 16), 14.5f,
+                        dpToPx(context, 18), dpToPx(context, 12),
+                        15.5f, 11f, 1.2f,
+                        false, false, dpToPx(context, 4));
             case LEFT_ALIGNED:
-                return new ChatComposerConfig(dpToPx(context, 56), dpToPx(context, 16), dpToPx(context, 16),
-                        dpToPx(context, 16), dpToPx(context, 12), 12.5f);
+                return new ChatComposerConfig(
+                        dpToPx(context, 56), dpToPx(context, 16), dpToPx(context, 16),
+                        dpToPx(context, 16), dpToPx(context, 12), 12.5f,
+                        dpToPx(context, 12), dpToPx(context, 8),
+                        13f, 10f, 1.05f,
+                        true, true, dpToPx(context, 4));
             case DEFAULT:
             default:
-                return new ChatComposerConfig(dpToPx(context, 56), dpToPx(context, 96), dpToPx(context, 16),
-                        dpToPx(context, 16), dpToPx(context, 14), 12.5f);
+                return new ChatComposerConfig(
+                        dpToPx(context, 52), dpToPx(context, 88), dpToPx(context, 14),
+                        dpToPx(context, 14), dpToPx(context, 12), 12f,
+                        dpToPx(context, 12), dpToPx(context, 7),
+                        12.5f, 9.5f, 1.04f,
+                        false, false, dpToPx(context, 2));
         }
     }
 
