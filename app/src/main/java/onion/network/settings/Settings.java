@@ -17,6 +17,7 @@ public class Settings {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(c);
 
         PreferenceManager.setDefaultValues(c, R.xml.prefs, false);
+        PreferenceManager.setDefaultValues(c, R.xml.theme_prefs, false);
 
         return p;
 

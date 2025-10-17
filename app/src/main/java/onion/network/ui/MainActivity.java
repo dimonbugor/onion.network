@@ -5,8 +5,6 @@ package onion.network.ui;
 import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
 import static onion.network.helpers.Const.REQUEST_QR;
 import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_BLOG;
-import static onion.network.helpers.ThemeManager.themeKeys;
-import static onion.network.helpers.ThemeManager.themes;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
@@ -129,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
     String TAG = "Activity";
     Timer timer = null;
     ChatPage chatPage;
+    private String appliedTheme;
 
     ArcButtonLayout arcButtonLayout;
     FloatingActionButton menuFab;
@@ -299,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate");
         ThemeManager.init(this).applyNoActionBarTheme(this);
         super.onCreate(savedInstanceState);
+        appliedTheme = ThemeManager.init(this).getTheme();
 
         setContentView(R.layout.activity_main);
         setupPreferenceListener();
@@ -1318,34 +1318,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_menu_themes) {
-            int selectedIndex = -1;
-            String currentTheme = ThemeManager.init(this).getTheme();
-            for (int i = 0; i < themeKeys.length; i++) {
-                if (themeKeys[i].equals(currentTheme)) {
-                    selectedIndex = i;
-                    break;
-                }
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_single_choice_item, themes);
-
-            AlertDialog dialog = DialogHelper.themedBuilder(this)
-                    .setTitle(R.string.dialog_choose_theme_title)
-                    .setSingleChoiceItems(adapter, selectedIndex, (d, which) -> {
-                        // Показуємо overlay
-                        dimOverlay.setVisibility(View.VISIBLE);
-                        dimOverlay.setAlpha(0f);
-                        dimOverlay.animate()
-                                .alpha(1f)
-                                .setDuration(200)
-                                .withEndAction(() -> {
-                                    ThemeManager.init(this).setTheme(this, themeKeys[which]);
-                                    d.dismiss();
-                                    recreate(); // перезапуск активності
-                                });
-
-                    })
-                    .create();
-            DialogHelper.show(dialog);
+            startActivity(new Intent(this, ThemeSettingsActivity.class));
             return true;
         }
         if (id == R.id.action_clear_chat) {
@@ -1494,6 +1467,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        String currentTheme = ThemeManager.init(this).getTheme();
+        if (appliedTheme != null && !appliedTheme.equals(currentTheme)) {
+            appliedTheme = currentTheme;
+            recreate();
+            return;
+        }
         applyUiCustomization();
         notifyPagesCustomizationChanged();
         for (BasePage page : pages) {

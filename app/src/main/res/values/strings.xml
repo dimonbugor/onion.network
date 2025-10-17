@@ -124,6 +124,16 @@
         <item>Sunset</item>
     </string-array>
 
+    <string name="theme_dark_mode_title">Dark mode</string>
+    <string name="theme_dark_mode_summary_on">Dark theme is enabled</string>
+    <string name="theme_dark_mode_summary_off">Light theme is enabled</string>
+    <string name="theme_customization_category">Interface</string>
+    <string name="pref_title_color_preset">Color preset</string>
+    <string name="pref_title_call_fab_position">Call button position</string>
+    <string name="pref_title_menu_button_position">Menu button position</string>
+    <string name="pref_title_friend_card_style">Friend list layout</string>
+    <string name="pref_title_chat_composer_style">Message composer layout</string>
+
     <string name="permission_required_title">Permissions required</string>
     <string name="permission_required_positive">Continue</string>
     <string name="permission_required_negative">Cancel</string>

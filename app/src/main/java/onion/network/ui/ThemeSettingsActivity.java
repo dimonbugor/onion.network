@@ -2,12 +2,10 @@
 
 package onion.network.ui;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -16,14 +14,8 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.IOException;
-
 import onion.network.R;
-import onion.network.cashes.ItemCache;
-import onion.network.cashes.SiteCache;
-import onion.network.helpers.DialogHelper;
 import onion.network.helpers.ThemeManager;
-import onion.network.helpers.Utils;
 import onion.network.models.WallBot;
 import onion.network.settings.Settings;
 
@@ -88,72 +80,29 @@ public class ThemeSettingsActivity extends AppCompatActivity {
         @Override
         public void onCreate(final Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.prefs);
+            addPreferencesFromResource(R.xml.theme_prefs);
 
-            getPreferenceManager().findPreference("clearcache").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
-                            .setTitle(R.string.dialog_clear_cache_title)
-                            .setMessage(R.string.dialog_clear_cache_message)
-                            .setNegativeButton(R.string.dialog_button_no, null)
-                            .setPositiveButton(R.string.dialog_button_yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    ItemCache.getInstance(getActivity()).clearCache();
-                                    SiteCache.getInstance(getActivity()).clearCache();
-                                    Snackbar.make(getView(), R.string.snackbar_cache_cleared, Snackbar.LENGTH_SHORT).show();
-                                }
-                            })
-                            .create();
-                    DialogHelper.show(dialog);
-                    return true;
+            SwitchPreference themeSwitch = (SwitchPreference) getPreferenceManager().findPreference("theme_dark_mode");
+            if (themeSwitch != null) {
+                final android.app.Activity activity = getActivity();
+                if (activity == null) {
+                    return;
                 }
-            });
-
-            getPreferenceManager().findPreference("licenses").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    showLibraries();
+                boolean isDark = ThemeManager.init(activity).getTheme().equals(ThemeManager.themeKeys[0]);
+                themeSwitch.setChecked(isDark);
+                themeSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+                    boolean enableDark = (Boolean) newValue;
+                    android.app.Activity host = getActivity();
+                    if (host == null) {
+                        return false;
+                    }
+                    ThemeManager.init(host).setTheme(host,
+                            enableDark ? ThemeManager.themeKeys[0] : ThemeManager.themeKeys[1]);
+                    host.recreate();
                     return true;
-                }
-            });
-        }
-
-
-        void showLibraries() {
-            final String[] items;
-            try {
-                items = getResources().getAssets().list("licenses");
-            } catch (IOException ex) {
-                throw new Error(ex);
+                });
             }
-            AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
-                    .setTitle(R.string.dialog_third_party_software_title)
-                    .setItems(items, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            showLicense(items[which]);
-                        }
-                    })
-                    .create();
-            DialogHelper.show(dialog);
         }
-
-        void showLicense(String name) {
-            String text;
-            try {
-                text = Utils.readInputStreamToString(getResources().getAssets().open("licenses/" + name));
-            } catch (IOException ex) {
-                throw new Error(ex);
-            }
-            AlertDialog dialog = DialogHelper.styledBuilder(getActivity(), R.style.RoundedAlertDialog)
-                    .setTitle(name)
-                    .setMessage(text)
-                    .create();
-            DialogHelper.show(dialog);
-        }
-
     }
 
 }
