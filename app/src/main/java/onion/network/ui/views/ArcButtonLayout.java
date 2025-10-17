@@ -89,53 +89,61 @@ public class ArcButtonLayout extends ViewGroup {
     }
 
     private void animateButtons() {
-        if (fab == null) return;
+        if (fab == null || buttons.isEmpty()) return;
 
         int width = getWidth();
         int height = getHeight();
-        //int radius = (int) (maxButtonSize / Math.sin(Math.toRadians(angleStep / 2))); // щоб дуга автоматично зменшувалась, якщо екран менший
-        int radius = Math.min(width, height) - fab.getWidth() * 2; // Set radius to half the width/height of the layout
 
-        //int cx = width - fab.getWidth() / 2 + centerMarginLeft - centerMarginRight; // Center of the layout
-        int cx = width - fab.getWidth() * 2 + buttons.get(0).getWidth() / 2 - centerMarginRight + centerMarginLeft;
-        //int cy = height / 2 + centerMarginTop - centerMarginBottom; // Center of the layout
-        int cy = height - radius - fab.getHeight() - centerMarginBottom + centerMarginTop;
+        float cx = width / 2f + centerMarginLeft - centerMarginRight;
+        float cy = height / 2f + centerMarginTop - centerMarginBottom;
 
-        float startAngle = 180; // Start from 9 o'clock
-        float endAngle = 93; // End at 6 o'clock
-        float angleStep = (endAngle - startAngle) / (buttons.size() - 1);
+        float maxHalfSize = 0f;
+        for (RelativeLayout button : buttons) {
+            maxHalfSize = Math.max(maxHalfSize,
+                    Math.max(button.getMeasuredWidth(), button.getMeasuredHeight()) / 2f);
+        }
 
-        int startX = fab.getLeft() + fab.getWidth() / 2; // Центр кнопки fab
-        int startY = fab.getTop() + fab.getHeight() / 2; // Центр кнопки fab
+        float availableRadius = Math.min(width, height) / 2f - maxHalfSize;
+        float marginAdjustment = Math.max(centerMarginLeft + centerMarginRight,
+                centerMarginTop + centerMarginBottom);
+        float radius = Math.max(availableRadius - marginAdjustment, 0f);
+
+        float angleStep = 360f / buttons.size();
+        float startAngle = -90f; // start from top
+
+        float startX = cx;
+        float startY = cy;
 
         for (int i = 0; i < buttons.size(); i++) {
             RelativeLayout button = buttons.get(i);
             float angle = startAngle + angleStep * i;
-            float radian = angle * (float) Math.PI / 180f;
-            int x = (int) (cx + radius * Math.cos(radian));
-            int y = (int) (cy + radius * Math.sin(radian));
+            double radian = Math.toRadians(angle);
+            float targetX = (float) (cx + radius * Math.cos(radian));
+            float targetY = (float) (cy + radius * Math.sin(radian));
+            float buttonOffsetX = button.getMeasuredWidth() / 2f;
+            float buttonOffsetY = button.getMeasuredHeight() / 2f;
 
             if (isExpanded) {
                 button.setVisibility(VISIBLE);
                 button.setAlpha(0f);
-                button.setTranslationX(startX - button.getMeasuredWidth() / 2);
-                button.setTranslationY(startY - button.getMeasuredHeight() / 2);
+                button.setTranslationX(startX - buttonOffsetX);
+                button.setTranslationY(startY - buttonOffsetY);
                 button.animate()
-                        .translationX(x - button.getMeasuredWidth() / 2)
-                        .translationY(y - button.getMeasuredHeight() / 2)
+                        .translationX(targetX - buttonOffsetX)
+                        .translationY(targetY - buttonOffsetY)
                         .alpha(1f)
-                        .setStartDelay(i * 100)
-                        .setDuration(300)
+                        .setStartDelay(i * 80L)
+                        .setDuration(300L)
                         .withStartAction(() -> button.setLayerType(View.LAYER_TYPE_HARDWARE, null))
                         .withEndAction(() -> button.setLayerType(View.LAYER_TYPE_NONE, null))
                         .start();
             } else {
                 button.animate()
-                        .translationX(startX - button.getMeasuredWidth() / 2)
-                        .translationY(startY - button.getMeasuredHeight() / 2)
+                        .translationX(startX - buttonOffsetX)
+                        .translationY(startY - buttonOffsetY)
                         .alpha(0f)
-                        .setStartDelay(i * 100)
-                        .setDuration(300)
+                        .setStartDelay(i * 60L)
+                        .setDuration(250L)
                         .withEndAction(() -> {
                             button.setVisibility(GONE);
                             button.setLayerType(View.LAYER_TYPE_NONE, null);
@@ -182,24 +190,12 @@ public class ArcButtonLayout extends ViewGroup {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = MeasureSpec.getSize(heightMeasureSpec);
-        int radius = Math.min(width, height) - fab.getMeasuredWidth() * 2;
-
-        // кутовий крок
-        float angleStep = (buttons.size() > 1) ? (93 - 180) / (buttons.size() - 1) : 1;
-
-        // мінімальна відстань між кнопками на дузі
-        float minArcLength = (float) (radius * Math.toRadians(angleStep));
-        int maxButtonSize = (int) Math.min(minArcLength * 0.8f, width * 0.15f); // не більше ніж 15% ширини
-
-        for (RelativeLayout button : buttons) {
-            int childSpec = MeasureSpec.makeMeasureSpec(maxButtonSize, MeasureSpec.AT_MOST);
-            button.measure(childSpec, childSpec);
-        }
-
         if (fab != null) {
             measureChild(fab, widthMeasureSpec, heightMeasureSpec);
+        }
+
+        for (RelativeLayout button : buttons) {
+            measureChild(button, widthMeasureSpec, heightMeasureSpec);
         }
     }
 
