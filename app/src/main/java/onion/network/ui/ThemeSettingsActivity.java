@@ -9,6 +9,7 @@ import android.preference.SwitchPreference;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -33,14 +34,15 @@ public class ThemeSettingsActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+        }
+
+
         getFragmentManager().beginTransaction().add(R.id.content, new SettingsFragment()).commit();
 
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        WallBot.getInstance(this).init();
     }
 
     @Override
@@ -70,6 +72,11 @@ public class ThemeSettingsActivity extends AppCompatActivity {
 
         if (id == R.id.action_reset) {
             doreset();
+        }
+
+        if (id == android.R.id.home) {
+            onBackPressed(); // або finish();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

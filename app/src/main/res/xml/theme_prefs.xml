@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="theme_dark_mode"
+        android:defaultValue="true"
+        android:title="@string/theme_dark_mode_title"
+        android:summaryOn="@string/theme_dark_mode_summary_on"
+        android:summaryOff="@string/theme_dark_mode_summary_off" />
+
+    <PreferenceCategory
+        android:key="ui_customization"
+        android:title="@string/theme_customization_category">
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_color_preset"
+            android:title="@string/pref_title_color_preset"
+            android:defaultValue="system"
+            android:entryValues="@array/ui_color_preset_values"
+            android:entries="@array/ui_color_preset_labels" />
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_call_fab_position"
+            android:title="@string/pref_title_call_fab_position"
+            android:defaultValue="bottom_end"
+            android:entryValues="@array/ui_call_fab_position_values"
+            android:entries="@array/ui_call_fab_position_labels" />
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_menu_button_position"
+            android:title="@string/pref_title_menu_button_position"
+            android:defaultValue="bottom_left"
+            android:entryValues="@array/ui_menu_button_position_values"
+            android:entries="@array/ui_menu_button_position_labels" />
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_friend_card_style"
+            android:title="@string/pref_title_friend_card_style"
+            android:defaultValue="default"
+            android:entryValues="@array/ui_friend_card_style_values"
+            android:entries="@array/ui_friend_card_style_labels" />
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_chat_composer_style"
+            android:title="@string/pref_title_chat_composer_style"
+            android:defaultValue="default"
+            android:entryValues="@array/ui_chat_composer_style_values"
+            android:entries="@array/ui_chat_composer_style_labels" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
