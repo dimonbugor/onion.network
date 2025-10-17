@@ -7,18 +7,16 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import onion.network.helpers.Ed25519Signature;
-import onion.network.helpers.TorBridgeParser;
 import onion.network.helpers.Utils;
 import onion.network.servers.Server;
+import onion.network.tor.BridgeChecker;
+import onion.network.tor.TorBridgeParser;
 
 public class TorManager {
     private static TorManager instance = null;
@@ -134,12 +132,33 @@ public class TorManager {
                         clients.add("webtunnel");
                     }
                     if (bridge.contains("snowflake")) {
-                        writer.println(bridge);
-                        clients.add("snowflake");
+                        boolean tcpOk = BridgeChecker.isReachableTCP(bridge, 2000);
+                        boolean udpOk = BridgeChecker.isLikelyUdpOpen(bridge, 1500);
+                        if (tcpOk && udpOk) {
+                            writer.println(bridge);
+                            clients.add("snowflake");
+                        } else {
+                            Log.w("BridgeCheck", "❌ Пропущено " + bridge);
+                        }
+                    }
+                    if (bridge.contains("conjure")) {
+                        // conjure перевіримо лише TCP-доступність
+                        if (BridgeChecker.isReachableTCP(bridge, 2000)) {
+                            writer.println(bridge);
+                            clients.add("conjure");
+                        } else {
+                            Log.w("BridgeCheck", "❌ Пропущено conjure: " + bridge);
+                        }
                     }
                     if (bridge.contains("meek")) {
-                        writer.println(bridge);
-                        clients.add("meek");
+                        boolean tcpOk = BridgeChecker.isReachableTCP(bridge, 2000);
+                        boolean udpOk = BridgeChecker.isLikelyUdpOpen(bridge, 1500);
+                        if (tcpOk && udpOk) {
+                            writer.println(bridge);
+                            clients.add("meek");
+                        } else {
+                            Log.w("BridgeCheck", "❌ Пропущено " + bridge);
+                        }
                     }
                 }
                 writer.println();

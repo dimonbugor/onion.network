@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
 import onion.network.databases.ChatDatabase;

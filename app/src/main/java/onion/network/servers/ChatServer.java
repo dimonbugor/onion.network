@@ -10,7 +10,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
-import onion.network.helpers.Utils;
 import onion.network.models.ChatBot;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;

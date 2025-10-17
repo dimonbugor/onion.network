@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import onion.network.R;
 import onion.network.TorManager;
-import onion.network.helpers.TorStatusFormatter;
+import onion.network.tor.TorStatusFormatter;
 
 public class TorStatusView extends LinearLayout implements TorManager.LogListener {
 

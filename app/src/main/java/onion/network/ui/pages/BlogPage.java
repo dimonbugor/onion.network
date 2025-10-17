@@ -35,7 +35,6 @@ import java.net.URL;
 import onion.network.R;
 import onion.network.TorManager;
 import onion.network.helpers.DialogHelper;
-import onion.network.helpers.ThemeManager;
 import onion.network.helpers.Utils;
 import onion.network.models.Blog;
 import onion.network.models.Response;

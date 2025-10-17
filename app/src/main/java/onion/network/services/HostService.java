@@ -25,7 +25,7 @@ import onion.network.R;
 import onion.network.TorManager;
 import onion.network.models.WallBot;
 import onion.network.clients.ChatClient;
-import onion.network.helpers.TorStatusFormatter;
+import onion.network.tor.TorStatusFormatter;
 import onion.network.servers.BlogServer;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;

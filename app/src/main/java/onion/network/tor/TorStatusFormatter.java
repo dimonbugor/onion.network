@@ -1,4 +1,4 @@
-package onion.network.helpers;
+package onion.network.tor;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
