@@ -43,6 +43,7 @@ import onion.network.models.ItemTask;
 import onion.network.R;
 import onion.network.TorManager;
 import onion.network.databases.ItemDatabase;
+import onion.network.helpers.ThemeManager;
 import onion.network.helpers.Utils;
 import onion.network.helpers.VideoCacheManager;
 import onion.network.models.ItemResult;
@@ -399,6 +400,15 @@ public class WallPage extends BasePage {
                                String displayName,
                                String postAddress,
                                String wallOwner) {
+        int primaryTextColor = ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnBackground);
+        int secondaryTextColor = ThemeManager.getColor(context, R.attr.white_80);
+
+        holder.name.setTextColor(primaryTextColor);
+        holder.text.setTextColor(primaryTextColor);
+        holder.text.setLinkTextColor(ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnPrimary));
+        holder.address.setTextColor(secondaryTextColor);
+        holder.date.setTextColor(secondaryTextColor);
+
         if (!TextUtils.isEmpty(displayName)) {
             holder.name.setText(displayName);
         }
