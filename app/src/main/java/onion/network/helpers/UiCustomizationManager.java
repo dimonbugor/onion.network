@@ -18,6 +18,9 @@ public final class UiCustomizationManager {
     private static final String PREF_CHAT_COMPOSER_STYLE = "ui_chat_composer_style";
     private static final String PREF_FRIEND_CARD_STYLE = "ui_friend_card_style";
     private static final String PREF_COLOR_PRESET = "ui_color_preset";
+    private static final String PREF_POST_LAYOUT_STYLE = "ui_post_layout_style";
+    private static final String PREF_POST_AVATAR_POSITION = "ui_post_avatar_position";
+    private static final String PREF_CARD_CORNER_RADIUS = "ui_card_corner_radius";
 
     private UiCustomizationManager() {
     }
@@ -113,6 +116,7 @@ public final class UiCustomizationManager {
         public final boolean metadataStacked;
         public final boolean metadataAlignStart;
         public final int metadataSpacingVerticalPx;
+        public final float bubbleCornerRadiusPx;
 
         private ChatComposerConfig(int heightPx, int marginStartPx, int marginEndPx, int marginBottomPx,
                                    int paddingHorizontalPx, float textSizeSp,
@@ -120,7 +124,7 @@ public final class UiCustomizationManager {
                                    float messageTextSizeSp, float metadataTextSizeSp,
                                    float messageLineSpacingMultiplier,
                                    boolean metadataStacked, boolean metadataAlignStart,
-                                   int metadataSpacingVerticalPx) {
+                                   int metadataSpacingVerticalPx, float bubbleCornerRadiusPx) {
             this.heightPx = heightPx;
             this.marginStartPx = marginStartPx;
             this.marginEndPx = marginEndPx;
@@ -135,6 +139,7 @@ public final class UiCustomizationManager {
             this.metadataStacked = metadataStacked;
             this.metadataAlignStart = metadataAlignStart;
             this.metadataSpacingVerticalPx = metadataSpacingVerticalPx;
+            this.bubbleCornerRadiusPx = bubbleCornerRadiusPx;
         }
     }
 
@@ -147,21 +152,21 @@ public final class UiCustomizationManager {
                         dpToPx(context, 10), dpToPx(context, 8), 10.8f,
                         dpToPx(context, 8), dpToPx(context, 4),
                         11f, 8.5f, 0.96f,
-                        false, false, dpToPx(context, 1));
+                        false, false, dpToPx(context, 1), dpToPx(context, 12));
             case EXPANDED:
                 return new ChatComposerConfig(
                         dpToPx(context, 72), dpToPx(context, 48), dpToPx(context, 12),
                         dpToPx(context, 20), dpToPx(context, 16), 14.5f,
                         dpToPx(context, 18), dpToPx(context, 12),
                         15.5f, 11f, 1.2f,
-                        false, false, dpToPx(context, 4));
+                        false, false, dpToPx(context, 4), dpToPx(context, 20));
             case LEFT_ALIGNED:
                 return new ChatComposerConfig(
                         dpToPx(context, 56), dpToPx(context, 16), dpToPx(context, 16),
                         dpToPx(context, 16), dpToPx(context, 12), 12.5f,
                         dpToPx(context, 12), dpToPx(context, 8),
                         13f, 10f, 1.05f,
-                        true, true, dpToPx(context, 4));
+                        true, true, dpToPx(context, 4), dpToPx(context, 16));
             case DEFAULT:
             default:
                 return new ChatComposerConfig(
@@ -169,7 +174,7 @@ public final class UiCustomizationManager {
                         dpToPx(context, 14), dpToPx(context, 12), 12f,
                         dpToPx(context, 12), dpToPx(context, 7),
                         12.5f, 9.5f, 1.04f,
-                        false, false, dpToPx(context, 2));
+                        false, false, dpToPx(context, 2), dpToPx(context, 14));
         }
     }
 
@@ -232,6 +237,144 @@ public final class UiCustomizationManager {
                 return new FriendCardConfig(dpToPx(context, 16), dpToPx(context, 16), dpToPx(context, 8),
                         14f, 12f, dpToPx(context, 48));
         }
+    }
+
+    public enum PostLayoutStyle {
+        STANDARD("standard"),
+        COMPACT("compact"),
+        SPACIOUS("spacious");
+
+        private final String key;
+
+        PostLayoutStyle(String key) {
+            this.key = key;
+        }
+
+        static PostLayoutStyle fromValue(String value) {
+            for (PostLayoutStyle style : values()) {
+                if (style.key.equals(value)) {
+                    return style;
+                }
+            }
+            return STANDARD;
+        }
+    }
+
+    public static PostLayoutStyle getPostLayoutStyle(Context context) {
+        String value = prefs(context).getString(PREF_POST_LAYOUT_STYLE, PostLayoutStyle.STANDARD.key);
+        return PostLayoutStyle.fromValue(value);
+    }
+
+    public static class PostCardConfig {
+        public final int containerPaddingHorizontalPx;
+        public final int containerPaddingVerticalPx;
+        public final int textTopMarginPx;
+        public final int textBottomMarginPx;
+        public final int avatarSizePx;
+        public final int avatarSpacingHorizontalPx;
+        public final int linkPaddingHorizontalPx;
+        public final int actionIconPaddingPx;
+        public final int actionRowPaddingVerticalPx;
+        public final int imageTopMarginPx;
+        public final float nameTextSizeSp;
+        public final float bodyTextSizeSp;
+        public final float metadataTextSizeSp;
+        public final float cardCornerRadiusPx;
+
+        private PostCardConfig(int containerPaddingHorizontalPx, int containerPaddingVerticalPx,
+                               int textTopMarginPx, int textBottomMarginPx,
+                               int avatarSizePx, int avatarSpacingHorizontalPx,
+                               int linkPaddingHorizontalPx, int actionIconPaddingPx,
+                               int actionRowPaddingVerticalPx, int imageTopMarginPx,
+                               float nameTextSizeSp, float bodyTextSizeSp,
+                               float metadataTextSizeSp, float cardCornerRadiusPx) {
+            this.containerPaddingHorizontalPx = containerPaddingHorizontalPx;
+            this.containerPaddingVerticalPx = containerPaddingVerticalPx;
+            this.textTopMarginPx = textTopMarginPx;
+            this.textBottomMarginPx = textBottomMarginPx;
+            this.avatarSizePx = avatarSizePx;
+            this.avatarSpacingHorizontalPx = avatarSpacingHorizontalPx;
+            this.linkPaddingHorizontalPx = linkPaddingHorizontalPx;
+            this.actionIconPaddingPx = actionIconPaddingPx;
+            this.actionRowPaddingVerticalPx = actionRowPaddingVerticalPx;
+            this.imageTopMarginPx = imageTopMarginPx;
+            this.nameTextSizeSp = nameTextSizeSp;
+            this.bodyTextSizeSp = bodyTextSizeSp;
+            this.metadataTextSizeSp = metadataTextSizeSp;
+            this.cardCornerRadiusPx = cardCornerRadiusPx;
+        }
+    }
+
+    public static PostCardConfig getPostCardConfig(Context context) {
+        PostLayoutStyle style = getPostLayoutStyle(context);
+        switch (style) {
+            case COMPACT:
+                return new PostCardConfig(
+                        dpToPx(context, 12), dpToPx(context, 10),
+                        dpToPx(context, 6), dpToPx(context, 4),
+                        dpToPx(context, 40), dpToPx(context, 8),
+                        dpToPx(context, 10), dpToPx(context, 6),
+                        dpToPx(context, 4), dpToPx(context, 6),
+                        14f, 12.5f, 10.5f, dpToPx(context, 12));
+            case SPACIOUS:
+                return new PostCardConfig(
+                        dpToPx(context, 20), dpToPx(context, 16),
+                        dpToPx(context, 12), dpToPx(context, 10),
+                        dpToPx(context, 56), dpToPx(context, 16),
+                        dpToPx(context, 18), dpToPx(context, 10),
+                        dpToPx(context, 8), dpToPx(context, 12),
+                        18f, 16f, 14f, dpToPx(context, 20));
+            case STANDARD:
+            default:
+                return new PostCardConfig(
+                        dpToPx(context, 16), dpToPx(context, 12),
+                        dpToPx(context, 8), dpToPx(context, 6),
+                        dpToPx(context, 48), dpToPx(context, 12),
+                        dpToPx(context, 14), dpToPx(context, 8),
+                        dpToPx(context, 6), dpToPx(context, 8),
+                        16f, 14f, 12f, dpToPx(context, 16));
+        }
+    }
+
+    public enum CardCornerStyle {
+        SYSTEM("system", -1f),
+        NONE("none", 0f),
+        SOFT("soft", 8f),
+        MEDIUM("medium", 14f),
+        ROUNDED("rounded", 22f);
+
+        private final String key;
+        private final float radiusDp;
+
+        CardCornerStyle(String key, float radiusDp) {
+            this.key = key;
+            this.radiusDp = radiusDp;
+        }
+
+        static CardCornerStyle fromValue(String value) {
+            for (CardCornerStyle style : values()) {
+                if (style.key.equals(value)) {
+                    return style;
+                }
+            }
+            return SYSTEM;
+        }
+
+        float resolvePx(Context context, float fallbackPx) {
+            if (radiusDp < 0f) {
+                return fallbackPx;
+            }
+            return dpToPx(context, radiusDp);
+        }
+    }
+
+    public static CardCornerStyle getCardCornerStyle(Context context) {
+        String value = prefs(context).getString(PREF_CARD_CORNER_RADIUS, CardCornerStyle.SYSTEM.key);
+        return CardCornerStyle.fromValue(value);
+    }
+
+    public static float resolveCornerRadiusPx(Context context, float fallbackPx) {
+        return getCardCornerStyle(context).resolvePx(context, fallbackPx);
     }
 
     public enum ColorPreset {

@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     ItemDatabase db;
     WallPage wallPage;
     FriendPage friendPage;
+    ConversationPage conversationPage;
     BasePage[] pages;
     String TAG = "Activity";
     Timer timer = null;
@@ -332,11 +333,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (address.isEmpty()) {
             requestPage = new RequestPage(this);
+            conversationPage = new ConversationPage(this);
             pages = new BasePage[]{
                     wallPage,
                     friendPage,
                     requestPage,
-                    new ConversationPage(this),
+                    conversationPage,
                     new ProfilePage(this),
                     new BlogPage(this),
                     new CloudPage(this),
@@ -344,6 +346,7 @@ public class MainActivity extends AppCompatActivity {
             };
         } else {
             chatPage = new ChatPage(this);
+            conversationPage = null;
             pages = new BasePage[]{
                     wallPage,
                     friendPage,
@@ -999,6 +1002,12 @@ public class MainActivity extends AppCompatActivity {
     private void notifyPagesCustomizationChanged() {
         if (friendPage != null) {
             friendPage.refreshAppearance();
+        }
+        if (wallPage != null) {
+            wallPage.refreshAppearance();
+        }
+        if (conversationPage != null) {
+            conversationPage.refreshAppearance();
         }
         if (chatPage != null) {
             chatPage.applyUiCustomizationFromHost();

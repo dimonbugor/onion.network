@@ -110,6 +110,34 @@
         <item>Pill cards</item>
     </string-array>
 
+    <string-array name="ui_post_layout_style_values">
+        <item>standard</item>
+        <item>compact</item>
+        <item>spacious</item>
+    </string-array>
+
+    <string-array name="ui_post_layout_style_labels">
+        <item>Standard</item>
+        <item>Compact</item>
+        <item>Spacious</item>
+    </string-array>
+
+    <string-array name="ui_card_corner_radius_values">
+        <item>system</item>
+        <item>none</item>
+        <item>soft</item>
+        <item>medium</item>
+        <item>rounded</item>
+    </string-array>
+
+    <string-array name="ui_card_corner_radius_labels">
+        <item>Use style default</item>
+        <item>No rounding</item>
+        <item>Soft</item>
+        <item>Medium</item>
+        <item>Rounded</item>
+    </string-array>
+
     <string-array name="ui_color_preset_values">
         <item>system</item>
         <item>midnight</item>
@@ -133,6 +161,9 @@
     <string name="pref_title_menu_button_position">Menu button position</string>
     <string name="pref_title_friend_card_style">Friend list layout</string>
     <string name="pref_title_chat_composer_style">Message composer layout</string>
+    <string name="pref_title_post_layout_style">Post layout</string>
+    <string name="pref_title_post_avatar_position">Post avatar alignment</string>
+    <string name="pref_title_card_corner_radius">Card corner radius</string>
 
     <string name="permission_required_title">Permissions required</string>
     <string name="permission_required_positive">Continue</string>

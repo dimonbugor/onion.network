@@ -11,6 +11,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.content.res.ColorStateList;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -18,11 +19,14 @@ import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -37,8 +41,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.lang.ref.WeakReference;
 
+import com.google.android.material.card.MaterialCardView;
+
+import androidx.core.content.FileProvider;
+import androidx.core.graphics.ColorUtils;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import onion.network.helpers.DialogHelper;
 import onion.network.helpers.PermissionHelper;
+import onion.network.helpers.UiCustomizationManager;
 import onion.network.models.Item;
 import onion.network.models.ItemTask;
 import onion.network.R;
@@ -52,9 +64,7 @@ import onion.network.cashes.ItemCache;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
 
-import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.graphics.BitmapFactory;
 
 public class WallPage extends BasePage {
 
@@ -355,7 +365,7 @@ public class WallPage extends BasePage {
         JSONObject rawData = parseJsonSafe(item.text());
         JSONObject data = item.json(getContext(), address);
 
-        bindInlineImage(holder.image, data);
+        bindInlineImage(holder, data);
 
         String postAddress = firstNonEmpty(rawData.optString("addr"), data.optString("addr"));
         PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
@@ -364,9 +374,149 @@ public class WallPage extends BasePage {
 
         bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
         bindPostActions(holder, item, data, wallOwner, myAddress, postAddress);
+        applyPostAppearance(holder);
     }
 
-    private void bindInlineImage(ImageView imageView, JSONObject data) {
+    private void applyPostAppearance(PostViewHolder holder) {
+        UiCustomizationManager.PostCardConfig config = UiCustomizationManager.getPostCardConfig(getContext());
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
+
+        if (holder.card != null) {
+            float radius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), config.cardCornerRadiusPx);
+            holder.card.setRadius(radius);
+            int cardColor = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                    ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorSurface)
+                    : preset.getSurfaceColor(getContext());
+            holder.card.setCardBackgroundColor(cardColor);
+            holder.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
+            holder.card.setStrokeColor(preset.getAccentColor(getContext()));
+        }
+
+        if (holder.container != null) {
+            holder.container.setPadding(
+                    0, //config.containerPaddingHorizontalPx,
+                    config.containerPaddingVerticalPx,
+                    0, //config.containerPaddingHorizontalPx,
+                    config.containerPaddingVerticalPx);
+        }
+
+        if (holder.link != null) {
+            holder.link.setPadding(
+                    config.linkPaddingHorizontalPx,
+                    holder.link.getPaddingTop(),
+                    config.linkPaddingHorizontalPx,
+                    holder.link.getPaddingBottom());
+        }
+
+        if (holder.text != null) {
+            holder.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.bodyTextSizeSp);
+            holder.text.setPadding(0, 0, 0, 0);
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) holder.text.getLayoutParams();
+            if (lp != null) {
+                lp.topMargin = config.textTopMarginPx;
+                lp.bottomMargin = config.textBottomMarginPx;
+                lp.leftMargin = config.containerPaddingHorizontalPx;
+                lp.rightMargin = config.containerPaddingHorizontalPx;
+                holder.text.setLayoutParams(lp);
+            }
+        }
+
+        if (holder.name != null) {
+            holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
+        }
+        if (holder.address != null) {
+            holder.address.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
+        }
+        if (holder.date != null) {
+            holder.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
+        }
+
+        int onSurface = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnSurface)
+                : preset.getOnSurfaceColor(getContext());
+        int accent = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnPrimary)
+                : preset.getAccentColor(getContext());
+        int secondary = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(getContext(), R.attr.white_80)
+                : ColorUtils.setAlphaComponent(onSurface, 180);
+
+        holder.name.setTextColor(onSurface);
+        holder.text.setTextColor(onSurface);
+        holder.text.setLinkTextColor(accent);
+        holder.address.setTextColor(secondary);
+        holder.date.setTextColor(secondary);
+
+        if (holder.imageContainer != null) {
+            ViewGroup.MarginLayoutParams imageLp = (ViewGroup.MarginLayoutParams) holder.imageContainer.getLayoutParams();
+            if (imageLp != null) {
+                imageLp.topMargin = config.imageTopMarginPx;
+                holder.imageContainer.setLayoutParams(imageLp);
+            }
+        }
+
+        if (holder.avatarCard != null) {
+            ViewGroup.LayoutParams avatarLp = holder.avatarCard.getLayoutParams();
+            if (avatarLp != null) {
+                avatarLp.width = config.avatarSizePx;
+                avatarLp.height = config.avatarSizePx;
+                holder.avatarCard.setLayoutParams(avatarLp);
+            }
+            holder.avatarCard.setRadius(config.avatarSizePx / 2f);
+            holder.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
+            holder.avatarCard.setStrokeColor(preset.getAccentColor(getContext()));
+        }
+
+        if (holder.actionRow != null) {
+            holder.actionRow.setPadding(
+                    config.containerPaddingHorizontalPx,
+                    config.actionRowPaddingVerticalPx,
+                    config.containerPaddingHorizontalPx,
+                    config.actionRowPaddingVerticalPx);
+        }
+
+        ColorStateList iconTint = ColorStateList.valueOf(onSurface);
+        styleActionIcon(holder.like, config.actionIconPaddingPx, iconTint);
+        styleActionIcon(holder.comments, config.actionIconPaddingPx, iconTint);
+        styleActionIcon(holder.share, config.actionIconPaddingPx, iconTint);
+        styleActionIcon(holder.edit, config.actionIconPaddingPx, iconTint);
+        styleActionIcon(holder.delete, config.actionIconPaddingPx, iconTint);
+
+        if (holder.headerRow != null && holder.avatarContainer != null && holder.link != null) {
+            LinearLayout header = holder.headerRow;
+            View avatarContainer = holder.avatarContainer;
+            FrameLayout linkContainer = holder.link;
+
+            LinearLayout.LayoutParams avatarParams = (LinearLayout.LayoutParams) avatarContainer.getLayoutParams();
+            LinearLayout.LayoutParams linkParams = (LinearLayout.LayoutParams) linkContainer.getLayoutParams();
+
+            avatarParams.setMarginStart(0);
+            avatarParams.setMarginEnd(config.avatarSpacingHorizontalPx);
+            linkParams.setMarginStart(config.avatarSpacingHorizontalPx);
+            linkParams.setMarginEnd(0);
+
+//            header.addView(avatarContainer);
+//            header.addView(linkContainer);
+
+            avatarContainer.setLayoutParams(avatarParams);
+            linkContainer.setLayoutParams(linkParams);
+        }
+    }
+
+    private void styleActionIcon(ImageView view, int paddingPx, ColorStateList tint) {
+        if (view == null) return;
+        view.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        view.setImageTintList(tint);
+    }
+
+    private void bindInlineImage(PostViewHolder holder, JSONObject data) {
+        if (holder.imageContainer != null) {
+            holder.imageContainer.setVisibility(View.GONE);
+        }
+        ImageView imageView = holder.image;
+        if (imageView == null) {
+            return;
+        }
         imageView.setVisibility(View.GONE);
         try {
             String encoded = data.optString("img", "").trim();
@@ -380,10 +530,16 @@ public class WallPage extends BasePage {
             final Bitmap bitmap = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
             imageView.setImageBitmap(bitmap);
             imageView.setVisibility(View.VISIBLE);
+            if (holder.imageContainer != null) {
+                holder.imageContainer.setVisibility(View.VISIBLE);
+            }
             imageView.setOnClickListener(v -> activity.lightbox(bitmap));
         } catch (Exception ex) {
             ex.printStackTrace();
             imageView.setVisibility(View.GONE);
+            if (holder.imageContainer != null) {
+                holder.imageContainer.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -809,7 +965,7 @@ public class WallPage extends BasePage {
     }
 
     private static final class PostViewHolder extends RecyclerView.ViewHolder {
-        final View link;
+        final FrameLayout link;
         final View thumblink;
         final TextView address;
         final TextView name;
@@ -821,7 +977,14 @@ public class WallPage extends BasePage {
         final ImageView delete;
         final ImageView edit;
         final AvatarView thumb;
+        final FrameLayout imageContainer;
         final ImageView image;
+        final MaterialCardView card;
+        final LinearLayout container;
+        final LinearLayout headerRow;
+        final FrameLayout avatarContainer;
+        final MaterialCardView avatarCard;
+        final LinearLayout actionRow;
 
         PostViewHolder(View root) {
             super(root);
@@ -837,9 +1000,23 @@ public class WallPage extends BasePage {
             delete = root.findViewById(R.id.delete);
             edit = root.findViewById(R.id.edit);
             thumb = root.findViewById(R.id.thumb);
+            imageContainer = root.findViewById(R.id.imageContainer);
             image = root.findViewById(R.id.image);
+            card = root.findViewById(R.id.card);
+            container = root.findViewById(R.id.postContent);
+            headerRow = root.findViewById(R.id.headerRow);
+            avatarContainer = root.findViewById(R.id.avatarContainer);
+            avatarCard = root.findViewById(R.id.avatarCard);
+            actionRow = root.findViewById(R.id.actionRow);
         }
     }
+
+    public void refreshAppearance() {
+        if (wallAdapter != null) {
+            wallAdapter.notifyDataSetChanged();
+        }
+    }
+
     public void pauseAvatarVideos() {
         synchronized (activeAvatars) {
             for (int i = activeAvatars.size() - 1; i >= 0; i--) {
@@ -884,6 +1061,7 @@ public class WallPage extends BasePage {
         }
         return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
     }
+
     private void deleteTempPhoto() {
         if (pendingPhotoUri == null) return;
         try {

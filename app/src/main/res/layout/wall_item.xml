@@ -17,20 +17,24 @@
         app:strokeWidth="0dp">
 
         <LinearLayout
+            android:id="@+id/postContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
             android:paddingVertical="@dimen/dp8"
                 android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/headerRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <FrameLayout
+                    android:id="@+id/avatarContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/avatarCard"
                         android:layout_width="@dimen/dp48"
                         android:layout_height="@dimen/dp48"
                         android:layout_marginStart="@dimen/dp16"
@@ -135,15 +139,22 @@
                     android:textSize="@dimen/sp14"
                     android:text="Medium Text" />
 
-                <ImageView
-                    android:id="@+id/image"
+                <FrameLayout
+                    android:id="@+id/imageContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp8"
-                    android:adjustViewBounds="true"
-                    android:scaleType="centerCrop" />
+                    android:layout_marginTop="@dimen/dp8">
+
+                    <ImageView
+                        android:id="@+id/image"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:adjustViewBounds="true"
+                        android:scaleType="centerCrop" />
+                </FrameLayout>
 
                 <LinearLayout
+                    android:id="@+id/actionRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">

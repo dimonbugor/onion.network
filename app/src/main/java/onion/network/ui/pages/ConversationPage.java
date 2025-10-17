@@ -11,8 +11,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import android.content.res.ColorStateList;
+import android.util.TypedValue;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.card.MaterialCardView;
+
+import androidx.core.graphics.ColorUtils;
 
 import onion.network.R;
 import onion.network.TorManager;
@@ -23,6 +30,8 @@ import onion.network.servers.ChatServer;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
 import onion.network.helpers.VideoCacheManager;
+import onion.network.helpers.UiCustomizationManager;
+import onion.network.helpers.ThemeManager;
 
 import org.json.JSONObject;
 
@@ -190,6 +199,8 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             holder.direction.setImageResource(myid.equals(sender) ? R.drawable.ic_call_made : R.drawable.ic_call_received);
 
             holder.data.setAlpha(incoming ? 1.0f : 0.4f);
+
+            applyConversationItemStyle(holder);
         }
 
         @Override
@@ -204,4 +215,64 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
         }
 
     }
+
+    private void applyConversationItemStyle(ConversationHolder holder) {
+        UiCustomizationManager.FriendCardConfig config = UiCustomizationManager.getFriendCardConfig(activity);
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(activity);
+
+        MaterialCardView card = (MaterialCardView) holder.itemView;
+        float resolvedRadius = UiCustomizationManager.resolveCornerRadiusPx(activity, config.cornerRadiusPx);
+        card.setRadius(resolvedRadius);
+        card.setContentPadding(config.horizontalPaddingPx, config.verticalPaddingPx,
+                config.horizontalPaddingPx, config.verticalPaddingPx);
+        card.setStrokeWidth(UiCustomizationManager.dpToPx(activity, 1));
+        card.setStrokeColor(preset.getAccentColor(activity));
+
+        int surfaceColor = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(activity, com.google.android.material.R.attr.colorPrimaryContainer)
+                : preset.getSurfaceColor(activity);
+        card.setCardBackgroundColor(surfaceColor);
+
+        View avatarView = holder.thumb;
+        if (avatarView != null) {
+            View avatarContainer = (View) avatarView.getParent();
+            if (avatarContainer != null) {
+                ViewGroup.LayoutParams params = avatarContainer.getLayoutParams();
+                if (params != null) {
+                    params.width = config.avatarSizePx;
+                    params.height = config.avatarSizePx;
+                    avatarContainer.setLayoutParams(params);
+                }
+                if (avatarContainer instanceof MaterialCardView) {
+                    MaterialCardView avatarCard = (MaterialCardView) avatarContainer;
+                    avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(activity, 1));
+                    avatarCard.setStrokeColor(preset.getAccentColor(activity));
+                    avatarCard.setRadius(config.avatarSizePx / 2f);
+                }
+            }
+        }
+
+        int onSurface = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(activity, com.google.android.material.R.attr.colorOnBackground)
+                : preset.getOnSurfaceColor(activity);
+        int secondary = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                ? ThemeManager.getColor(activity, R.attr.white_80)
+                : ColorUtils.setAlphaComponent(onSurface, 180);
+
+        holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
+        holder.address.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
+        holder.message.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
+
+        holder.name.setTextColor(onSurface);
+        holder.address.setTextColor(secondary);
+        holder.message.setTextColor(onSurface);
+        holder.direction.setImageTintList(ColorStateList.valueOf(secondary));
+    }
+
+    public void refreshAppearance() {
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
 }

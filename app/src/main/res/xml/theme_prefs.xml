@@ -47,6 +47,20 @@
             android:entryValues="@array/ui_chat_composer_style_values"
             android:entries="@array/ui_chat_composer_style_labels" />
 
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_post_layout_style"
+            android:title="@string/pref_title_post_layout_style"
+            android:defaultValue="standard"
+            android:entryValues="@array/ui_post_layout_style_values"
+            android:entries="@array/ui_post_layout_style_labels" />
+
+        <onion.network.settings.ListPreferenceEx
+            android:key="ui_card_corner_radius"
+            android:title="@string/pref_title_card_corner_radius"
+            android:defaultValue="system"
+            android:entryValues="@array/ui_card_corner_radius_values"
+            android:entries="@array/ui_card_corner_radius_labels" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

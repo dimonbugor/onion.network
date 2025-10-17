@@ -311,7 +311,8 @@ public class FriendPage extends BasePage {
         UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
 
         MaterialCardView card = (MaterialCardView) view;
-        card.setRadius(config.cornerRadiusPx);
+        float resolvedRadius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), config.cornerRadiusPx);
+        card.setRadius(resolvedRadius);
         card.setContentPadding(config.horizontalPaddingPx, config.verticalPaddingPx,
                 config.horizontalPaddingPx, config.verticalPaddingPx);
         card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));

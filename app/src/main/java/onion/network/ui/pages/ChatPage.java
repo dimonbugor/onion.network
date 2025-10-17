@@ -520,6 +520,26 @@ public class ChatPage extends BasePage
                 holder.status.setLayoutParams(statusLp);
                 holder.time.setLayoutParams(timeLp);
             }
+
+            float bubbleRadius = UiCustomizationManager.resolveCornerRadiusPx(context, config.bubbleCornerRadiusPx);
+            holder.card.setRadius(bubbleRadius);
+            updateBubbleCorners(holder, outgoing, bubbleRadius);
+        }
+
+        private void updateBubbleCorners(ChatHolder holder, boolean outgoing,
+                                         float resolvedRadius) {
+            if (holder.card == null) return;
+            if (!(holder.card.getBackground() instanceof GradientDrawable)) return;
+            GradientDrawable drawable = (GradientDrawable) holder.card.getBackground().mutate();
+            float[] radii;
+            if (outgoing) {
+                radii = new float[]{resolvedRadius, resolvedRadius, resolvedRadius, resolvedRadius,
+                        0f, 0f, resolvedRadius, resolvedRadius};
+            } else {
+                radii = new float[]{resolvedRadius, resolvedRadius, resolvedRadius, resolvedRadius,
+                        resolvedRadius, resolvedRadius, 0f, 0f};
+            }
+            drawable.setCornerRadii(radii);
         }
 
     }
