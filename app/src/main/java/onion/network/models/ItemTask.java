@@ -19,6 +19,7 @@ import onion.network.TorManager;
 import onion.network.cashes.ItemCache;
 import onion.network.clients.HttpClient;
 import onion.network.databases.ItemDatabase;
+import onion.network.helpers.Utils;
 
 public class ItemTask {
 
@@ -30,6 +31,8 @@ public class ItemTask {
     String type;
     String index;
     int count;
+    private ItemResult cachedResult;
+    private String knownHash;
     protected String TAG = "ItemTask";
 
     public ItemTask(Context context, String address, String type) {
@@ -63,7 +66,21 @@ public class ItemTask {
             JSONArray ii = o.getJSONArray("items");
             for (int i = 0; i < ii.length(); i++) {
                 JSONObject oo = ii.getJSONObject(i);
-                items.add(new Item(type, oo.getString("k"), oo.getString("i"), oo.getJSONObject("d")));
+                String itemType = oo.optString("t", type);
+                String itemKey = oo.getString("k");
+                String itemIndex = oo.optString("i", "");
+                if (oo.optBoolean("unchanged", false)) {
+                    Item cachedItem = findCachedItem(itemType, itemKey, itemIndex);
+                    if (cachedItem != null) {
+                        items.add(cachedItem);
+                        continue;
+                    }
+                }
+                JSONObject dataObject = oo.optJSONObject("d");
+                if (dataObject == null) {
+                    dataObject = new JSONObject();
+                }
+                items.add(new Item(itemType, itemKey, itemIndex, dataObject));
             }
             String more = o.optString("more", null);
             return new ItemResult(items, more, ok, loading);
@@ -77,10 +94,25 @@ public class ItemTask {
     }
 
     public String getUrl() {
-        return "http://" + address + ".onion/a?t=" + type + "&i=" + index + "&n=" + (count + 1);
+        StringBuilder builder = new StringBuilder("http://")
+                .append(address)
+                .append(".onion/a?t=")
+                .append(type)
+                .append("&i=")
+                .append(index)
+                .append("&n=")
+                .append(count + 1);
+        if (knownHash != null && !knownHash.isEmpty()) {
+            builder.append("&h=").append(Uri.encode(knownHash));
+            builder.append("&skip=1");
+        }
+        return builder.toString();
     }
 
     protected ItemResult doInBackground(Void... params) {
+
+        cachedResult = null;
+        knownHash = null;
 
         if (address == null || address.equals(TorManager.getInstance(context).getID())) {
             address = "";
@@ -119,6 +151,11 @@ public class ItemTask {
                 itemResult.setOk(true);
                 publishProgress(itemResult);
                 finalResult = itemResult;
+                cachedResult = itemResult;
+            }
+
+            if (count == 1 && cachedResult != null && cachedResult.size() > 0) {
+                knownHash = Utils.sha256Base64(cachedResult.one().data());
             }
 
             // try to load and view real data
@@ -134,6 +171,7 @@ public class ItemTask {
                     }
                     loadOk = true;
                     finalResult = itemResult;
+                    cachedResult = itemResult;
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -187,6 +225,25 @@ public class ItemTask {
                 onPostExecute(result);
             }
         });
+    }
+
+    private Item findCachedItem(String itemType, String itemKey, String itemIndex) {
+        if (cachedResult == null) {
+            return null;
+        }
+        for (int i = 0; i < cachedResult.size(); i++) {
+            Item cached = cachedResult.at(i);
+            boolean typeMatches = itemType != null && itemType.equals(cached.type());
+            boolean keyMatches = itemKey != null && itemKey.equals(cached.key());
+            boolean indexMatches = itemIndex == null || itemIndex.equals(cached.index());
+            if (typeMatches && keyMatches && indexMatches) {
+                return cached;
+            }
+        }
+        if (cachedResult.size() == 1) {
+            return cachedResult.one();
+        }
+        return null;
     }
 
 }

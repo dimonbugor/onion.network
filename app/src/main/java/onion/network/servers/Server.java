@@ -23,6 +23,7 @@ import onion.network.TorManager;
 import onion.network.databases.ItemDatabase;
 import onion.network.models.ItemResult;
 import onion.network.settings.Settings;
+import onion.network.helpers.Utils;
 import onion.network.ui.views.RequestTool;
 
 public class Server {
@@ -115,6 +116,8 @@ public class Server {
                 String type = uri.getQueryParameter("t");
                 String index = uri.getQueryParameter("i");
                 int count = Integer.parseInt(uri.getQueryParameter("n"));
+                String knownHashParam = uri.getQueryParameter("h");
+                boolean skipContent = "1".equals(uri.getQueryParameter("skip"));
                 ItemResult data = ItemDatabase.getInstance(context).get(type, index, count);
                 if (data.size() == 0 && "name".equals(type) && "".equals(index) && count == 1) {
                     List<Item> il = new ArrayList<>();
@@ -122,12 +125,22 @@ public class Server {
                     data = new ItemResult(il, null, true, false);
                 }
                 JSONArray items = new JSONArray();
+                TorManager torManager = TorManager.getInstance(context);
+                String requestAddress = torManager.getID();
+                boolean canUseHashSkip = skipContent && knownHashParam != null && !knownHashParam.isEmpty() && data.size() == 1;
                 for (int i = 0; i < data.size(); i++) {
                     JSONObject o = new JSONObject();
                     o.put("t", data.at(i).type());
                     o.put("k", data.at(i).key());
                     o.put("i", data.at(i).index());
-                    o.put("d", data.at(i).json(context, TorManager.getInstance(context).getID()));
+                    JSONObject serialized = data.at(i).json(context, requestAddress);
+                    String payloadHash = Utils.sha256Base64(data.at(i).data());
+                    o.put("h", payloadHash);
+                    if (canUseHashSkip && payloadHash.equals(knownHashParam)) {
+                        o.put("unchanged", true);
+                    } else {
+                        o.put("d", serialized);
+                    }
                     items.put(o);
                 }
                 JSONObject o = new JSONObject();

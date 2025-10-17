@@ -109,6 +109,18 @@ public class Utils {
         }
     }
 
+    public static String sha256Base64(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            if (data != null) {
+                digest.update(data);
+            }
+            return Base64.encodeToString(digest.digest(), Base64.NO_WRAP);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static CharSequence linkify(final Context context, String text) {
         SpannableStringBuilder spannable = new SpannableStringBuilder(text);
         Linkify.addLinks(spannable, Linkify.WEB_URLS);
