@@ -1010,7 +1010,8 @@ public class MainActivity extends AppCompatActivity {
         applyFabPosition((FloatingActionButton) findViewById(R.id.wallFab), callPosition);
         applyFabPosition((FloatingActionButton) findViewById(R.id.friendFab), callPosition);
 
-        UiCustomizationManager.FabPosition menuPosition = UiCustomizationManager.getMenuButtonPosition(this);
+        UiCustomizationManager.FabPosition menuPosition =
+                resolveMenuFabPosition(callPosition, UiCustomizationManager.getMenuButtonPosition(this));
         applyMenuFabPosition(menuPosition);
 
         UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(this);
@@ -1032,6 +1033,28 @@ public class MainActivity extends AppCompatActivity {
         ColorStateList iconTint = ColorStateList.valueOf(preset.getOnAccentColor(this));
         fab.setBackgroundTintList(backgroundTint);
         fab.setImageTintList(iconTint);
+    }
+
+    private UiCustomizationManager.FabPosition resolveMenuFabPosition(
+            UiCustomizationManager.FabPosition callPosition,
+            UiCustomizationManager.FabPosition desiredMenuPosition) {
+        if (desiredMenuPosition == null) return null;
+        if (callPosition == null || callPosition != desiredMenuPosition) {
+            return desiredMenuPosition;
+        }
+
+        UiCustomizationManager.FabPosition[] candidates = {
+                UiCustomizationManager.FabPosition.BOTTOM_START,
+                UiCustomizationManager.FabPosition.CENTER_BOTTOM,
+                UiCustomizationManager.FabPosition.BOTTOM_END
+        };
+
+        for (UiCustomizationManager.FabPosition candidate : candidates) {
+            if (candidate != callPosition) {
+                return candidate;
+            }
+        }
+        return desiredMenuPosition;
     }
 
     private void applyFabPosition(FloatingActionButton fab, UiCustomizationManager.FabPosition position) {

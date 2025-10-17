@@ -54,7 +54,7 @@
         <item>2h</item>
     </string-array>
 
-    <string-array name="ui_call_fab_position_values">
+    <string-array name="ui_page_action_fab_position_values">
         <item>bottom_end</item>
         <item>bottom_start</item>
         <item>top_end</item>
@@ -63,7 +63,7 @@
         <item>center_top</item>
     </string-array>
 
-    <string-array name="ui_call_fab_position_labels">
+    <string-array name="ui_page_action_fab_position_labels">
         <item>Bottom right</item>
         <item>Bottom left</item>
         <item>Top right</item>
@@ -129,7 +129,7 @@
     <string name="theme_dark_mode_summary_off">Light theme is enabled</string>
     <string name="theme_customization_category">Interface</string>
     <string name="pref_title_color_preset">Color preset</string>
-    <string name="pref_title_call_fab_position">Call button position</string>
+    <string name="pref_title_page_action_fab_position">Page action button position</string>
     <string name="pref_title_menu_button_position">Menu button position</string>
     <string name="pref_title_friend_card_style">Friend list layout</string>
     <string name="pref_title_chat_composer_style">Message composer layout</string>

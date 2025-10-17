@@ -21,10 +21,10 @@
 
         <onion.network.settings.ListPreferenceEx
             android:key="ui_call_fab_position"
-            android:title="@string/pref_title_call_fab_position"
+            android:title="@string/pref_title_page_action_fab_position"
             android:defaultValue="bottom_end"
-            android:entryValues="@array/ui_call_fab_position_values"
-            android:entries="@array/ui_call_fab_position_labels" />
+            android:entryValues="@array/ui_page_action_fab_position_values"
+            android:entries="@array/ui_page_action_fab_position_labels" />
 
         <onion.network.settings.ListPreferenceEx
             android:key="ui_menu_button_position"
