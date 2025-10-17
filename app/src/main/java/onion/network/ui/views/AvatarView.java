@@ -3,6 +3,7 @@ package onion.network.ui.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Outline;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -16,9 +17,11 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 import androidx.media3.ui.AspectRatioFrameLayout;
@@ -42,6 +45,8 @@ public class AvatarView extends FrameLayout {
     private String currentVideoUri;
     @Nullable
     private Bitmap fallbackBitmap;
+    @Nullable
+    private Bitmap currentBitmap;
 
     private int placeholderResId = R.drawable.nothumb;
 
@@ -118,6 +123,7 @@ public class AvatarView extends FrameLayout {
      */
     public void bind(@Nullable Bitmap photo, @Nullable Bitmap videoThumb, @Nullable String videoUri) {
         fallbackBitmap = null;
+        currentBitmap = null;
         if (!TextUtils.isEmpty(videoUri)) {
             setVideo(videoUri, videoThumb != null ? videoThumb : photo);
         } else {
@@ -140,6 +146,15 @@ public class AvatarView extends FrameLayout {
             player.setPlayWhenReady(false);
             player.pause();
         }
+        if (!TextUtils.isEmpty(currentVideoUri)) {
+            imageView.setVisibility(VISIBLE);
+            imageView.setAlpha(1f);
+            if (fallbackBitmap != null) {
+                imageView.setImageBitmap(fallbackBitmap);
+            }
+            playerView.setAlpha(0f);
+            playerView.setVisibility(INVISIBLE);
+        }
     }
 
     /**
@@ -149,14 +164,9 @@ public class AvatarView extends FrameLayout {
         if (player != null && !TextUtils.isEmpty(currentVideoUri)) {
             player.setPlayWhenReady(true);
             player.play();
+            playerView.setVisibility(VISIBLE);
+            playerView.setAlpha(1f);
         }
-    }
-
-    /**
-     * Whether avatar currently represents a video.
-     */
-    public boolean hasVideo() {
-        return !TextUtils.isEmpty(currentVideoUri);
     }
 
     @Override
@@ -195,6 +205,7 @@ public class AvatarView extends FrameLayout {
         }
     };
 
+    @OptIn(markerClass = UnstableApi.class)
     private void ensurePlayer() {
         if (player != null) return;
         DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
@@ -225,11 +236,13 @@ public class AvatarView extends FrameLayout {
         } else {
             imageView.setImageResource(placeholderResId);
         }
+        currentBitmap = bitmap;
     }
 
     private void setVideo(@NonNull String videoUri, @Nullable Bitmap fallback) {
         currentVideoUri = videoUri;
         fallbackBitmap = fallback;
+        currentBitmap = fallback;
 
         if (fallback != null) {
             imageView.setImageBitmap(fallback);
@@ -284,8 +297,10 @@ public class AvatarView extends FrameLayout {
         imageView.setVisibility(VISIBLE);
         if (fallbackBitmap != null) {
             imageView.setImageBitmap(fallbackBitmap);
+            currentBitmap = fallbackBitmap;
         } else {
             imageView.setImageResource(placeholderResId);
+            currentBitmap = null;
         }
     }
 
@@ -304,5 +319,21 @@ public class AvatarView extends FrameLayout {
                 player = null;
             }
         }
+    }
+
+    @Nullable
+    public String getCurrentVideoUri() {
+        return currentVideoUri;
+    }
+
+    @Nullable
+    public Bitmap getPreviewBitmap() {
+        if (currentBitmap != null) {
+            return currentBitmap;
+        }
+        if (imageView.getDrawable() instanceof BitmapDrawable) {
+            return ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+        }
+        return null;
     }
 }

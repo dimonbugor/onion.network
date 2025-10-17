@@ -45,15 +45,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -127,6 +131,17 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton menuFab;
     private ViewPager viewPager;
     private View dimOverlay;
+    private ImageView lightboxImageView;
+    private PlayerView lightboxVideoView;
+    private ExoPlayer lightboxPlayer;
+    private final Player.Listener lightboxPlayerListener = new Player.Listener() {
+        @Override
+        public void onPlaybackStateChanged(int state) {
+            if (state == Player.STATE_READY && lightboxImageView != null) {
+                lightboxImageView.setVisibility(View.GONE);
+            }
+        }
+    };
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
 
@@ -284,6 +299,21 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         setupPreferenceListener();
+
+        lightboxImageView = findViewById(R.id.lightbox);
+        lightboxVideoView = findViewById(R.id.lightboxVideo);
+        if (lightboxVideoView != null) {
+            lightboxVideoView.setUseController(false);
+            lightboxVideoView.setVisibility(View.INVISIBLE);
+            lightboxVideoView.setOnClickListener(null);
+            lightboxVideoView.setClickable(false);
+        }
+
+        if (lightboxImageView != null) {
+            lightboxImageView.setVisibility(View.INVISIBLE);
+            lightboxImageView.setOnClickListener(null);
+            lightboxImageView.setClickable(false);
+        }
 
         address = getIntent().getStringExtra("address");
         handleIntent(getIntent());
@@ -1507,6 +1537,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        releaseLightboxPlayer();
         super.onDestroy();
         if (preferences != null && preferenceListener != null) {
             preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener);
@@ -1515,56 +1546,88 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void lightbox(Bitmap bitmap) {
-        final ImageView v = (ImageView) findViewById(R.id.lightbox);
-        final VideoView videoOverlay = findViewById(R.id.lightboxVideo);
-        if (videoOverlay.getVisibility() == View.VISIBLE) {
-            if (videoOverlay.isPlaying()) videoOverlay.stopPlayback();
-            videoOverlay.clearAnimation();
-            videoOverlay.setVisibility(View.INVISIBLE);
+        if (lightboxImageView == null) return;
+        lightboxVideoHide(true, true);
+        lightboxImageView.setImageBitmap(bitmap);
+        lightboxImageView.bringToFront();
+        lightboxImageView.setVisibility(View.VISIBLE);
+        lightboxImageView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
+        lightboxImageView.setOnClickListener(v -> lightboxHide());
+        lightboxImageView.setClickable(true);
+        if (wallPage != null) {
+            wallPage.pauseAvatarVideos();
         }
-        v.setImageBitmap(bitmap);
-        v.bringToFront();
-        v.setVisibility(View.VISIBLE);
-        v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
-        v.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View vv) {
-                lightboxHide();
-            }
-        });
     }
 
     public void lightboxVideo(Uri uri) {
-        final VideoView v = findViewById(R.id.lightboxVideo);
-        final ImageView photoOverlay = findViewById(R.id.lightbox);
-        if (photoOverlay.getVisibility() == View.VISIBLE) {
-            photoOverlay.clearAnimation();
-            photoOverlay.setVisibility(View.GONE);
+        lightboxVideo(uri, null);
+    }
+
+    public void lightboxVideo(Uri uri, @Nullable Bitmap preview) {
+        if (lightboxVideoView == null) return;
+        if (wallPage != null) {
+            wallPage.pauseAvatarVideos();
         }
-
-        v.bringToFront();
-        v.setVisibility(View.VISIBLE);
-        v.setVideoURI(uri);
-        v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
-
-        v.setOnPreparedListener(mp -> {
-            mp.setLooping(true);
-            mp.setVolume(0f, 0f); // або прибери, якщо хочеш звук
-            v.start();
-        });
-
-        v.setOnClickListener(vv -> lightboxVideoHide());
+        lightboxVideoHide(true, true);
+        if (preview != null && lightboxImageView != null) {
+            lightboxImageView.setImageBitmap(preview);
+            lightboxImageView.bringToFront();
+            lightboxImageView.setVisibility(View.VISIBLE);
+            lightboxImageView.setOnClickListener(v -> lightboxHide());
+            lightboxImageView.setClickable(true);
+        } else {
+            hideLightboxImageImmediate();
+        }
+        ensureLightboxPlayer();
+        lightboxPlayer.stop();
+        lightboxPlayer.setMediaItem(MediaItem.fromUri(uri));
+        lightboxPlayer.prepare();
+        lightboxPlayer.seekTo(0);
+        lightboxPlayer.play();
+        lightboxVideoView.bringToFront();
+        lightboxVideoView.setVisibility(View.VISIBLE);
+        lightboxVideoView.setClickable(true);
+        lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
+        lightboxVideoView.setOnClickListener(v -> lightboxVideoHide());
     }
 
     public void lightboxVideoHide() {
-        final VideoView v = findViewById(R.id.lightboxVideo);
-        if (v.isPlaying()) v.stopPlayback();
-        v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
-        v.postDelayed(() -> v.setVisibility(View.INVISIBLE), 250);
+        lightboxVideoHide(false, false);
+    }
+
+    private void lightboxVideoHide(boolean immediate, boolean suppressResume) {
+        if (lightboxVideoView == null || lightboxVideoView.getVisibility() != View.VISIBLE) {
+            if (!suppressResume) {
+                maybeResumeAvatarVideos();
+            }
+            return;
+        }
+        if (lightboxPlayer != null) {
+            lightboxPlayer.setPlayWhenReady(false);
+            lightboxPlayer.pause();
+            lightboxPlayer.stop();
+        }
+        lightboxVideoView.setOnClickListener(null);
+        lightboxVideoView.setClickable(false);
+        if (immediate) {
+            lightboxVideoView.clearAnimation();
+            lightboxVideoView.setVisibility(View.INVISIBLE);
+            if (!suppressResume) {
+                maybeResumeAvatarVideos();
+            }
+        } else {
+            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
+            lightboxVideoView.postDelayed(() -> {
+                lightboxVideoView.setVisibility(View.INVISIBLE);
+                if (!suppressResume) {
+                    maybeResumeAvatarVideos();
+                }
+            }, 250);
+        }
     }
 
     private void lightboxHide() {
-        final ImageView v = (ImageView) findViewById(R.id.lightbox);
+        if (lightboxImageView == null || lightboxImageView.getVisibility() != View.VISIBLE) return;
         Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.lightbox_hide);
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -1573,29 +1636,74 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                v.setVisibility(View.GONE);
+                lightboxImageView.setVisibility(View.GONE);
+                lightboxImageView.setImageDrawable(null);
+                lightboxImageView.setOnClickListener(null);
+                lightboxImageView.setClickable(false);
+                maybeResumeAvatarVideos();
             }
 
             @Override
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        v.startAnimation(animation);
+        lightboxImageView.startAnimation(animation);
+    }
+
+    private void hideLightboxImageImmediate() {
+        if (lightboxImageView == null) return;
+        lightboxImageView.clearAnimation();
+        lightboxImageView.setVisibility(View.GONE);
+        lightboxImageView.setImageDrawable(null);
+        lightboxImageView.setOnClickListener(null);
+        lightboxImageView.setClickable(false);
+    }
+
+    private void maybeResumeAvatarVideos() {
+        boolean imageVisible = lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE;
+        boolean videoVisible = lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE;
+        if (!imageVisible && !videoVisible && wallPage != null) {
+            wallPage.resumeAvatarVideos();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        final VideoView videoView = findViewById(R.id.lightboxVideo);
-        if (videoView.getVisibility() == View.VISIBLE) {
+        if (lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE) {
             lightboxVideoHide();
             return;
         }
-        final ImageView v = (ImageView) findViewById(R.id.lightbox);
-        if (v.getVisibility() == View.VISIBLE) {
+        if (lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE) {
             lightboxHide();
             return;
         }
         super.onBackPressed();
+    }
+
+    private void ensureLightboxPlayer() {
+        if (lightboxPlayer == null) {
+            lightboxPlayer = new ExoPlayer.Builder(this).build();
+            lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ONE);
+            lightboxPlayer.setVolume(0f);
+            lightboxPlayer.addListener(lightboxPlayerListener);
+            if (lightboxVideoView != null) {
+                lightboxVideoView.setPlayer(lightboxPlayer);
+            }
+        }
+    }
+
+    private void releaseLightboxPlayer() {
+        if (lightboxPlayer != null) {
+            lightboxPlayer.removeListener(lightboxPlayerListener);
+            lightboxPlayer.release();
+            lightboxPlayer = null;
+        }
+        if (lightboxVideoView != null) {
+            lightboxVideoView.setPlayer(null);
+            lightboxVideoView.setOnClickListener(null);
+            lightboxVideoView.setClickable(false);
+            lightboxVideoView.setVisibility(View.INVISIBLE);
+        }
     }
 
     void inviteFriend() {

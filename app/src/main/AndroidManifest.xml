@@ -19,7 +19,9 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
@@ -258,10 +260,19 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.PostActivity"
             android:configChanges="screenSize|screenLayout|orientation|uiMode"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:name=".ui.PostActivity" />
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="Settings"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.ThemeSettingsActivity"
+            android:label="Themes"
+            android:parentActivityName=".ui.MainActivity" />
+
         <service
             android:name=".services.HostService"
             android:enabled="true"
@@ -284,11 +295,6 @@
             </intent-filter>
         </receiver>
 
-        <activity
-            android:name=".ui.SettingsActivity"
-            android:label="Settings"
-            android:parentActivityName=".ui.MainActivity" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -296,7 +302,7 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"/>
+                android:resource="@xml/file_paths" />
         </provider>
     </application>
 

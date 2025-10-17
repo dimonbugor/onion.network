@@ -85,7 +85,7 @@
         android:id="@+id/text_input_layout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginStart="@dimen/dp96"
+        android:layout_marginStart="@dimen/dp72"
         android:layout_marginEnd="@dimen/dp16"
         android:layout_marginBottom="@dimen/dp16"
         app:boxBackgroundMode="none"

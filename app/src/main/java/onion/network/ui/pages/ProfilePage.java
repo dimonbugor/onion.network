@@ -94,7 +94,7 @@ public class ProfilePage extends BasePage {
         profileAvatarView.bind(profilePhotoBitmap, fallback, videoUri);
 
         if (videoUri != null) {
-            profileAvatarView.setOnClickListener(v -> activity.lightboxVideo(Uri.parse(videoUri)));
+            profileAvatarView.setOnClickListener(v -> activity.lightboxVideo(Uri.parse(videoUri), profileAvatarView.getPreviewBitmap()));
         } else if (profilePhotoBitmap != null) {
             profileAvatarView.setOnClickListener(v -> activity.lightbox(profilePhotoBitmap));
         } else {

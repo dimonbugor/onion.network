@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.ref.WeakReference;
 
 import onion.network.helpers.DialogHelper;
 import onion.network.helpers.PermissionHelper;
@@ -60,6 +61,7 @@ public class WallPage extends BasePage {
     RecyclerView recyclerView;
     WallAdapter wallAdapter;
     final List<Item> posts = new ArrayList<>();
+    final List<WeakReference<AvatarView>> activeAvatars = new ArrayList<>();
     int count = 5;
     String TAG = "WallPage";
     String postEditText = null;
@@ -358,7 +360,7 @@ public class WallPage extends BasePage {
         String postAddress = firstNonEmpty(rawData.optString("addr"), data.optString("addr"));
         PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
         String ownerKey = resolveOwnerKey(postAddress, wallOwner, myAddress, item);
-        bindAvatar(holder.thumb, assets, ownerKey);
+        bindAvatar(holder, assets, ownerKey);
 
         bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
         bindPostActions(holder, item, data, wallOwner, myAddress, postAddress);
@@ -385,14 +387,42 @@ public class WallPage extends BasePage {
         }
     }
 
-    private void bindAvatar(AvatarView avatarView, PostAssets assets, String ownerKey) {
+    private void bindAvatar(PostViewHolder holder, PostAssets assets, String ownerKey) {
         Uri playableVideo = VideoCacheManager.ensureVideoUri(
                 getContext(),
                 ownerKey,
                 assets.storedVideoUri,
                 assets.videoData
         );
-        avatarView.bind(assets.photoThumb, assets.videoThumb, playableVideo != null ? playableVideo.toString() : null);
+        holder.thumb.bind(assets.photoThumb, assets.videoThumb, playableVideo != null ? playableVideo.toString() : null);
+        registerAvatar(holder.thumb);
+
+        holder.thumblink.setOnClickListener(null);
+        holder.thumblink.setOnLongClickListener(null);
+        holder.thumblink.setClickable(false);
+        holder.thumblink.setLongClickable(false);
+
+        holder.thumb.setOnClickListener(null);
+        holder.thumb.setOnLongClickListener(null);
+        holder.thumb.setClickable(false);
+        holder.thumb.setLongClickable(false);
+
+        View.OnClickListener openAvatar = v -> {
+            String videoUriStr = holder.thumb.getCurrentVideoUri();
+            Bitmap previewBitmap = holder.thumb.getPreviewBitmap();
+            if (!TextUtils.isEmpty(videoUriStr)) {
+                activity.lightboxVideo(Uri.parse(videoUriStr), previewBitmap);
+                return;
+            }
+            if (previewBitmap != null) {
+                activity.lightbox(previewBitmap);
+            }
+        };
+
+        holder.thumb.setOnClickListener(openAvatar);
+        holder.thumb.setClickable(true);
+        holder.thumblink.setOnClickListener(openAvatar);
+        holder.thumblink.setClickable(true);
     }
 
     private void bindPostTexts(PostViewHolder holder,
@@ -428,12 +458,22 @@ public class WallPage extends BasePage {
             View.OnClickListener openProfile = v ->
                     getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
             holder.link.setOnClickListener(openProfile);
-            holder.thumblink.setOnClickListener(openProfile);
+            View.OnLongClickListener openProfileLong = v -> {
+                openProfile.onClick(v);
+                return true;
+            };
+            holder.thumblink.setOnLongClickListener(openProfileLong);
+            holder.thumblink.setLongClickable(true);
+            holder.thumb.setOnLongClickListener(openProfileLong);
+            holder.thumb.setLongClickable(true);
         } else {
             holder.address.setPaintFlags(holder.address.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             holder.name.setPaintFlags(holder.name.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             holder.link.setOnClickListener(null);
-            holder.thumblink.setOnClickListener(null);
+            holder.thumblink.setOnLongClickListener(null);
+            holder.thumblink.setLongClickable(false);
+            holder.thumb.setOnLongClickListener(null);
+            holder.thumb.setLongClickable(false);
         }
     }
 
@@ -655,6 +695,7 @@ public class WallPage extends BasePage {
         private final List<Item> adapterItems = new ArrayList<>();
         private boolean showLoadMore;
         private boolean showEmpty;
+        private boolean videosPaused;
 
         void submit(List<Item> source, boolean displayLoadMore, boolean displayEmpty) {
             adapterItems.clear();
@@ -668,6 +709,13 @@ public class WallPage extends BasePage {
             boolean normalized = showEmpty ? false : visible;
             if (showLoadMore != normalized) {
                 showLoadMore = normalized;
+                notifyDataSetChanged();
+            }
+        }
+
+        void setVideosPaused(boolean paused) {
+            if (videosPaused != paused) {
+                videosPaused = paused;
                 notifyDataSetChanged();
             }
         }
@@ -714,7 +762,13 @@ public class WallPage extends BasePage {
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder instanceof PostViewHolder) {
                 Item item = adapterItems.get(position);
-                bindPostView((PostViewHolder) holder, item, currentWallOwner, currentMyAddress);
+                PostViewHolder postHolder = (PostViewHolder) holder;
+                bindPostView(postHolder, item, currentWallOwner, currentMyAddress);
+                if (videosPaused) {
+                    postHolder.thumb.pause();
+                } else {
+                    postHolder.thumb.resume();
+                }
             } else if (holder instanceof LoadMoreViewHolder) {
                 ((LoadMoreViewHolder) holder).bind();
             }
@@ -751,6 +805,18 @@ public class WallPage extends BasePage {
         String displayName;
     }
 
+    private void registerAvatar(AvatarView avatarView) {
+        synchronized (activeAvatars) {
+            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
+                AvatarView existing = activeAvatars.get(i).get();
+                if (existing == null) {
+                    activeAvatars.remove(i);
+                }
+            }
+            activeAvatars.add(new WeakReference<>(avatarView));
+        }
+    }
+
     private static final class PostViewHolder extends RecyclerView.ViewHolder {
         final View link;
         final View thumblink;
@@ -781,6 +847,37 @@ public class WallPage extends BasePage {
             edit = root.findViewById(R.id.edit);
             thumb = root.findViewById(R.id.thumb);
             image = root.findViewById(R.id.image);
+        }
+    }
+    public void pauseAvatarVideos() {
+        synchronized (activeAvatars) {
+            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
+                AvatarView avatar = activeAvatars.get(i).get();
+                if (avatar == null) {
+                    activeAvatars.remove(i);
+                } else {
+                    avatar.pause();
+                }
+            }
+        }
+        if (wallAdapter != null) {
+            wallAdapter.setVideosPaused(true);
+        }
+    }
+
+    public void resumeAvatarVideos() {
+        synchronized (activeAvatars) {
+            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
+                AvatarView avatar = activeAvatars.get(i).get();
+                if (avatar == null) {
+                    activeAvatars.remove(i);
+                } else {
+                    avatar.resume();
+                }
+            }
+        }
+        if (wallAdapter != null) {
+            wallAdapter.setVideosPaused(false);
         }
     }
 
