@@ -404,24 +404,15 @@ public class WallPage extends BasePage {
 
         holder.thumb.setOnClickListener(null);
         holder.thumb.setOnLongClickListener(null);
-        holder.thumb.setClickable(false);
-        holder.thumb.setLongClickable(false);
 
-        View.OnClickListener openAvatar = v -> {
-            String videoUriStr = holder.thumb.getCurrentVideoUri();
-            Bitmap previewBitmap = holder.thumb.getPreviewBitmap();
-            if (!TextUtils.isEmpty(videoUriStr)) {
-                activity.lightboxVideo(Uri.parse(videoUriStr), previewBitmap);
-                return;
+        holder.thumb.setOnAvatarClickListener(content -> {
+            if (content.isVideo()) {
+                activity.showLightbox(content); // один універсальний метод
+            } else {
+                activity.showLightbox(content); // той самий
             }
-            if (previewBitmap != null) {
-                activity.lightbox(previewBitmap);
-            }
-        };
-
-        holder.thumb.setOnClickListener(openAvatar);
+        });
         holder.thumb.setClickable(true);
-        holder.thumblink.setOnClickListener(openAvatar);
         holder.thumblink.setClickable(true);
     }
 

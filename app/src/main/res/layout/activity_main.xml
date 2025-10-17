@@ -18,9 +18,9 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/dp32"
             android:background="@android:color/transparent"
+            android:paddingVertical="0dp"
             app:liftOnScroll="true"
-            app:liftOnScrollTargetViewId="@id/container"
-            android:paddingVertical="0dp">
+            app:liftOnScrollTargetViewId="@id/container">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
@@ -44,13 +44,13 @@
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent" />
 
             <onion.network.ui.views.TorStatusView
                 android:id="@+id/torStatusView"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -158,10 +158,13 @@
         android:id="@+id/lightboxVideo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#000"
         android:clickable="true"
         android:visibility="invisible"
-        android:background="#000"
-        app:use_controller="false"
-        app:surface_type="texture_view" />
+        app:keep_content_on_player_reset="true"
+        app:show_buffering="never"
+        app:shutter_background_color="@android:color/transparent"
+        app:surface_type="texture_view"
+        app:use_controller="false" />
 
 </FrameLayout>

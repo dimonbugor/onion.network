@@ -33,6 +33,7 @@ import android.view.Choreographer;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -52,6 +53,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.media3.common.MediaItem;
@@ -106,6 +110,7 @@ import onion.network.ui.pages.ProfilePage;
 import onion.network.ui.pages.RequestPage;
 import onion.network.ui.pages.WallPage;
 import onion.network.ui.views.ArcButtonLayout;
+import onion.network.ui.views.AvatarView;
 import onion.network.ui.views.RequestTool;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
@@ -303,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
         lightboxImageView = findViewById(R.id.lightbox);
         lightboxVideoView = findViewById(R.id.lightboxVideo);
         if (lightboxVideoView != null) {
-            lightboxVideoView.setUseController(false);
+//            lightboxVideoView.setUseController(false);
             lightboxVideoView.setVisibility(View.INVISIBLE);
             lightboxVideoView.setOnClickListener(null);
             lightboxVideoView.setClickable(false);
@@ -1559,93 +1564,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void lightboxVideo(Uri uri) {
-        lightboxVideo(uri, null);
-    }
-
-    public void lightboxVideo(Uri uri, @Nullable Bitmap preview) {
-        if (lightboxVideoView == null) return;
-        if (wallPage != null) {
-            wallPage.pauseAvatarVideos();
-        }
-        lightboxVideoHide(true, true);
-        if (preview != null && lightboxImageView != null) {
-            lightboxImageView.setImageBitmap(preview);
-            lightboxImageView.bringToFront();
-            lightboxImageView.setVisibility(View.VISIBLE);
-            lightboxImageView.setOnClickListener(v -> lightboxHide());
-            lightboxImageView.setClickable(true);
-        } else {
-            hideLightboxImageImmediate();
-        }
-        ensureLightboxPlayer();
-        lightboxPlayer.stop();
-        lightboxPlayer.setMediaItem(MediaItem.fromUri(uri));
-        lightboxPlayer.prepare();
-        lightboxPlayer.seekTo(0);
-        lightboxPlayer.play();
-        lightboxVideoView.bringToFront();
-        lightboxVideoView.setVisibility(View.VISIBLE);
-        lightboxVideoView.setClickable(true);
-        lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
-        lightboxVideoView.setOnClickListener(v -> lightboxVideoHide());
-    }
-
-    public void lightboxVideoHide() {
-        lightboxVideoHide(false, false);
-    }
-
-    private void lightboxVideoHide(boolean immediate, boolean suppressResume) {
-        if (lightboxVideoView == null || lightboxVideoView.getVisibility() != View.VISIBLE) {
-            if (!suppressResume) {
-                maybeResumeAvatarVideos();
-            }
-            return;
-        }
-        if (lightboxPlayer != null) {
-            lightboxPlayer.setPlayWhenReady(false);
-            lightboxPlayer.pause();
-            lightboxPlayer.stop();
-        }
-        lightboxVideoView.setOnClickListener(null);
-        lightboxVideoView.setClickable(false);
-        if (immediate) {
-            lightboxVideoView.clearAnimation();
-            lightboxVideoView.setVisibility(View.INVISIBLE);
-            if (!suppressResume) {
-                maybeResumeAvatarVideos();
-            }
-        } else {
-            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
-            lightboxVideoView.postDelayed(() -> {
-                lightboxVideoView.setVisibility(View.INVISIBLE);
-                if (!suppressResume) {
-                    maybeResumeAvatarVideos();
-                }
-            }, 250);
-        }
-    }
-
     private void lightboxHide() {
         if (lightboxImageView == null || lightboxImageView.getVisibility() != View.VISIBLE) return;
         Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.lightbox_hide);
         animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
+            @Override public void onAnimationStart(Animation animation) { }
 
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                lightboxImageView.setVisibility(View.GONE);
+            @Override public void onAnimationEnd(Animation animation) {
+                lightboxImageView.clearAnimation();
+                lightboxImageView.setAlpha(0f);
+                lightboxImageView.setVisibility(View.GONE); // ← GONE, не INVISIBLE
                 lightboxImageView.setImageDrawable(null);
                 lightboxImageView.setOnClickListener(null);
                 lightboxImageView.setClickable(false);
-                maybeResumeAvatarVideos();
+                checkAndResumeAvatarVideos(); // ← єдина точка перевірки після ховання
             }
 
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
+            @Override public void onAnimationRepeat(Animation animation) { }
         });
         lightboxImageView.startAnimation(animation);
     }
@@ -1653,13 +1588,14 @@ public class MainActivity extends AppCompatActivity {
     private void hideLightboxImageImmediate() {
         if (lightboxImageView == null) return;
         lightboxImageView.clearAnimation();
-        lightboxImageView.setVisibility(View.GONE);
+        lightboxImageView.setAlpha(0f);
+        lightboxImageView.setVisibility(View.GONE); // ← GONE
         lightboxImageView.setImageDrawable(null);
         lightboxImageView.setOnClickListener(null);
         lightboxImageView.setClickable(false);
     }
 
-    private void maybeResumeAvatarVideos() {
+    private void checkAndResumeAvatarVideos() {
         boolean imageVisible = lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE;
         boolean videoVisible = lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE;
         if (!imageVisible && !videoVisible && wallPage != null) {
@@ -1670,7 +1606,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE) {
-            lightboxVideoHide();
+            lightboxVideoHide(true, true);
             return;
         }
         if (lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE) {
@@ -1681,13 +1617,158 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void ensureLightboxPlayer() {
-        if (lightboxPlayer == null) {
-            lightboxPlayer = new ExoPlayer.Builder(this).build();
-            lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ONE);
-            lightboxPlayer.setVolume(0f);
-            lightboxPlayer.addListener(lightboxPlayerListener);
-            if (lightboxVideoView != null) {
-                lightboxVideoView.setPlayer(lightboxPlayer);
+        if (lightboxPlayer != null) return;
+
+        DefaultLoadControl load = new DefaultLoadControl.Builder()
+                .setBufferDurationsMs(1000, 3000, 250, 500)
+                .build();
+
+        DefaultRenderersFactory rf = new DefaultRenderersFactory(this)
+                .setEnableDecoderFallback(true)
+                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
+
+        lightboxPlayer = new ExoPlayer.Builder(this)
+                .setRenderersFactory(rf)
+                .setLoadControl(load)
+                .build();
+
+        lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+        lightboxPlayer.setVolume(1f);
+        lightboxVideoView.setPlayer(lightboxPlayer);
+
+        lightboxPlayer.addListener(new Player.Listener() {
+            @Override
+            public void onRenderedFirstFrame() {
+                crossfadePreviewToVideo();
+            }
+
+            @Override
+            public void onPlayerError(@NonNull PlaybackException error) {
+                // повертаємо прев’ю у разі помилки
+                if (lightboxImageView != null) {
+                    lightboxImageView.setVisibility(View.VISIBLE);
+                    lightboxImageView.setAlpha(1f);
+                }
+                lightboxVideoView.setAlpha(0f);
+                lightboxVideoView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    private void crossfadePreviewToVideo() {
+        if (lightboxVideoView == null) return;
+
+        lightboxVideoView.animate().cancel();
+        lightboxVideoView.animate().alpha(1f).setDuration(180).start();
+
+        if (lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE) {
+            lightboxImageView.animate().cancel();
+            lightboxImageView.animate()
+                    .alpha(0f)
+                    .setDuration(120)
+                    .withEndAction(() -> {
+                        lightboxImageView.setVisibility(View.GONE);
+                        lightboxImageView.setImageDrawable(null);
+                        lightboxImageView.setOnClickListener(null);
+                        lightboxImageView.setClickable(false);
+                    })
+                    .start();
+        }
+    }
+
+    private void hideLightboxes() {
+        lightboxVideoHide(true, true); // ховає відео з анімацією
+        lightboxHide();      // ховає зображення з анімацією
+        // страховка від гонок/диявольських анімацій :)
+        lightboxVideoView.postDelayed(this::checkAndResumeAvatarVideos, 350);
+    }
+
+    private void lightboxVideoHide(boolean immediate, boolean suppressResume) {
+        if (lightboxVideoView == null || lightboxVideoView.getVisibility() != View.VISIBLE) {
+            if (!suppressResume) checkAndResumeAvatarVideos(); // ← новий метод нижче
+            return;
+        }
+        if (lightboxPlayer != null) {
+            lightboxPlayer.setPlayWhenReady(false);
+            lightboxPlayer.pause();
+            // optional: залиш, або прибери якщо відчуваєш лаг на наступному відкритті
+            lightboxPlayer.clearMediaItems();
+        }
+        lightboxVideoView.setOnClickListener(null);
+        lightboxVideoView.setClickable(false);
+
+        Runnable end = () -> {
+            lightboxVideoView.clearAnimation();
+            lightboxVideoView.setAlpha(0f);
+            lightboxVideoView.setVisibility(View.GONE); // ← GONE замість INVISIBLE
+            if (!suppressResume) checkAndResumeAvatarVideos();
+        };
+
+        if (immediate) {
+            end.run();
+        } else {
+            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
+            lightboxVideoView.postDelayed(end, 250);
+        }
+    }
+
+    public void showLightbox(AvatarView.AvatarContent content) {
+        // пауза бекграунд-аватарів
+        if (wallPage != null) wallPage.pauseAvatarVideos();
+
+        // Приховати попередній стейт
+        hideLightboxImageImmediate();
+        lightboxVideoHide(true, true);
+
+        if (content.isVideo()) {
+            if (content.preview != null && lightboxImageView != null) {
+                lightboxImageView.setImageBitmap(content.preview);
+                lightboxImageView.setVisibility(View.VISIBLE);
+                lightboxImageView.bringToFront();
+                lightboxImageView.setOnClickListener(v -> hideLightboxes());
+            }
+
+            ensureLightboxPlayer();
+            lightboxPlayer.stop();
+            lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+            lightboxPlayer.setVolume(1f);
+            lightboxPlayer.setMediaItem(MediaItem.fromUri(Uri.parse(content.videoUri)));
+            lightboxPlayer.prepare();
+            lightboxPlayer.play();
+
+            lightboxVideoView.setShutterBackgroundColor(0x00000000);
+            lightboxVideoView.setKeepContentOnPlayerReset(true);
+
+            lightboxVideoView.setVisibility(View.VISIBLE);
+            lightboxVideoView.bringToFront();
+            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
+            lightboxVideoView.setOnClickListener(v -> hideLightboxes());
+        } else {
+            if (content.photo != null && lightboxImageView != null) {
+                // прибрати все, що могло лишитись після hide
+                lightboxImageView.clearAnimation();
+                lightboxImageView.setOnClickListener(null);
+                lightboxImageView.setClickable(false);
+                lightboxImageView.setTranslationZ(1000f);
+
+                if (lightboxVideoView != null) {
+                    lightboxVideoView.clearAnimation();
+                    lightboxVideoView.setAlpha(0f);
+                    lightboxVideoView.setVisibility(View.GONE); // важливо: GONE
+                    lightboxVideoView.setOnClickListener(null);
+                    lightboxVideoView.setClickable(false);
+                }
+
+                // ставимо картинку і явно робимо видимою
+                lightboxImageView.setImageBitmap(content.photo);
+                lightboxImageView.setAlpha(1f);                 // ← критично
+                lightboxImageView.setVisibility(View.VISIBLE);
+                lightboxImageView.bringToFront();
+                lightboxImageView.setClickable(true);
+                lightboxImageView.setOnClickListener(v -> hideLightboxes());
+
+                lightboxImageView.setAlpha(0f);
+                lightboxImageView.animate().alpha(1f).setDuration(180).start();
             }
         }
     }

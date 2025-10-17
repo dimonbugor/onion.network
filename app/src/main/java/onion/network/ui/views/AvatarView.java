@@ -50,6 +50,8 @@ public class AvatarView extends FrameLayout {
 
     private int placeholderResId = R.drawable.nothumb;
 
+    @Nullable private OnAvatarClickListener clickListener;
+
     private final Player.Listener playerListener = new Player.Listener() {
         @Override
         public void onPlaybackStateChanged(int playbackState) {
@@ -106,6 +108,20 @@ public class AvatarView extends FrameLayout {
         imageView.setImageResource(placeholderResId);
         imageView.setClickable(false);
         addView(imageView);
+    }
+
+    public void setOnAvatarClickListener(@Nullable OnAvatarClickListener l) {
+        clickListener = l;
+        boolean has = (l != null);
+        setClickable(has);
+        setOnClickListener(has ? v -> {
+            if (clickListener == null) return;
+            if (!TextUtils.isEmpty(currentVideoUri)) {
+                clickListener.onClick(AvatarContent.video(currentVideoUri, getPreviewBitmap()));
+            } else {
+                clickListener.onClick(AvatarContent.photo(getPreviewBitmap()));
+            }
+        } : null);
     }
 
     /**
@@ -335,5 +351,30 @@ public class AvatarView extends FrameLayout {
             return ((BitmapDrawable) imageView.getDrawable()).getBitmap();
         }
         return null;
+    }
+    public interface OnAvatarClickListener {
+        void onClick(@NonNull AvatarContent content);
+    }
+
+    public static final class AvatarContent {
+        @Nullable public final String videoUri;
+        @Nullable public final Bitmap preview;
+        @Nullable public final Bitmap photo;
+
+        public boolean isVideo() { return !TextUtils.isEmpty(videoUri); }
+
+        private AvatarContent(@Nullable String videoUri, @Nullable Bitmap preview, @Nullable Bitmap photo) {
+            this.videoUri = videoUri;
+            this.preview = preview;
+            this.photo = photo;
+        }
+
+        public static AvatarContent video(String uri, @Nullable Bitmap preview) {
+            return new AvatarContent(uri, preview, null);
+        }
+
+        public static AvatarContent photo(@Nullable Bitmap bmp) {
+            return new AvatarContent(null, null, bmp);
+        }
     }
 }

@@ -93,13 +93,13 @@ public class ProfilePage extends BasePage {
 
         profileAvatarView.bind(profilePhotoBitmap, fallback, videoUri);
 
-        if (videoUri != null) {
-            profileAvatarView.setOnClickListener(v -> activity.lightboxVideo(Uri.parse(videoUri), profileAvatarView.getPreviewBitmap()));
-        } else if (profilePhotoBitmap != null) {
-            profileAvatarView.setOnClickListener(v -> activity.lightbox(profilePhotoBitmap));
-        } else {
-            profileAvatarView.setOnClickListener(null);
-        }
+            profileAvatarView.setOnAvatarClickListener(content -> {
+                if (content.isVideo()) {
+                    activity.showLightbox(content); // один універсальний метод
+                } else {
+                    activity.showLightbox(content); // той самий
+                }
+            });
     }
 
     private void configureDeleteButtonForPhoto() {
