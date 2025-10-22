@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.res.ColorStateList;
@@ -38,7 +39,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.lang.ref.WeakReference;
 
 import com.google.android.material.card.MaterialCardView;
@@ -64,14 +67,20 @@ import onion.network.cashes.ItemCache;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
 
-import android.graphics.BitmapFactory;
-
 public class WallPage extends BasePage {
+
+    private static final int FRIEND_PREVIEW_LIMIT = 12;
 
     RecyclerView recyclerView;
     WallAdapter wallAdapter;
+    RecyclerView friendPreviewRecyclerView;
+    FriendPreviewAdapter friendPreviewAdapter;
     final List<Item> posts = new ArrayList<>();
+    final List<FriendPreview> friendPreviews = new ArrayList<>();
+    final Map<String, FriendPreview> friendPreviewByAddress = new HashMap<>();
+    final List<String> friendPreviewOrder = new ArrayList<>();
     final List<WeakReference<AvatarView>> activeAvatars = new ArrayList<>();
+    private int friendPreviewGeneration = 0;
     int count = 5;
     String TAG = "WallPage";
     String postEditText = null;
@@ -86,6 +95,12 @@ public class WallPage extends BasePage {
     public WallPage(MainActivity activity) {
         super(activity);
         activity.getLayoutInflater().inflate(R.layout.wall_page, this, true);
+        friendPreviewRecyclerView = findViewById(R.id.friendPreviewRecyclerView);
+        if (friendPreviewRecyclerView != null) {
+            friendPreviewRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+            friendPreviewAdapter = new FriendPreviewAdapter();
+            friendPreviewRecyclerView.setAdapter(friendPreviewAdapter);
+        }
         recyclerView = findViewById(R.id.wallRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         wallAdapter = new WallAdapter();
@@ -104,6 +119,7 @@ public class WallPage extends BasePage {
 
     @Override
     public void load() {
+        loadFriendPostPreviews();
         load(0, "");
     }
 
@@ -151,6 +167,177 @@ public class WallPage extends BasePage {
     @Override
     public void onResume() {
         postEditText = null;
+        loadFriendPostPreviews();
+    }
+
+    private boolean isViewingOwnWall() {
+        MainActivity a = activity;
+        return a != null && TextUtils.isEmpty(a.address);
+    }
+
+    private void loadFriendPostPreviews() {
+        if (friendPreviewRecyclerView == null || friendPreviewAdapter == null) {
+            return;
+        }
+
+        if (!isViewingOwnWall()) {
+            friendPreviewByAddress.clear();
+            friendPreviews.clear();
+            friendPreviewOrder.clear();
+            friendPreviewAdapter.notifyDataSetChanged();
+            friendPreviewRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        friendPreviewGeneration++;
+        final int generation = friendPreviewGeneration;
+
+        new ItemTask(getContext(), "", "friend", "", FRIEND_PREVIEW_LIMIT) {
+
+            @Override
+            protected void onProgressUpdate(ItemResult... results) {
+                ItemResult result = safeFirst(results);
+                handleFriendPreviewResult(result, generation);
+            }
+
+            @Override
+            protected void onPostExecute(ItemResult itemResult) {
+                handleFriendPreviewResult(itemResult, generation);
+            }
+
+            private ItemResult safeFirst(ItemResult[] results) {
+                return results != null && results.length > 0 ? results[0] : null;
+            }
+        }.execute2();
+    }
+
+    private void handleFriendPreviewResult(ItemResult itemResult, int generation) {
+        if (generation != friendPreviewGeneration) {
+            return;
+        }
+        if (itemResult == null) {
+            updateFriendPreviewVisibility();
+            return;
+        }
+
+        Map<String, FriendPreview> retained = new HashMap<>(friendPreviewByAddress);
+        friendPreviewByAddress.clear();
+        friendPreviewOrder.clear();
+
+        for (int idx = 0; idx < itemResult.size(); idx++) {
+            Item friendItem = itemResult.at(idx);
+            if (friendItem == null) continue;
+            JSONObject friendData = friendItem.json(getContext(), activity.address);
+            String friendAddress = friendData.optString("addr").trim();
+            if (TextUtils.isEmpty(friendAddress)) {
+                continue;
+            }
+
+            FriendPreview preview = retained.remove(friendAddress);
+            if (preview == null) {
+                preview = new FriendPreview(friendAddress);
+            }
+
+            preview.friendItem = friendItem;
+            preview.friendData = friendData;
+            preview.displayName = resolveFriendDisplayName(friendData);
+
+            friendPreviewByAddress.put(friendAddress, preview);
+            friendPreviewOrder.add(friendAddress);
+        }
+
+        refreshDisplayedFriendPreviews();
+
+        for (String friendAddress : friendPreviewOrder) {
+            FriendPreview preview = friendPreviewByAddress.get(friendAddress);
+            if (preview == null) continue;
+            if (preview.lastRequestedGeneration == generation) continue;
+            loadLatestPostForFriend(preview, generation);
+        }
+    }
+
+    private void loadLatestPostForFriend(final FriendPreview preview, final int generation) {
+        if (preview == null) return;
+        preview.lastRequestedGeneration = generation;
+
+        new ItemTask(getContext(), preview.friendAddress, "post", "", 1) {
+
+            @Override
+            protected void onProgressUpdate(ItemResult... results) {
+                ItemResult result = safeFirst(results);
+                handleFriendPostResult(preview, generation, result);
+            }
+
+            @Override
+            protected void onPostExecute(ItemResult itemResult) {
+                handleFriendPostResult(preview, generation, itemResult);
+            }
+
+            private ItemResult safeFirst(ItemResult[] results) {
+                return results != null && results.length > 0 ? results[0] : null;
+            }
+        }.execute2();
+    }
+
+    private void handleFriendPostResult(FriendPreview preview, int generation, ItemResult itemResult) {
+        if (preview == null) {
+            return;
+        }
+        if (generation != friendPreviewGeneration) {
+            return;
+        }
+        if (!friendPreviewByAddress.containsKey(preview.friendAddress)) {
+            return;
+        }
+
+        if (itemResult == null) {
+            refreshDisplayedFriendPreviews();
+            return;
+        }
+
+        if (itemResult.size() > 0) {
+            Item post = itemResult.at(0);
+            preview.latestPost = post;
+        } else if (!itemResult.loading() && itemResult.ok()) {
+            preview.latestPost = null;
+        }
+
+        refreshDisplayedFriendPreviews();
+    }
+
+    private void refreshDisplayedFriendPreviews() {
+        friendPreviews.clear();
+        for (String friendAddress : friendPreviewOrder) {
+            FriendPreview preview = friendPreviewByAddress.get(friendAddress);
+            if (preview == null) continue;
+            if (preview.latestPost != null) {
+                friendPreviews.add(preview);
+            }
+        }
+        if (friendPreviewAdapter != null) {
+            friendPreviewAdapter.notifyDataSetChanged();
+        }
+        updateFriendPreviewVisibility();
+    }
+
+    private void updateFriendPreviewVisibility() {
+        if (friendPreviewRecyclerView == null) return;
+        if (!isViewingOwnWall()) {
+            friendPreviewRecyclerView.setVisibility(View.GONE);
+            return;
+        }
+        friendPreviewRecyclerView.setVisibility(friendPreviews.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private String resolveFriendDisplayName(JSONObject friendData) {
+        if (friendData == null) {
+            return "Anonymous";
+        }
+        String displayName = friendData.optString("name", "").trim();
+        if (displayName.isEmpty()) {
+            displayName = "Anonymous";
+        }
+        return displayName;
     }
 
     void doPost(final Item item, final String text, Bitmap bitmap) {
@@ -359,6 +546,138 @@ public class WallPage extends BasePage {
         if (wallAdapter != null) {
             wallAdapter.submit(posts, showLoadMore, showEmpty);
         }
+    }
+
+    private void bindFriendPreview(FriendPreviewAdapter.FriendPreviewHolder holder, FriendPreview preview) {
+        if (holder == null || preview == null) {
+            return;
+        }
+
+        applyFriendPreviewStyle(holder);
+        bindFriendPreviewAvatar(holder, preview);
+
+        if (holder.name != null) {
+            holder.name.setText(preview.displayName);
+        }
+
+        View.OnClickListener openWallListener = v -> {
+            if (TextUtils.isEmpty(preview.friendAddress)) {
+                return;
+            }
+            Context ctx = getContext();
+            if (ctx == null) return;
+            ctx.startActivity(new Intent(ctx, MainActivity.class).putExtra("address", preview.friendAddress));
+        };
+
+        if (holder.card != null) {
+            holder.card.setOnClickListener(openWallListener);
+        } else {
+            holder.itemView.setOnClickListener(openWallListener);
+        }
+
+        if (preview.latestPost == null) {
+            return;
+        }
+
+        holder.itemView.setVisibility(View.VISIBLE);
+        JSONObject postData = preview.latestPost.json(getContext(), preview.friendAddress);
+        String dateValue = Utils.formatDate(postData.optString("date"));
+        if (holder.date != null) {
+            if (!TextUtils.isEmpty(dateValue)) {
+                holder.date.setText(dateValue);
+                holder.date.setVisibility(View.VISIBLE);
+            } else {
+                holder.date.setVisibility(View.GONE);
+            }
+        }
+
+        String text = postData.optString("text", "").trim();
+        if (holder.postText != null) {
+            if (!TextUtils.isEmpty(text)) {
+                holder.postText.setText(text);
+                holder.postText.setVisibility(View.VISIBLE);
+                holder.postText.setAlpha(1f);
+            } else {
+                holder.postText.setText("");
+                holder.postText.setVisibility(View.GONE);
+            }
+        }
+
+        Bitmap postImage = preview.latestPost.bitmap("img");
+        if (holder.postImage != null) {
+            if (postImage != null) {
+                holder.postImage.setImageBitmap(postImage);
+                holder.postImage.setVisibility(View.VISIBLE);
+                if (holder.imageContainer != null) {
+                    holder.imageContainer.setVisibility(View.VISIBLE);
+                }
+            } else {
+                holder.postImage.setImageDrawable(null);
+                holder.postImage.setVisibility(View.GONE);
+                if (holder.imageContainer != null) {
+                    holder.imageContainer.setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
+    private void applyFriendPreviewStyle(FriendPreviewAdapter.FriendPreviewHolder holder) {
+        UiCustomizationManager.FriendCardConfig config = UiCustomizationManager.getFriendCardConfig(getContext());
+        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
+
+        if (holder.card != null) {
+            float radius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), config.cornerRadiusPx);
+            holder.card.setRadius(radius);
+            holder.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
+            holder.card.setStrokeColor(preset.getAccentColor(getContext()));
+            int background = preset == UiCustomizationManager.ColorPreset.SYSTEM
+                    ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorPrimaryContainer)
+                    : preset.getSurfaceColor(getContext());
+            holder.card.setCardBackgroundColor(background);
+            holder.card.setContentPadding(config.horizontalPaddingPx, config.verticalPaddingPx,
+                    config.horizontalPaddingPx, config.verticalPaddingPx);
+        }
+
+        if (holder.avatarCard != null) {
+            holder.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
+            holder.avatarCard.setStrokeColor(preset.getAccentColor(getContext()));
+            ViewGroup.LayoutParams params = holder.avatarCard.getLayoutParams();
+            if (params != null) {
+                params.width = config.avatarSizePx;
+                params.height = config.avatarSizePx;
+                holder.avatarCard.setLayoutParams(params);
+            }
+        }
+
+        if (holder.name != null) {
+            holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
+        }
+
+        if (holder.date != null) {
+            holder.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
+        }
+
+        if (holder.postText != null) {
+            holder.postText.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
+        }
+    }
+
+    private void bindFriendPreviewAvatar(FriendPreviewAdapter.FriendPreviewHolder holder, FriendPreview preview) {
+        if (holder.avatar == null) {
+            return;
+        }
+        Item friendItem = preview.friendItem;
+        JSONObject friendData = preview.friendData;
+        Bitmap photoThumb = friendItem != null ? friendItem.bitmap("thumb") : null;
+        Bitmap videoThumb = friendItem != null ? friendItem.bitmap("video_thumb") : null;
+        String storedVideoUri = friendData != null ? friendData.optString("video_uri", "").trim() : "";
+        String videoData = friendData != null ? friendData.optString("video", "").trim() : "";
+        Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(),
+                preview.friendAddress,
+                storedVideoUri,
+                videoData);
+        holder.avatar.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
+        registerAvatar(holder.avatar);
     }
 
     private void bindPostView(PostViewHolder holder, Item item, String wallOwner, String myAddress) {
@@ -831,6 +1150,65 @@ public class WallPage extends BasePage {
             return myAddress;
         }
         return "post_" + item.key();
+    }
+
+    private final class FriendPreviewAdapter extends RecyclerView.Adapter<FriendPreviewAdapter.FriendPreviewHolder> {
+
+        @Override
+        public FriendPreviewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+            View view = inflater.inflate(R.layout.wall_friend_preview_item, parent, false);
+            return new FriendPreviewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(FriendPreviewHolder holder, int position) {
+            FriendPreview preview = position >= 0 && position < friendPreviews.size()
+                    ? friendPreviews.get(position)
+                    : null;
+            bindFriendPreview(holder, preview);
+        }
+
+        @Override
+        public int getItemCount() {
+            return friendPreviews.size();
+        }
+
+        final class FriendPreviewHolder extends RecyclerView.ViewHolder {
+            final MaterialCardView card;
+            final MaterialCardView avatarCard;
+            final AvatarView avatar;
+            final TextView name;
+            final TextView date;
+            final TextView postText;
+            final ImageView postImage;
+            final View imageContainer;
+
+            FriendPreviewHolder(View itemView) {
+                super(itemView);
+                card = itemView.findViewById(R.id.previewCard);
+                avatarCard = itemView.findViewById(R.id.avatarCard);
+                avatar = itemView.findViewById(R.id.avatar);
+                name = itemView.findViewById(R.id.friendName);
+                date = itemView.findViewById(R.id.postDate);
+                postText = itemView.findViewById(R.id.postText);
+                postImage = itemView.findViewById(R.id.postImage);
+                imageContainer = itemView.findViewById(R.id.postImageContainer);
+            }
+        }
+    }
+
+    private static final class FriendPreview {
+        final String friendAddress;
+        Item friendItem;
+        JSONObject friendData;
+        String displayName;
+        Item latestPost;
+        int lastRequestedGeneration = -1;
+
+        FriendPreview(String friendAddress) {
+            this.friendAddress = friendAddress;
+        }
     }
 
     private final class WallAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
