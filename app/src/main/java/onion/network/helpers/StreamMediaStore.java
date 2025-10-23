@@ -1,7 +1,10 @@
 package onion.network.helpers;
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.TextUtils;
+
+import androidx.core.content.FileProvider;
 
 import org.json.JSONObject;
 
@@ -115,6 +118,18 @@ public final class StreamMediaStore {
             metaFile.delete();
         }
         return removed;
+    }
+
+    public static Uri createContentUri(Context context, String mediaId) {
+        MediaDescriptor descriptor = get(context, mediaId);
+        if (descriptor == null || descriptor.file == null || !descriptor.file.exists()) {
+            return null;
+        }
+        return FileProvider.getUriForFile(
+                context,
+                context.getPackageName() + ".fileprovider",
+                descriptor.file
+        );
     }
 
     private static String sanitizeMime(String mime) {

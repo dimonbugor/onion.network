@@ -56,6 +56,7 @@ import onion.network.TorManager;
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.helpers.ChatMediaStore;
+import onion.network.helpers.MediaResolver;
 import onion.network.helpers.Const;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.PermissionHelper;
@@ -1128,10 +1129,14 @@ public class ChatPage extends BasePage
                 return false;
             }
             Bitmap thumb = loadVideoThumbnail(file);
-            Uri contentUri = ChatMediaStore.createContentUri(context, payload.getData());
+            Uri contentUri = payload.hasMediaReference()
+                    ? MediaResolver.resolveMediaUri(context, payload.getMediaId())
+                    : ChatMediaStore.createContentUri(context, payload.getData());
             if (contentUri == null) {
-                return false;
+                contentUri = Uri.fromFile(file);
             }
+            final Bitmap previewBitmap = thumb;
+            final Uri playableUri = contentUri;
             holder.attachmentContainer.setVisibility(View.VISIBLE);
             holder.attachmentImage.setVisibility(View.VISIBLE);
             if (thumb != null) {
@@ -1145,7 +1150,7 @@ public class ChatPage extends BasePage
                 holder.attachmentVideoBadge.setVisibility(View.VISIBLE);
             }
             holder.attachmentContainer.setOnClickListener(v ->
-                    activity.showLightbox(AvatarView.AvatarContent.video(contentUri.toString(), thumb)));
+                    activity.showLightbox(AvatarView.AvatarContent.video(playableUri.toString(), previewBitmap)));
             return true;
         }
 
@@ -1184,14 +1189,29 @@ public class ChatPage extends BasePage
         }
 
         private File resolvePayloadFile(ChatMessagePayload payload) {
-            if (payload == null || payload.isInline()) {
+            if (payload == null) {
                 return null;
             }
-            return ChatMediaStore.resolveFile(context, payload.getData());
+            if (payload.hasMediaReference()) {
+                File refFile = MediaResolver.resolveMediaFile(context, payload.getMediaId());
+                if (refFile != null && refFile.exists()) {
+                    return refFile;
+                }
+            }
+            if (!payload.isInline()) {
+                return ChatMediaStore.resolveFile(context, payload.getData());
+            }
+            return null;
         }
 
         private File resolveAudioFile(ChatMessagePayload payload) {
             if (payload == null) return null;
+            if (payload.hasMediaReference()) {
+                File file = MediaResolver.resolveMediaFile(context, payload.getMediaId());
+                if (file != null && file.exists()) {
+                    return file;
+                }
+            }
             if (!payload.isInline()) {
                 File file = ChatMediaStore.resolveFile(context, payload.getData());
                 if (file != null && file.exists()) {
@@ -1203,6 +1223,12 @@ public class ChatPage extends BasePage
 
         private Bitmap loadImageBitmap(ChatMessagePayload payload) {
             if (payload == null) return null;
+            if (payload.hasMediaReference()) {
+                File file = MediaResolver.resolveMediaFile(context, payload.getMediaId());
+                if (file != null && file.exists()) {
+                    return decodeBitmapFromFile(file, 1024);
+                }
+            }
             if (!payload.isInline()) {
                 File file = resolvePayloadFile(payload);
                 if (file != null && file.exists()) {
@@ -1276,7 +1302,9 @@ public class ChatPage extends BasePage
                 activity.snack(activity.getString(R.string.chat_attachment_unavailable));
                 return;
             }
-            Uri uri = ChatMediaStore.createContentUri(context, payload.getData());
+            Uri uri = payload.hasMediaReference()
+                    ? MediaResolver.resolveMediaUri(context, payload.getMediaId())
+                    : ChatMediaStore.createContentUri(context, payload.getData());
             if (uri == null) {
                 uri = Uri.fromFile(file);
             }

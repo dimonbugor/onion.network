@@ -266,12 +266,14 @@ public class WallPage extends BasePage {
             } else {
                 target.remove(prefix + "_thumb");
             }
+            target.put(prefix + "_uri", "/media/" + mediaId);
             target.remove(prefix);
         } else {
             target.remove(prefix + "_id");
             target.remove(prefix + "_mime");
             target.remove(prefix + "_duration");
             target.remove(prefix + "_thumb");
+            target.remove(prefix + "_uri");
         }
     }
 
@@ -779,6 +781,16 @@ public class WallPage extends BasePage {
         Bitmap videoThumb = friendItem != null ? friendItem.bitmap("video_thumb") : null;
         String storedVideoUri = friendData != null ? friendData.optString("video_uri", "").trim() : "";
         String videoData = friendData != null ? friendData.optString("video", "").trim() : "";
+        String videoId = friendData != null ? friendData.optString("video_id", "").trim() : "";
+        if (!TextUtils.isEmpty(videoId)) {
+            Uri local = StreamMediaStore.createContentUri(context, videoId);
+            if (local != null) {
+                storedVideoUri = local.toString();
+            } else {
+                String host = preview.friendAddress.contains(".") ? preview.friendAddress : preview.friendAddress + ".onion";
+                storedVideoUri = "http://" + host + "/media/" + videoId;
+            }
+        }
         Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(),
                 preview.friendAddress,
                 storedVideoUri,
@@ -1123,9 +1135,19 @@ public class WallPage extends BasePage {
                 assets.videoThumb = decodeBitmapBase64(data.optString("video_thumb", ""));
             }
         }
+        assets.videoMediaId = firstNonEmpty(data.optString("video_id", "").trim(), rawData.optString("video_id", "").trim());
         assets.storedVideoUri = firstNonEmpty(data.optString("video_uri", "").trim(), rawData.optString("video_uri", "").trim());
         assets.videoData = firstNonEmpty(rawData.optString("video", "").trim(), data.optString("video", "").trim());
+        assets.audioMediaId = firstNonEmpty(data.optString("audio_id", "").trim(), rawData.optString("audio_id", "").trim());
         assets.displayName = firstNonEmpty(rawData.optString("name", ""), data.optString("name", ""));
+        if (!TextUtils.isEmpty(assets.videoMediaId)) {
+            Uri localUri = StreamMediaStore.createContentUri(context, assets.videoMediaId);
+            if (localUri != null) {
+                assets.storedVideoUri = localUri.toString();
+            } else if (TextUtils.isEmpty(assets.storedVideoUri)) {
+                assets.storedVideoUri = "/media/" + assets.videoMediaId;
+            }
+        }
 
         boolean belongsToFriend = !TextUtils.isEmpty(postAddress) && !postAddress.equals(myAddress);
         if (belongsToFriend) {
@@ -1201,6 +1223,12 @@ public class WallPage extends BasePage {
                 if (!TextUtils.isEmpty(friendName)) {
                     assets.displayName = friendName;
                 }
+            }
+        }
+        if (!TextUtils.isEmpty(assets.storedVideoUri) && assets.storedVideoUri.startsWith("/media/")) {
+            if (!TextUtils.isEmpty(postAddress)) {
+                String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";
+                assets.storedVideoUri = "http://" + host + assets.storedVideoUri;
             }
         }
         return assets;
@@ -1853,6 +1881,8 @@ public class WallPage extends BasePage {
         Bitmap videoThumb;
         String storedVideoUri;
         String videoData;
+        String videoMediaId;
+        String audioMediaId;
         String displayName;
     }
 
