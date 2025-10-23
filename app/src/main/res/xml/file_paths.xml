@@ -3,4 +3,6 @@
     <external-cache-path name="cam" path="camera/"/>
     <files-path name="avatar_video" path="avatar_video/" />
     <cache-path name="avatar_cache" path="avatar_cache/" />
+    <files-path name="chat_media" path="chat_media/" />
+    <files-path name="media_store" path="media_store/" />
 </paths>
