@@ -50,6 +50,34 @@
                 android:textSize="12sp"
                  />
 
+            <FrameLayout
+                android:id="@+id/attachmentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp8"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/attachmentImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/chat_item_background" />
+
+                <ImageView
+                    android:id="@+id/attachmentVideoBadge"
+                    android:layout_width="@dimen/dp36"
+                    android:layout_height="@dimen/dp36"
+                    android:layout_gravity="center"
+                    android:alpha="0.85"
+                    android:padding="@dimen/dp4"
+                    android:src="@drawable/ic_videocam"
+                    android:visibility="gone"
+                    app:tint="@android:color/white" />
+
+            </FrameLayout>
+
         <LinearLayout
             android:id="@+id/metaRow"
             android:layout_width="match_parent"

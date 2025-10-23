@@ -6,16 +6,22 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
+import android.util.Size;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +55,7 @@ import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.helpers.ChatMediaStore;
 import onion.network.helpers.Const;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
@@ -59,6 +66,7 @@ import onion.network.servers.ChatServer;
 import onion.network.services.UpdateScheduler;
 import onion.network.settings.Settings;
 import onion.network.ui.MainActivity;
+import onion.network.ui.views.AvatarView;
 
 public class ChatPage extends BasePage
         implements ChatClient.OnMessageSentListener, ChatServer.OnMessageReceivedListener {
@@ -791,6 +799,9 @@ public class ChatPage extends BasePage
         public View abort;
         public LinearLayout cardContent;
         public LinearLayout metaRow;
+        public FrameLayout attachmentContainer;
+        public ImageView attachmentImage;
+        public ImageView attachmentVideoBadge;
 
         public ChatHolder(View v) {
             super(v);
@@ -803,6 +814,9 @@ public class ChatPage extends BasePage
             abort = v.findViewById(R.id.abort);
             cardContent = v.findViewById(R.id.cardContent);
             metaRow = v.findViewById(R.id.metaRow);
+            attachmentContainer = v.findViewById(R.id.attachmentContainer);
+            attachmentImage = v.findViewById(R.id.attachmentImage);
+            attachmentVideoBadge = v.findViewById(R.id.attachmentVideoBadge);
         }
     }
 
@@ -890,10 +904,21 @@ public class ChatPage extends BasePage
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 
+            boolean attachmentVisible = bindAttachment(holder, payload);
             String displayMessage = buildDisplayMessage(payload);
-            holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-            holder.message.setText(Utils.linkify(context, displayMessage));
-            holder.message.setVisibility(TextUtils.isEmpty(displayMessage) ? View.GONE : View.VISIBLE);
+            if (TextUtils.isEmpty(displayMessage)) {
+                if (attachmentVisible) {
+                    holder.message.setVisibility(View.GONE);
+                } else {
+                    holder.message.setVisibility(View.VISIBLE);
+                    holder.message.setMovementMethod(LinkMovementMethod.getInstance());
+                    holder.message.setText(payloadPlaceholder(payload));
+                }
+            } else {
+                holder.message.setVisibility(View.VISIBLE);
+                holder.message.setMovementMethod(LinkMovementMethod.getInstance());
+                holder.message.setText(Utils.linkify(context, displayMessage));
+            }
 
             applyMessageStyle(holder, tx);
 
@@ -996,33 +1021,162 @@ public class ChatPage extends BasePage
             if (payload == null) {
                 return "";
             }
-            StringBuilder builder = new StringBuilder();
-            String text = payload.getText();
-            if (!TextUtils.isEmpty(text)) {
-                builder.append(text);
-            }
-            if (!payload.isText()) {
-                if (builder.length() > 0) {
-                    builder.append('\n');
-                }
-                builder.append(payloadPlaceholder(payload));
-            }
-            if (builder.length() == 0) {
-                builder.append(payload.getDisplayText());
-            }
-            return builder.toString();
+            return payload.getText();
         }
 
         private String payloadPlaceholder(ChatMessagePayload payload) {
             switch (payload.getType()) {
                 case IMAGE:
-                    return "[Image attachment]";
+                    return "[" + activity.getString(R.string.chat_attachment_image) + "]";
                 case VIDEO:
-                    return "[Video attachment]";
+                    return "[" + activity.getString(R.string.chat_attachment_video) + "]";
                 case AUDIO:
-                    return "[Audio message]";
+                    return "[" + activity.getString(R.string.chat_attachment_audio) + "]";
                 default:
-                    return "[Attachment]";
+                    return "[" + activity.getString(R.string.chat_attachment_generic) + "]";
+            }
+        }
+
+        private boolean bindAttachment(ChatHolder holder, ChatMessagePayload payload) {
+            if (holder.attachmentContainer == null || holder.attachmentImage == null) {
+                return false;
+            }
+            holder.attachmentContainer.setVisibility(View.GONE);
+            holder.attachmentImage.setVisibility(View.GONE);
+            holder.attachmentImage.setImageBitmap(null);
+            holder.attachmentImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            if (holder.attachmentVideoBadge != null) {
+                holder.attachmentVideoBadge.setVisibility(View.GONE);
+            }
+            holder.attachmentContainer.setOnClickListener(null);
+
+            if (payload == null) {
+                return false;
+            }
+
+            switch (payload.getType()) {
+                case IMAGE:
+                    return bindImageAttachment(holder, payload);
+                case VIDEO:
+                    return bindVideoAttachment(holder, payload);
+                default:
+                    return false;
+            }
+        }
+
+        private boolean bindImageAttachment(ChatHolder holder, ChatMessagePayload payload) {
+            Bitmap bitmap = loadImageBitmap(payload);
+            if (bitmap == null) {
+                return false;
+            }
+            holder.attachmentContainer.setVisibility(View.VISIBLE);
+            holder.attachmentImage.setVisibility(View.VISIBLE);
+            holder.attachmentImage.setImageBitmap(bitmap);
+            holder.attachmentContainer.setOnClickListener(v ->
+                    activity.showLightbox(AvatarView.AvatarContent.photo(bitmap)));
+            return true;
+        }
+
+        private boolean bindVideoAttachment(ChatHolder holder, ChatMessagePayload payload) {
+            File file = resolvePayloadFile(payload);
+            if (file == null || !file.exists()) {
+                return false;
+            }
+            Bitmap thumb = loadVideoThumbnail(file);
+            Uri contentUri = ChatMediaStore.createContentUri(context, payload.getData());
+            if (contentUri == null) {
+                return false;
+            }
+            holder.attachmentContainer.setVisibility(View.VISIBLE);
+            holder.attachmentImage.setVisibility(View.VISIBLE);
+            if (thumb != null) {
+                holder.attachmentImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                holder.attachmentImage.setImageBitmap(thumb);
+            } else {
+                holder.attachmentImage.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                holder.attachmentImage.setImageResource(R.drawable.ic_videocam);
+            }
+            if (holder.attachmentVideoBadge != null) {
+                holder.attachmentVideoBadge.setVisibility(View.VISIBLE);
+            }
+            holder.attachmentContainer.setOnClickListener(v ->
+                    activity.showLightbox(AvatarView.AvatarContent.video(contentUri.toString(), thumb)));
+            return true;
+        }
+
+        private File resolvePayloadFile(ChatMessagePayload payload) {
+            if (payload == null || payload.isInline()) {
+                return null;
+            }
+            return ChatMediaStore.resolveFile(context, payload.getData());
+        }
+
+        private Bitmap loadImageBitmap(ChatMessagePayload payload) {
+            if (payload == null) return null;
+            if (!payload.isInline()) {
+                File file = resolvePayloadFile(payload);
+                if (file != null && file.exists()) {
+                    return decodeBitmapFromFile(file, 1024);
+                }
+            }
+            String data = payload.getData();
+            if (!TextUtils.isEmpty(data)) {
+                try {
+                    byte[] bytes = Ed25519Signature.base64Decode(data);
+                    return decodeBitmapFromBytes(bytes, 1024);
+                } catch (Exception ignore) {
+                }
+            }
+            return null;
+        }
+
+        private Bitmap decodeBitmapFromFile(File file, int maxDim) {
+            if (file == null) return null;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            options.inSampleSize = calculateSampleSize(options, maxDim);
+            options.inJustDecodeBounds = false;
+            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        }
+
+        private Bitmap decodeBitmapFromBytes(byte[] data, int maxDim) {
+            if (data == null || data.length == 0) return null;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            options.inSampleSize = calculateSampleSize(options, maxDim);
+            options.inJustDecodeBounds = false;
+            return BitmapFactory.decodeByteArray(data, 0, data.length, options);
+        }
+
+        private int calculateSampleSize(BitmapFactory.Options options, int maxDim) {
+            int height = options.outHeight;
+            int width = options.outWidth;
+            int inSampleSize = 1;
+            if (height > maxDim || width > maxDim) {
+                final int halfHeight = height / 2;
+                final int halfWidth = width / 2;
+                while ((halfHeight / inSampleSize) >= maxDim && (halfWidth / inSampleSize) >= maxDim) {
+                    inSampleSize *= 2;
+                }
+            }
+            return Math.max(1, inSampleSize);
+        }
+
+        private Bitmap loadVideoThumbnail(File file) {
+            if (file == null || !file.exists()) {
+                return null;
+            }
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    return ThumbnailUtils.createVideoThumbnail(file, new Size(512, 512), null);
+                } else {
+                    return ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Images.Thumbnails.MINI_KIND);
+                }
+            } catch (Exception ex) {
+                Log.w(TAG, "Unable to create video thumbnail", ex);
+                return null;
             }
         }
 
