@@ -38,7 +38,8 @@ public class ChatMessagePayload {
 
     public enum Storage {
         INLINE("inline"),
-        FILE("file");
+        FILE("file"),
+        REFERENCE("ref");
 
         private final String key;
 
@@ -74,6 +75,7 @@ public class ChatMessagePayload {
     private String fileName;
     private String preview; // base64 thumbnail or waveform
     private Storage storage = Storage.INLINE;
+    private String mediaId;
 
     private ChatMessagePayload(Type type) {
         this.type = type == null ? Type.TEXT : type;
@@ -211,6 +213,9 @@ public class ChatMessagePayload {
             if (!TextUtils.isEmpty(preview)) {
                 o.put("preview", preview);
             }
+            if (!TextUtils.isEmpty(mediaId)) {
+                o.put("media_id", mediaId);
+            }
         } catch (JSONException ignore) {
         }
         return o;
@@ -246,6 +251,7 @@ public class ChatMessagePayload {
         payload.durationMs = o.optLong("duration", 0);
         payload.fileName = o.optString("name", null);
         payload.preview = o.optString("preview", null);
+        payload.mediaId = o.optString("media_id", null);
         return payload;
     }
 
@@ -267,5 +273,18 @@ public class ChatMessagePayload {
 
     public boolean isText() {
         return type == Type.TEXT;
+    }
+
+    public String getMediaId() {
+        return mediaId;
+    }
+
+    public ChatMessagePayload setMediaId(String mediaId) {
+        this.mediaId = mediaId;
+        return this;
+    }
+
+    public boolean hasMediaReference() {
+        return !TextUtils.isEmpty(mediaId);
     }
 }

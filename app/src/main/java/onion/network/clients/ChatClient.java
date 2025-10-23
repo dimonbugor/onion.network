@@ -5,6 +5,7 @@ package onion.network.clients;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -18,6 +19,8 @@ import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.TorManager;
 import onion.network.helpers.ChatMediaStore;
+import onion.network.helpers.MediaUploadClient;
+import onion.network.helpers.StreamMediaStore;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.Utils;
 import onion.network.models.ChatMessagePayload;
@@ -56,13 +59,13 @@ public class ChatClient {
     }
 
     public Uri makeUri(String sender, String receiver, String content, long time) {
-        Envelope envelope = buildEnvelope(sender, receiver, prepareContentForSend(content), time);
+        Envelope envelope = buildEnvelope(sender, receiver, prepareContentForSend(content, receiver), time);
         return envelope.toUri();
     }
 
     public boolean sendOne(String sender, String receiver, String content, long time) throws IOException {
 
-        String networkContent = prepareContentForSend(content);
+        String networkContent = prepareContentForSend(content, receiver);
         Envelope envelope = buildEnvelope(sender, receiver, networkContent, time);
         boolean sent = sendViaPost(envelope);
         if (!sent) {
@@ -174,19 +177,82 @@ public class ChatClient {
         return rs;
     }
 
-    private String prepareContentForSend(String rawContent) {
+    private String prepareContentForSend(String rawContent, String receiver) {
+        boolean rawLooksJson = rawContent != null && rawContent.trim().startsWith("{");
         try {
-            boolean rawLooksJson = rawContent != null && rawContent.trim().startsWith("{");
             ChatMessagePayload payload = ChatMessagePayload.fromStorageString(rawContent);
             if (payload.getType() == ChatMessagePayload.Type.TEXT) {
-                if (!rawLooksJson) {
-                    return rawContent;
-                }
-                return payload.getText();
+                return rawLooksJson ? payload.getText() : rawContent;
             }
+            if (ensureMediaReference(payload, receiver)) {
+                return payload.toStorageString();
+            }
+            return convertToInlinePayload(payload, rawLooksJson ? payload.toStorageString() : rawContent);
+        } catch (Exception ex) {
+            log("prepareContentForSend error: " + ex.getMessage());
+            return rawContent;
+        }
+    }
+
+    private boolean ensureMediaReference(ChatMessagePayload payload, String receiver) {
+        if (payload == null || payload.getType() == ChatMessagePayload.Type.TEXT) {
+            return false;
+        }
+        if (payload.hasMediaReference()) {
+            return true;
+        }
+        byte[] bytes = null;
+        String mime = payload.getMime();
+        try {
             if (!payload.isInline()) {
-                String relativePath = payload.getData();
-                File file = ChatMediaStore.resolveFile(context, relativePath);
+                File file = ChatMediaStore.resolveFile(context, payload.getData());
+                if (file == null || !file.exists()) {
+                    return false;
+                }
+                bytes = Utils.readFileAsBytes(file);
+                if (TextUtils.isEmpty(mime)) {
+                    mime = "application/octet-stream";
+                }
+            } else {
+                String base64 = payload.getData();
+                if (!TextUtils.isEmpty(base64)) {
+                    bytes = Ed25519Signature.base64Decode(base64);
+                }
+            }
+            if (bytes == null || bytes.length == 0) {
+                return false;
+            }
+            if (ChatMediaStore.exceedsLimit(bytes.length)) {
+                return false;
+            }
+            if (TextUtils.isEmpty(receiver)) {
+                StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, bytes, mime);
+                payload.setMediaId(descriptor.id);
+                payload.setMime(descriptor.mime);
+                payload.setSizeBytes(descriptor.size);
+            } else {
+                String host = receiver.endsWith(".onion") ? receiver : receiver + ".onion";
+                MediaUploadClient.Result result = MediaUploadClient.upload(host, bytes, mime);
+                payload.setMediaId(result.id);
+                payload.setMime(result.mime);
+                payload.setSizeBytes(result.size);
+            }
+            payload.setStorage(ChatMessagePayload.Storage.REFERENCE);
+            payload.setData(null);
+            return true;
+        } catch (Exception ex) {
+            log("ensureMediaReference error: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    private String convertToInlinePayload(ChatMessagePayload payload, String fallback) {
+        if (payload == null) {
+            return fallback;
+        }
+        try {
+            if (!payload.isInline()) {
+                File file = ChatMediaStore.resolveFile(context, payload.getData());
                 if (file != null && file.exists()) {
                     byte[] bytes = Utils.readFileAsBytes(file);
                     if (bytes.length > 0 && !ChatMediaStore.exceedsLimit(bytes.length)) {
@@ -194,15 +260,17 @@ public class ChatClient {
                         inline.setStorage(ChatMessagePayload.Storage.INLINE);
                         inline.setData(Ed25519Signature.base64Encode(bytes));
                         inline.setSizeBytes(bytes.length);
+                        inline.setMediaId(null);
                         return inline.toStorageString();
                     }
                 }
+            } else if (!TextUtils.isEmpty(payload.getData())) {
+                return payload.toStorageString();
             }
-            return payload.toStorageString();
         } catch (Exception ex) {
-            log("prepareContentForSend error: " + ex.getMessage());
-            return rawContent;
+            log("convertToInlinePayload error: " + ex.getMessage());
         }
+        return fallback;
     }
 
     private static final class Envelope {
