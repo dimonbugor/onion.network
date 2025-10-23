@@ -43,6 +43,7 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -62,6 +63,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import onion.network.helpers.DialogHelper;
+import onion.network.helpers.StreamMediaStore;
 import onion.network.helpers.Const;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.UiCustomizationManager;
@@ -188,45 +190,32 @@ public class WallPage extends BasePage {
         } else {
             o.remove("img");
         }
-        if (draft.videoData != null && draft.videoData.length > 0) {
-            o.put("video", Ed25519Signature.base64Encode(draft.videoData));
-            if (draft.videoThumb != null) {
-                o.put("video_thumb", Utils.encodeImage(draft.videoThumb));
-            } else {
-                o.remove("video_thumb");
-            }
-            if (!TextUtils.isEmpty(draft.videoMime)) {
-                o.put("video_mime", draft.videoMime);
-            } else {
-                o.remove("video_mime");
-            }
-            if (draft.videoDurationMs > 0) {
-                o.put("video_duration", draft.videoDurationMs);
-            } else {
-                o.remove("video_duration");
-            }
-        } else {
-            o.remove("video");
-            o.remove("video_thumb");
-            o.remove("video_mime");
-            o.remove("video_duration");
+        applyMediaReference(o, "video", draft.videoMediaId, draft.videoMime, draft.videoDurationMs, draft.videoThumb);
+        applyMediaReference(o, "audio", draft.audioMediaId, draft.audioMime, draft.audioDurationMs, null);
+    }
+
+    private boolean ensureDraftMediaReferences(PostDraft draft) {
+        if (draft == null) {
+            return true;
         }
-        if (draft.audioData != null && draft.audioData.length > 0) {
-            o.put("audio", Ed25519Signature.base64Encode(draft.audioData));
-            if (!TextUtils.isEmpty(draft.audioMime)) {
-                o.put("audio_mime", draft.audioMime);
-            } else {
-                o.remove("audio_mime");
+        try {
+            if (TextUtils.isEmpty(draft.videoMediaId) && draft.videoData != null && draft.videoData.length > 0) {
+                StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, draft.videoData, draft.videoMime);
+                draft.videoMediaId = descriptor.id;
+                draft.videoMime = descriptor.mime;
+                draft.videoData = null;
             }
-            if (draft.audioDurationMs > 0) {
-                o.put("audio_duration", draft.audioDurationMs);
-            } else {
-                o.remove("audio_duration");
+            if (TextUtils.isEmpty(draft.audioMediaId) && draft.audioData != null && draft.audioData.length > 0) {
+                StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, draft.audioData, draft.audioMime);
+                draft.audioMediaId = descriptor.id;
+                draft.audioMime = descriptor.mime;
+                draft.audioData = null;
             }
-        } else {
-            o.remove("audio");
-            o.remove("audio_mime");
-            o.remove("audio_duration");
+            return true;
+        } catch (IOException ex) {
+            Log.e(TAG, "Unable to persist media", ex);
+            activity.snack(activity.getString(R.string.wall_media_store_failed));
+            return false;
         }
     }
 
@@ -256,6 +245,33 @@ public class WallPage extends BasePage {
             return Long.parseLong(value);
         } catch (NumberFormatException ex) {
             return 0L;
+        }
+    }
+
+    private void applyMediaReference(JSONObject target, String prefix, String mediaId, String mime, long durationMs, Bitmap thumbBitmap) throws JSONException {
+        if (!TextUtils.isEmpty(mediaId)) {
+            target.put(prefix + "_id", mediaId);
+            if (!TextUtils.isEmpty(mime)) {
+                target.put(prefix + "_mime", mime);
+            } else {
+                target.remove(prefix + "_mime");
+            }
+            if (durationMs > 0) {
+                target.put(prefix + "_duration", durationMs);
+            } else {
+                target.remove(prefix + "_duration");
+            }
+            if (thumbBitmap != null) {
+                target.put(prefix + "_thumb", Utils.encodeImage(thumbBitmap));
+            } else {
+                target.remove(prefix + "_thumb");
+            }
+            target.remove(prefix);
+        } else {
+            target.remove(prefix + "_id");
+            target.remove(prefix + "_mime");
+            target.remove(prefix + "_duration");
+            target.remove(prefix + "_thumb");
         }
     }
 
@@ -347,6 +363,7 @@ public class WallPage extends BasePage {
                                 draft.videoMime = mime;
                                 draft.videoThumb = thumb;
                                 draft.videoDurationMs = duration;
+                                draft.videoMediaId = null;
                             }
                         } catch (IOException ex) {
                             Log.e(TAG, "Unable to read selected video", ex);
@@ -1308,9 +1325,11 @@ public class WallPage extends BasePage {
         Bitmap videoThumb;
         String videoMime;
         long videoDurationMs;
+        String videoMediaId;
         byte[] audioData;
         String audioMime;
         long audioDurationMs;
+        String audioMediaId;
 
         PostDraft copy() {
             PostDraft copy = new PostDraft();
@@ -1320,9 +1339,11 @@ public class WallPage extends BasePage {
             copy.videoThumb = videoThumb;
             copy.videoMime = videoMime;
             copy.videoDurationMs = videoDurationMs;
+            copy.videoMediaId = videoMediaId;
             copy.audioData = audioData;
             copy.audioMime = audioMime;
             copy.audioDurationMs = audioDurationMs;
+            copy.audioMediaId = audioMediaId;
             return copy;
         }
 
@@ -1338,30 +1359,48 @@ public class WallPage extends BasePage {
                 if (bmp != null) {
                     draft.image = bmp;
                 }
-                String videoBase64 = data.optString("video", "").trim();
-                if (!TextUtils.isEmpty(videoBase64)) {
-                    try {
-                        draft.videoData = Ed25519Signature.base64Decode(videoBase64);
-                    } catch (Exception ignore) {
-                        draft.videoData = null;
-                    }
+                draft.videoMediaId = data.optString("video_id", null);
+                if (!TextUtils.isEmpty(draft.videoMediaId)) {
+                    draft.videoMime = data.optString("video_mime", null);
+                    draft.videoDurationMs = data.optLong("video_duration", 0L);
                     String thumbBase64 = data.optString("video_thumb", "").trim();
                     if (!TextUtils.isEmpty(thumbBase64)) {
                         draft.videoThumb = Utils.decodeImage(thumbBase64);
                     }
-                    draft.videoMime = data.optString("video_mime", null);
-                    draft.videoDurationMs = data.optLong("video_duration", 0L);
-                }
-                String audioBase64 = data.optString("audio", "").trim();
-                if (!TextUtils.isEmpty(audioBase64)) {
-                    try {
-                        draft.audioData = Ed25519Signature.base64Decode(audioBase64);
-                    } catch (Exception ignore) {
-                        draft.audioData = null;
+                } else {
+                    String videoBase64 = data.optString("video", "").trim();
+                    if (!TextUtils.isEmpty(videoBase64)) {
+                        try {
+                            draft.videoData = Ed25519Signature.base64Decode(videoBase64);
+                        } catch (Exception ignore) {
+                            draft.videoData = null;
+                        }
+                        String thumbBase64 = data.optString("video_thumb", "").trim();
+                        if (!TextUtils.isEmpty(thumbBase64)) {
+                            draft.videoThumb = Utils.decodeImage(thumbBase64);
+                        }
+                        draft.videoMime = data.optString("video_mime", null);
+                        draft.videoDurationMs = data.optLong("video_duration", 0L);
                     }
-                    draft.audioMime = data.optString("audio_mime", "audio/mp4");
-                    draft.audioDurationMs = data.optLong("audio_duration", 0L);
                 }
+
+        String audioId = data.optString("audio_id", null);
+        if (!TextUtils.isEmpty(audioId)) {
+            draft.audioMediaId = audioId;
+            draft.audioMime = data.optString("audio_mime", "audio/mp4");
+            draft.audioDurationMs = data.optLong("audio_duration", 0L);
+        } else {
+            String audioBase64 = data.optString("audio", "").trim();
+            if (!TextUtils.isEmpty(audioBase64)) {
+                try {
+                    draft.audioData = Ed25519Signature.base64Decode(audioBase64);
+                } catch (Exception ignore) {
+                    draft.audioData = null;
+                }
+                draft.audioMime = data.optString("audio_mime", "audio/mp4");
+                draft.audioDurationMs = data.optLong("audio_duration", 0L);
+            }
+        }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -1377,12 +1416,14 @@ public class WallPage extends BasePage {
             videoThumb = null;
             videoMime = null;
             videoDurationMs = 0L;
+            videoMediaId = null;
         }
 
         void clearAudio() {
             audioData = null;
             audioMime = null;
             audioDurationMs = 0L;
+            audioMediaId = null;
         }
     }
 
@@ -1506,6 +1547,9 @@ public class WallPage extends BasePage {
             if (publishButton != null) {
                 publishButton.setOnClickListener(v -> {
                     captureText();
+                    if (!ensureDraftMediaReferences(draft)) {
+                        return;
+                    }
                     doPostPublish(item, draft.copy());
                     dialog.dismiss();
                 });
@@ -1520,6 +1564,7 @@ public class WallPage extends BasePage {
             captureText();
             pendingDraftAfterActivity = draft.copy();
             pendingDraftItem = item;
+            cancelAudioRecording();
             dialog.dismiss();
             if (action != null) {
                 action.run();
@@ -1611,6 +1656,7 @@ public class WallPage extends BasePage {
             draft.audioData = bytes;
             draft.audioMime = "audio/mp4";
             draft.audioDurationMs = duration;
+            draft.audioMediaId = null;
             updatePreview();
             activity.snack(activity.getString(R.string.chat_attachment_recording_saved));
         }
@@ -1643,7 +1689,7 @@ public class WallPage extends BasePage {
 
         void updatePreview() {
             boolean hasImage = draft.image != null;
-            boolean hasVideo = draft.videoData != null && draft.videoData.length > 0;
+            boolean hasVideo = (draft.videoData != null && draft.videoData.length > 0) || !TextUtils.isEmpty(draft.videoMediaId);
             if (mediaContainer != null) {
                 if (hasImage || hasVideo) {
                     mediaContainer.setVisibility(View.VISIBLE);
@@ -1668,7 +1714,7 @@ public class WallPage extends BasePage {
                 }
             }
             if (audioContainer != null) {
-                if (draft.audioData != null && draft.audioData.length > 0) {
+                if ((draft.audioData != null && draft.audioData.length > 0) || !TextUtils.isEmpty(draft.audioMediaId)) {
                     audioContainer.setVisibility(View.VISIBLE);
                     if (audioLabel != null) {
                         audioLabel.setText(buildAudioLabel(draft.audioDurationMs));

@@ -273,5 +273,6 @@
     <string name="chat_attachment_unavailable">Attachment unavailable</string>
     <string name="chat_audio_play">Play audio</string>
     <string name="chat_audio_pause">Pause audio</string>
+    <string name="wall_media_store_failed">Unable to store media</string>
 
 </resources>
