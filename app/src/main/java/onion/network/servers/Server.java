@@ -6,15 +6,19 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.net.Uri;
 import android.util.Log;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import onion.network.helpers.StreamMediaStore;
 
 import onion.network.models.FriendTool;
 import onion.network.models.Item;
@@ -35,6 +39,7 @@ public class Server {
     LocalSocket ls;
     LocalServerSocket lss;
     private String TAG = "Server";
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     public Server(Context context) {
         this.context = context;
@@ -73,6 +78,16 @@ public class Server {
 
         Uri uri = Uri.parse(request.getPath());
         String path = uri.getPath();
+
+        if ("/upload".equals(path)) {
+            handleUpload(request, response);
+            return;
+        }
+
+        if (path != null && path.startsWith("/media/")) {
+            handleMediaDownload(request, response, path.substring("/media/".length()));
+            return;
+        }
 
         if (Settings.getPrefs(context).getBoolean("webprofile", true)) {
             if ("/".equals(path)) {
@@ -179,6 +194,82 @@ public class Server {
             return;
         }
 
+    }
+
+    private void handleUpload(HttpServer.Request request, HttpServer.Response response) {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(405, "Method Not Allowed");
+            response.setContentPlain("Method Not Allowed");
+            return;
+        }
+        if (!request.hasBody()) {
+            response.setStatus(400, "Bad Request");
+            response.setContentPlain("Empty body");
+            return;
+        }
+        String mime = request.getHeader("Content-Type", "application/octet-stream");
+        byte[] body = request.getBody();
+        if (body == null || body.length == 0) {
+            response.setStatus(400, "Bad Request");
+            response.setContentPlain("Empty body");
+            return;
+        }
+        try {
+            StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, body, mime);
+            JSONObject payload = new JSONObject();
+            payload.put("status", "ok");
+            payload.put("id", descriptor.id);
+            payload.put("mime", descriptor.mime);
+            payload.put("size", descriptor.size);
+            writeJson(response, payload, 201, "Created");
+        } catch (IOException ex) {
+            boolean tooLarge = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("exceed");
+            JSONObject payload = new JSONObject();
+            try {
+                payload.put("status", "error");
+                payload.put("message", tooLarge ? "Media exceeds limit" : "Unable to store media");
+            } catch (JSONException ignore) {
+            }
+            writeJson(response, payload, tooLarge ? 413 : 500, tooLarge ? "Payload Too Large" : "Internal Server Error");
+        } catch (JSONException ex) {
+            response.setStatus(500, "Internal Server Error");
+            response.setContentPlain("JSON error");
+        }
+    }
+
+    private void handleMediaDownload(HttpServer.Request request, HttpServer.Response response, String mediaId) {
+        if (!"GET".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(405, "Method Not Allowed");
+            response.setContentPlain("Method Not Allowed");
+            return;
+        }
+        if (TextUtils.isEmpty(mediaId)) {
+            response.setStatus(400, "Bad Request");
+            response.setContentPlain("Missing media id");
+            return;
+        }
+        int slash = mediaId.indexOf('/') ;
+        if (slash >= 0) {
+            mediaId = mediaId.substring(0, slash);
+        }
+        StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.get(context, mediaId);
+        if (descriptor == null || descriptor.file == null || !descriptor.file.exists()) {
+            response.setStatus(404, "Not Found");
+            response.setContentPlain("Not Found");
+            return;
+        }
+        byte[] data = Utils.readFileAsBytes(descriptor.file);
+        response.putHeader("Cache-Control", "no-store");
+        response.setContent(data, descriptor.mime);
+    }
+
+    private void writeJson(HttpServer.Response response, JSONObject payload, int statusCode, String statusText) {
+        if (payload == null) {
+            payload = new JSONObject();
+        }
+        byte[] bytes = payload.toString().getBytes(UTF_8);
+        response.setStatus(statusCode, statusText);
+        response.setContent(bytes, "application/json; charset=utf-8");
     }
 
     public String getSocketName() {
