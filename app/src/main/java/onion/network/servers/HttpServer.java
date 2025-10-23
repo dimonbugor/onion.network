@@ -4,11 +4,9 @@ import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -47,12 +45,33 @@ public class HttpServer {
         this(new LocalServerSock(serverSocket), handler);
     }
 
+    private static String readLine(InputStream is) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        int c;
+        boolean seenAny = false;
+        while ((c = is.read()) != -1) {
+            seenAny = true;
+            if (c == '\n') {
+                break;
+            }
+            if (c != '\r') {
+                sb.append((char) c);
+            }
+        }
+        if (!seenAny && sb.length() == 0) {
+            return null;
+        }
+        return sb.toString();
+    }
+
     private static List<String> readHeaders(InputStream is) throws IOException {
-        BufferedReader r = new BufferedReader(new InputStreamReader(is));
         ArrayList<String> headers = new ArrayList<>();
         while (true) {
-            String header = r.readLine();
-            if (header == null || header.trim().length() == 0) {
+            String header = readLine(is);
+            if (header == null) {
+                break;
+            }
+            if (header.trim().isEmpty()) {
                 break;
             }
             headers.add(header.trim());
@@ -99,25 +118,52 @@ public class HttpServer {
     }
 
     private Request readRequest(InputStream is) throws IOException {
-        List<String> hh = readHeaders(is);
-        if (hh.size() == 0) throw new ProtocolException();
-        String requestLine = hh.get(0);
+        String requestLine = readLine(is);
+        if (requestLine == null) {
+            throw new ProtocolException();
+        }
         log(requestLine);
-        hh.remove(0);
         String[] requestToks = requestLine.trim().split(" ");
         if (requestToks.length != 3) throw new ProtocolException();
         String method = requestToks[0];
         String path = requestToks[1];
         String protocol = requestToks[2];
         if (!protocol.startsWith("HTTP/")) throw new ProtocolException();
+        List<String> headerLines = readHeaders(is);
+
         TreeMap<String, String> headers = new TreeMap<>();
-        for (String h : hh) {
+        for (String h : headerLines) {
             String[] tt = h.split("\\:", 2);
             if (tt.length == 2) {
                 headers.put(tt[0].trim(), tt[1].trim());
             }
         }
-        return new Request(method, path, headers);
+        byte[] body = new byte[0];
+        String contentLengthHeader = headers.get("Content-Length");
+        if (contentLengthHeader != null) {
+            int contentLength;
+            try {
+                contentLength = Integer.parseInt(contentLengthHeader.trim());
+            } catch (NumberFormatException ex) {
+                throw new ProtocolException();
+            }
+            if (contentLength < 0) throw new ProtocolException();
+            body = readFully(is, contentLength);
+        }
+        return new Request(method, path, headers, body);
+    }
+
+    private static byte[] readFully(InputStream is, int length) throws IOException {
+        byte[] data = new byte[length];
+        int offset = 0;
+        while (offset < length) {
+            int read = is.read(data, offset, length - offset);
+            if (read == -1) {
+                throw new ProtocolException();
+            }
+            offset += read;
+        }
+        return data;
     }
 
     private void writeResponse(Response response, OutputStream os) throws IOException {
@@ -191,14 +237,20 @@ public class HttpServer {
         private String method = "";
         private String path = "";
         private Map<String, String> headers = new TreeMap<>();
+        private byte[] body = new byte[0];
 
         public Request() {
         }
 
         public Request(String method, String path, Map<String, String> headers) {
+            this(method, path, headers, new byte[0]);
+        }
+
+        public Request(String method, String path, Map<String, String> headers, byte[] body) {
             this.method = method;
             this.path = path;
             this.headers = headers;
+            this.body = body == null ? new byte[0] : body;
         }
 
         public String getMethod() {
@@ -217,6 +269,14 @@ public class HttpServer {
             String ret = headers.get(key);
             if (ret == null) ret = defaultValue;
             return ret;
+        }
+
+        public byte[] getBody() {
+            return body;
+        }
+
+        public boolean hasBody() {
+            return body != null && body.length > 0;
         }
     }
 

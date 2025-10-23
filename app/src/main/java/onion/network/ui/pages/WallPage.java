@@ -8,13 +8,17 @@ import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
@@ -24,8 +28,10 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,6 +41,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
@@ -43,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.lang.ref.WeakReference;
+import java.util.Locale;
 
 import com.google.android.material.card.MaterialCardView;
 
@@ -52,6 +60,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import onion.network.helpers.DialogHelper;
+import onion.network.helpers.Const;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.models.Item;
@@ -62,10 +71,13 @@ import onion.network.databases.ItemDatabase;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.Utils;
 import onion.network.helpers.VideoCacheManager;
+import onion.network.helpers.ChatMediaStore;
+import onion.network.helpers.Ed25519Signature;
 import onion.network.models.ItemResult;
 import onion.network.cashes.ItemCache;
 import onion.network.ui.MainActivity;
 import onion.network.ui.views.AvatarView;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class WallPage extends BasePage {
 
@@ -83,13 +95,15 @@ public class WallPage extends BasePage {
     private int friendPreviewGeneration = 0;
     int count = 5;
     String TAG = "WallPage";
-    String postEditText = null;
 
     String smore;
     int imore;
     String currentWallOwner = "";
     String currentMyAddress = "";
     private Uri pendingPhotoUri;
+    private PostComposer activeComposer;
+    private PostDraft pendingDraftAfterActivity;
+    private Item pendingDraftItem;
 
 
     public WallPage(MainActivity activity) {
@@ -105,6 +119,254 @@ public class WallPage extends BasePage {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         wallAdapter = new WallAdapter();
         recyclerView.setAdapter(wallAdapter);
+    }
+
+    private void openPostComposer(@Nullable Item item, @Nullable PostDraft initialDraft) {
+        PostDraft draft = initialDraft != null ? initialDraft.copy() : new PostDraft();
+        View dialogView = activity.getLayoutInflater().inflate(R.layout.wall_dialog, null);
+        TextInputEditText textEdit = dialogView.findViewById(R.id.text);
+        if (!TextUtils.isEmpty(draft.text)) {
+            textEdit.setText(draft.text);
+            textEdit.setSelection(textEdit.getText().length());
+        }
+        AlertDialog.Builder builder = DialogHelper.themedBuilder(activity).setView(dialogView);
+        builder.setTitle(item != null ? "Edit Post" : "Write Post");
+        builder.setCancelable(true);
+        Dialog dialog = builder.create();
+        PostComposer composer = new PostComposer(item, draft, dialog, dialogView, textEdit);
+        dialog.setOnDismissListener(di -> {
+            if (activeComposer == composer) {
+                activeComposer = null;
+            }
+            composer.release();
+        });
+        activeComposer = composer;
+        composer.init();
+        dialog.show();
+    }
+
+    void editPost(final Item item) {
+        openPostComposer(item, PostDraft.fromItem(item));
+    }
+
+    public void writePost(final String text, final Bitmap bitmap) {
+        PostDraft draft = new PostDraft();
+        draft.text = text;
+        draft.image = bitmap;
+        openPostComposer(null, draft);
+    }
+
+    private void doPostPublish(@Nullable Item item, PostDraft draft) {
+        if (draft == null) return;
+        draft.text = draft.text == null ? "" : draft.text;
+        try {
+            if (item != null) {
+                JSONObject o = item.json();
+                o.put("text", draft.text);
+                applyDraftToJson(o, draft);
+                Item updated = new Item(item.type(), item.key(), item.index(), o);
+                ItemDatabase.getInstance(getContext()).put(updated);
+                activity.load();
+            } else {
+                JSONObject data = new JSONObject();
+                data.put("text", draft.text);
+                data.put("date", "" + System.currentTimeMillis());
+                applyDraftToJson(data, draft);
+                activity.publishPost(data);
+                activity.load();
+            }
+        } catch (JSONException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void applyDraftToJson(JSONObject o, PostDraft draft) throws JSONException {
+        if (draft.image != null) {
+            o.put("img", Utils.encodeImage(draft.image));
+        } else {
+            o.remove("img");
+        }
+        if (draft.videoData != null && draft.videoData.length > 0) {
+            o.put("video", Ed25519Signature.base64Encode(draft.videoData));
+            if (draft.videoThumb != null) {
+                o.put("video_thumb", Utils.encodeImage(draft.videoThumb));
+            } else {
+                o.remove("video_thumb");
+            }
+            if (!TextUtils.isEmpty(draft.videoMime)) {
+                o.put("video_mime", draft.videoMime);
+            } else {
+                o.remove("video_mime");
+            }
+            if (draft.videoDurationMs > 0) {
+                o.put("video_duration", draft.videoDurationMs);
+            } else {
+                o.remove("video_duration");
+            }
+        } else {
+            o.remove("video");
+            o.remove("video_thumb");
+            o.remove("video_mime");
+            o.remove("video_duration");
+        }
+        if (draft.audioData != null && draft.audioData.length > 0) {
+            o.put("audio", Ed25519Signature.base64Encode(draft.audioData));
+            if (!TextUtils.isEmpty(draft.audioMime)) {
+                o.put("audio_mime", draft.audioMime);
+            } else {
+                o.remove("audio_mime");
+            }
+            if (draft.audioDurationMs > 0) {
+                o.put("audio_duration", draft.audioDurationMs);
+            } else {
+                o.remove("audio_duration");
+            }
+        } else {
+            o.remove("audio");
+            o.remove("audio_mime");
+            o.remove("audio_duration");
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap bitmap, int maxDim) {
+        if (bitmap == null) return null;
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        if (width <= maxDim && height <= maxDim) {
+            return bitmap;
+        }
+        if (width >= height) {
+            int newWidth = maxDim;
+            int newHeight = (int) ((double) height * maxDim / width);
+            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+        } else {
+            int newHeight = maxDim;
+            int newWidth = (int) ((double) width * maxDim / height);
+            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+        }
+    }
+
+    private long parseDuration(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_PICK_IMAGE_POST
+                || requestCode == REQUEST_TAKE_PHOTO_POST
+                || requestCode == Const.REQUEST_PICK_VIDEO_POST) {
+
+            PostDraft draft = pendingDraftAfterActivity;
+            Item draftItem = pendingDraftItem;
+            pendingDraftAfterActivity = null;
+            pendingDraftItem = null;
+
+            if (draft == null) {
+                deleteTempPhoto();
+                return;
+            }
+
+            boolean success = (resultCode == Activity.RESULT_OK);
+            if (success) {
+                if (requestCode == REQUEST_PICK_IMAGE_POST || requestCode == REQUEST_TAKE_PHOTO_POST) {
+                    Bitmap bmp = null;
+                    Uri uri = data != null ? data.getData() : null;
+                    if (requestCode == REQUEST_TAKE_PHOTO_POST) {
+                        uri = pendingPhotoUri;
+                        if (uri != null) {
+                            try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+                                bmp = BitmapFactory.decodeStream(stream);
+                            } catch (IOException ex) {
+                                Log.e(TAG, "Failed to decode captured photo", ex);
+                            }
+                        } else if (data != null && data.getExtras() != null) {
+                            Object extra = data.getExtras().get("data");
+                            if (extra instanceof Bitmap) {
+                                bmp = (Bitmap) extra;
+                            }
+                        }
+                    } else if (data != null) {
+                        bmp = getActivityResultBitmap(data);
+                    }
+                    if (bmp != null && uri != null) {
+                        bmp = fixImageOrientation(bmp, uri);
+                    }
+                    if (bmp != null) {
+                        bmp = scaleBitmap(bmp, 1080);
+                        draft.image = bmp;
+                        draft.clearVideo();
+                        draft.clearAudio();
+                    } else {
+                        activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
+                    }
+                } else if (requestCode == Const.REQUEST_PICK_VIDEO_POST && data != null) {
+                    Uri uri = data.getData();
+                    if (uri != null) {
+                        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+                            byte[] bytes = Utils.readInputStream(stream);
+                            if (ChatMediaStore.exceedsLimit(bytes.length)) {
+                                activity.snack(activity.getString(R.string.chat_attachment_file_too_large));
+                            } else {
+                                String mime = activity.getContentResolver().getType(uri);
+                                if (TextUtils.isEmpty(mime)) {
+                                    String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                                    if (!TextUtils.isEmpty(extension)) {
+                                        mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                                    }
+                                }
+                                MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+                                Bitmap thumb = null;
+                                long duration = 0L;
+                                try {
+                                    retriever.setDataSource(activity, uri);
+                                    duration = parseDuration(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                                    thumb = retriever.getFrameAtTime(0);
+                                } catch (Exception ex) {
+                                    Log.w(TAG, "Unable to extract video metadata", ex);
+                                } finally {
+                                    try {
+                                        retriever.release();
+                                    } catch (Exception ignore) {
+                                    }
+                                }
+                                if (thumb != null) {
+                                    thumb = scaleBitmap(thumb, 1080);
+                                }
+                                draft.clearImage();
+                                draft.clearAudio();
+                                draft.videoData = bytes;
+                                draft.videoMime = mime;
+                                draft.videoThumb = thumb;
+                                draft.videoDurationMs = duration;
+                            }
+                        } catch (IOException ex) {
+                            Log.e(TAG, "Unable to read selected video", ex);
+                            activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
+                        }
+                    }
+                }
+            } else {
+                activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
+            }
+
+            deleteTempPhoto();
+            openPostComposer(draftItem, draft);
+            return;
+        }
+
+        if (resultCode != Activity.RESULT_OK) {
+            deleteTempPhoto();
+            return;
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -130,43 +392,12 @@ public class WallPage extends BasePage {
 
     @Override
     public void onFab() {
-        writePost(null, null);
+        openPostComposer(null, new PostDraft());
     }
 
-    void getData(JSONObject o, View dlg) {
-        try {
-            o.put("text", ((EditText) dlg.findViewById(R.id.text)).getText().toString());
-        } catch (JSONException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    void doPostPublish(Item item, String text, Bitmap bitmap, View dialogView) {
-        if (item != null) {
-            JSONObject o = item.json();
-            getData(o, dialogView);
-            Item item2 = new Item(item.type(), item.key(), item.index(), o);
-            ItemDatabase.getInstance(getContext()).put(item2);
-            activity.load();
-        } else {
-            JSONObject data = new JSONObject();
-            getData(data, dialogView);
-            try {
-                data.put("date", "" + System.currentTimeMillis());
-                if (bitmap != null) {
-                    data.put("img", Utils.encodeImage(bitmap));
-                }
-            } catch (JSONException ex) {
-                throw new RuntimeException(ex);
-            }
-            activity.publishPost(data);
-            activity.load();
-        }
-    }
 
     @Override
     public void onResume() {
-        postEditText = null;
         loadFriendPostPreviews();
     }
 
@@ -340,150 +571,7 @@ public class WallPage extends BasePage {
         return displayName;
     }
 
-    void doPost(final Item item, final String text, Bitmap bitmap) {
 
-        final View dialogView = activity.getLayoutInflater().inflate(R.layout.wall_dialog, null);
-        final EditText textEdit = (EditText) dialogView.findViewById(R.id.text);
-
-        if (item != null) {
-            textEdit.setText(item.json().optString("text"));
-            bitmap = item.bitmap("img");
-        }
-
-        if (text != null) {
-            textEdit.setText(text);
-        }
-
-        if (bitmap != null) {
-            ((ImageView) dialogView.findViewById(R.id.image)).setImageBitmap(bitmap);
-        } else {
-            dialogView.findViewById(R.id.image).setVisibility(View.GONE);
-        }
-
-        AlertDialog.Builder b = DialogHelper.themedBuilder(activity).setView(dialogView);
-
-        final Bitmap bmp = bitmap;
-
-        if (item != null) {
-            b.setTitle("Edit Post");
-        } else {
-            b.setTitle("Write Post");
-        }
-
-        b.setCancelable(true);
-
-        final Dialog d = b.create();
-
-        dialogView.findViewById(R.id.publish).setOnClickListener(v -> {
-            doPostPublish(item, text, bmp, dialogView);
-            d.cancel();
-        });
-
-        if (item == null) {
-            dialogView.findViewById(R.id.take_photo).setOnClickListener(v -> {
-                postEditText = textEdit.getText().toString();
-                PermissionHelper.runWithPermissions(activity,
-                        EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
-                        () -> {
-                            try {
-                                pendingPhotoUri = createPhotoOutputUri();
-                            } catch (IOException ex) {
-                                pendingPhotoUri = null;
-                                activity.snack("Unable to create photo file");
-                                return;
-                            }
-
-                            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
-                            takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            d.cancel();
-                            activity.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_POST);
-                        },
-                        () -> activity.snack("Camera permission required"));
-            });
-            dialogView.findViewById(R.id.add_image).setOnClickListener(v -> {
-                postEditText = textEdit.getText().toString();
-                PermissionHelper.runWithPermissions(activity,
-                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
-                        () -> {
-                            d.cancel();
-                            startImageChooser(REQUEST_PICK_IMAGE_POST);
-                        },
-                        () -> activity.snack("Storage permission required"));
-            });
-        } else {
-            dialogView.findViewById(R.id.take_photo).setVisibility(View.GONE);
-            dialogView.findViewById(R.id.add_image).setVisibility(View.GONE);
-        }
-
-        d.show();
-
-    }
-
-    void editPost(final Item item) {
-
-        doPost(item, null, null);
-
-    }
-
-    public void writePost(final String text, final Bitmap bitmap) {
-
-        doPost(null, text, bitmap);
-
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK) {
-            deleteTempPhoto();
-            return;
-        }
-
-        Bitmap bmp = null;
-
-        if (requestCode == REQUEST_PICK_IMAGE_POST) {
-            Uri uri = data.getData();
-            bmp = getActivityResultBitmap(data);
-            bmp = fixImageOrientation(bmp, uri);
-        }
-
-        if (requestCode == REQUEST_TAKE_PHOTO_POST) {
-            Uri uri = pendingPhotoUri;
-            if (uri != null) {
-//                bmp = decodeCapturedPhoto(uri);
-                bmp = fixImageOrientation(bmp, uri);
-            } else if (data != null && data.getExtras() != null) {
-                bmp = (Bitmap) data.getExtras().get("data");
-            }
-        }
-
-        if (bmp == null) {
-            deleteTempPhoto();
-            return;
-        }
-
-        int maxdim = 1080; // 🔼 Підвищено до 1080 для кращої якості
-
-        if (bmp.getWidth() >= bmp.getHeight() && bmp.getWidth() > maxdim) {
-            bmp = Bitmap.createScaledBitmap(
-                    bmp,
-                    maxdim,
-                    (int) ((double) bmp.getHeight() * maxdim / bmp.getWidth()),
-                    true
-            );
-        } else if (bmp.getHeight() > maxdim) {
-            bmp = Bitmap.createScaledBitmap(
-                    bmp,
-                    (int) ((double) bmp.getWidth() * maxdim / bmp.getHeight()),
-                    maxdim,
-                    true
-            );
-        }
-
-        writePost(postEditText, bmp);
-        postEditText = null;
-        deleteTempPhoto();
-    }
 
 
     void load(final int startIndex, String startKey) {
@@ -1208,6 +1296,396 @@ public class WallPage extends BasePage {
 
         FriendPreview(String friendAddress) {
             this.friendAddress = friendAddress;
+        }
+    }
+
+    private static final class PostDraft {
+        String text;
+        Bitmap image;
+        byte[] videoData;
+        Bitmap videoThumb;
+        String videoMime;
+        long videoDurationMs;
+        byte[] audioData;
+        String audioMime;
+        long audioDurationMs;
+
+        PostDraft copy() {
+            PostDraft copy = new PostDraft();
+            copy.text = text;
+            copy.image = image;
+            copy.videoData = videoData;
+            copy.videoThumb = videoThumb;
+            copy.videoMime = videoMime;
+            copy.videoDurationMs = videoDurationMs;
+            copy.audioData = audioData;
+            copy.audioMime = audioMime;
+            copy.audioDurationMs = audioDurationMs;
+            return copy;
+        }
+
+        static PostDraft fromItem(Item item) {
+            PostDraft draft = new PostDraft();
+            if (item == null) {
+                return draft;
+            }
+            try {
+                JSONObject data = item.json();
+                draft.text = data.optString("text", "");
+                Bitmap bmp = item.bitmap("img");
+                if (bmp != null) {
+                    draft.image = bmp;
+                }
+                String videoBase64 = data.optString("video", "").trim();
+                if (!TextUtils.isEmpty(videoBase64)) {
+                    try {
+                        draft.videoData = Ed25519Signature.base64Decode(videoBase64);
+                    } catch (Exception ignore) {
+                        draft.videoData = null;
+                    }
+                    String thumbBase64 = data.optString("video_thumb", "").trim();
+                    if (!TextUtils.isEmpty(thumbBase64)) {
+                        draft.videoThumb = Utils.decodeImage(thumbBase64);
+                    }
+                    draft.videoMime = data.optString("video_mime", null);
+                    draft.videoDurationMs = data.optLong("video_duration", 0L);
+                }
+                String audioBase64 = data.optString("audio", "").trim();
+                if (!TextUtils.isEmpty(audioBase64)) {
+                    try {
+                        draft.audioData = Ed25519Signature.base64Decode(audioBase64);
+                    } catch (Exception ignore) {
+                        draft.audioData = null;
+                    }
+                    draft.audioMime = data.optString("audio_mime", "audio/mp4");
+                    draft.audioDurationMs = data.optLong("audio_duration", 0L);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return draft;
+        }
+
+        void clearImage() {
+            image = null;
+        }
+
+        void clearVideo() {
+            videoData = null;
+            videoThumb = null;
+            videoMime = null;
+            videoDurationMs = 0L;
+        }
+
+        void clearAudio() {
+            audioData = null;
+            audioMime = null;
+            audioDurationMs = 0L;
+        }
+    }
+
+    private final class PostComposer {
+        final Item item;
+        final PostDraft draft;
+        final Dialog dialog;
+        final View root;
+        final TextInputEditText textField;
+        final FrameLayout mediaContainer;
+        final ImageView imageView;
+        final ImageView videoBadge;
+        final ImageButton removeMediaButton;
+        final LinearLayout audioContainer;
+        final TextView audioLabel;
+        final ImageButton removeAudioButton;
+        final ImageButton addImageButton;
+        final ImageButton takePhotoButton;
+        final ImageButton addVideoButton;
+        final ImageButton recordAudioButton;
+        final View publishButton;
+
+        MediaRecorder recorder;
+        File tempAudioFile;
+        boolean recording;
+        long recordingStartMs;
+
+        PostComposer(Item item, PostDraft draft, Dialog dialog, View root, TextInputEditText textField) {
+            this.item = item;
+            this.draft = draft;
+            this.dialog = dialog;
+            this.root = root;
+            this.textField = textField;
+            this.mediaContainer = root.findViewById(R.id.mediaPreviewContainer);
+            this.imageView = root.findViewById(R.id.image);
+            this.videoBadge = root.findViewById(R.id.videoBadge);
+            this.removeMediaButton = root.findViewById(R.id.remove_media);
+            this.audioContainer = root.findViewById(R.id.audioContainer);
+            this.audioLabel = root.findViewById(R.id.audioLabel);
+            this.removeAudioButton = root.findViewById(R.id.remove_audio);
+            this.addImageButton = root.findViewById(R.id.add_image);
+            this.takePhotoButton = root.findViewById(R.id.take_photo);
+            this.addVideoButton = root.findViewById(R.id.add_video);
+            this.recordAudioButton = root.findViewById(R.id.record_audio);
+            this.publishButton = root.findViewById(R.id.publish);
+        }
+
+        void init() {
+            updatePreview();
+
+            if (removeMediaButton != null) {
+                removeMediaButton.setOnClickListener(v -> {
+                    draft.clearImage();
+                    draft.clearVideo();
+                    updatePreview();
+                });
+            }
+            if (removeAudioButton != null) {
+                removeAudioButton.setOnClickListener(v -> {
+                    draft.clearAudio();
+                    updatePreview();
+                });
+            }
+            if (addImageButton != null) {
+                addImageButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
+                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                        () -> prepareExternalAction(() -> startImageChooser(REQUEST_PICK_IMAGE_POST)),
+                        () -> activity.snack(activity.getString(R.string.snackbar_storage_permission_required))));
+            }
+            if (takePhotoButton != null) {
+                takePhotoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
+                        EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+                        () -> {
+                            try {
+                                pendingPhotoUri = createPhotoOutputUri();
+                            } catch (IOException ex) {
+                                pendingPhotoUri = null;
+                                activity.snack("Unable to create photo file");
+                                return;
+                            }
+                            prepareExternalAction(() -> {
+                                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
+                                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                try {
+                                    activity.startActivityForResult(intent, REQUEST_TAKE_PHOTO_POST);
+                                } catch (ActivityNotFoundException ex) {
+                                    activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
+                                }
+                            });
+                        },
+                        () -> activity.snack("Camera permission required")));
+            }
+            if (addVideoButton != null) {
+                addVideoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
+                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                        () -> prepareExternalAction(() -> {
+                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                            intent.setType("video/*");
+                            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            try {
+                                activity.startActivityForResult(intent, Const.REQUEST_PICK_VIDEO_POST);
+                            } catch (ActivityNotFoundException ex) {
+                                activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
+                            }
+                        }),
+                        () -> activity.snack(activity.getString(R.string.snackbar_storage_permission_required))));
+            }
+            if (recordAudioButton != null) {
+                recordAudioButton.setOnClickListener(v -> {
+                    if (recording) {
+                        stopAudioRecording(true);
+                    } else {
+                        PermissionHelper.runWithPermissions(activity,
+                                EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
+                                this::startAudioRecording,
+                                () -> activity.snack(activity.getString(R.string.chat_attachment_mic_permission_required)));
+                    }
+                });
+            }
+            if (publishButton != null) {
+                publishButton.setOnClickListener(v -> {
+                    captureText();
+                    doPostPublish(item, draft.copy());
+                    dialog.dismiss();
+                });
+            }
+        }
+
+        void captureText() {
+            draft.text = textField.getText() != null ? textField.getText().toString() : "";
+        }
+
+        void prepareExternalAction(Runnable action) {
+            captureText();
+            pendingDraftAfterActivity = draft.copy();
+            pendingDraftItem = item;
+            dialog.dismiss();
+            if (action != null) {
+                action.run();
+            }
+        }
+
+        void startAudioRecording() {
+            cancelAudioRecording();
+            File dir = new File(activity.getCacheDir(), "post_audio");
+            if (!dir.exists() && !dir.mkdirs()) {
+                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
+                return;
+            }
+            tempAudioFile = new File(dir, "rec_" + System.currentTimeMillis() + ".m4a");
+            recorder = new MediaRecorder();
+            try {
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                recorder.setAudioChannels(1);
+                recorder.setAudioEncodingBitRate(96000);
+                recorder.setAudioSamplingRate(44100);
+                recorder.setOutputFile(tempAudioFile.getAbsolutePath());
+                recorder.prepare();
+                recorder.start();
+                recording = true;
+                recordingStartMs = SystemClock.elapsedRealtime();
+                if (recordAudioButton != null) {
+                    recordAudioButton.setImageResource(R.drawable.ic_close);
+                }
+                activity.snack(activity.getString(R.string.chat_attachment_recording_started));
+            } catch (Exception ex) {
+                Log.e(TAG, "Unable to start audio recording", ex);
+                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
+                cancelAudioRecording();
+            }
+        }
+
+        void stopAudioRecording(boolean keep) {
+            if (!recording) {
+                return;
+            }
+            try {
+                recorder.stop();
+            } catch (Exception ex) {
+                Log.w(TAG, "Recorder stop failed", ex);
+                keep = false;
+            }
+            recording = false;
+            if (recordAudioButton != null) {
+                recordAudioButton.setImageResource(R.drawable.ic_mic);
+            }
+            if (recorder != null) {
+                try {
+                    recorder.reset();
+                } catch (Exception ignore) {
+                }
+                try {
+                    recorder.release();
+                } catch (Exception ignore) {
+                }
+                recorder = null;
+            }
+            if (!keep) {
+                if (tempAudioFile != null && tempAudioFile.exists()) {
+                    tempAudioFile.delete();
+                }
+                tempAudioFile = null;
+                return;
+            }
+            if (tempAudioFile == null || !tempAudioFile.exists()) {
+                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
+                return;
+            }
+            byte[] bytes = Utils.readFileAsBytes(tempAudioFile);
+            tempAudioFile.delete();
+            tempAudioFile = null;
+            if (bytes.length == 0) {
+                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
+                return;
+            }
+            if (ChatMediaStore.exceedsLimit(bytes.length)) {
+                activity.snack(activity.getString(R.string.chat_attachment_file_too_large));
+                return;
+            }
+            long duration = SystemClock.elapsedRealtime() - recordingStartMs;
+            draft.clearImage();
+            draft.clearVideo();
+            draft.audioData = bytes;
+            draft.audioMime = "audio/mp4";
+            draft.audioDurationMs = duration;
+            updatePreview();
+            activity.snack(activity.getString(R.string.chat_attachment_recording_saved));
+        }
+
+        void cancelAudioRecording() {
+            if (recorder != null) {
+                try {
+                    recorder.stop();
+                } catch (Exception ignore) {
+                }
+                try {
+                    recorder.reset();
+                } catch (Exception ignore) {
+                }
+                try {
+                    recorder.release();
+                } catch (Exception ignore) {
+                }
+                recorder = null;
+            }
+            recording = false;
+            if (recordAudioButton != null) {
+                recordAudioButton.setImageResource(R.drawable.ic_mic);
+            }
+            if (tempAudioFile != null && tempAudioFile.exists()) {
+                tempAudioFile.delete();
+                tempAudioFile = null;
+            }
+        }
+
+        void updatePreview() {
+            boolean hasImage = draft.image != null;
+            boolean hasVideo = draft.videoData != null && draft.videoData.length > 0;
+            if (mediaContainer != null) {
+                if (hasImage || hasVideo) {
+                    mediaContainer.setVisibility(View.VISIBLE);
+                    if (hasImage) {
+                        imageView.setImageBitmap(draft.image);
+                    } else if (draft.videoThumb != null) {
+                        imageView.setImageBitmap(draft.videoThumb);
+                    } else {
+                        imageView.setImageBitmap(null);
+                    }
+                    if (videoBadge != null) {
+                        videoBadge.setVisibility(hasVideo ? View.VISIBLE : View.GONE);
+                    }
+                    if (removeMediaButton != null) {
+                        removeMediaButton.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    mediaContainer.setVisibility(View.GONE);
+                    if (removeMediaButton != null) {
+                        removeMediaButton.setVisibility(View.GONE);
+                    }
+                }
+            }
+            if (audioContainer != null) {
+                if (draft.audioData != null && draft.audioData.length > 0) {
+                    audioContainer.setVisibility(View.VISIBLE);
+                    if (audioLabel != null) {
+                        audioLabel.setText(buildAudioLabel(draft.audioDurationMs));
+                    }
+                } else {
+                    audioContainer.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        String buildAudioLabel(long durationMs) {
+            long totalSeconds = Math.max(1, durationMs / 1000);
+            long minutes = totalSeconds / 60;
+            long seconds = totalSeconds % 60;
+            return activity.getString(R.string.chat_attachment_voice_message) + " • " + String.format(Locale.US, "%d:%02d", minutes, seconds);
+        }
+
+        void release() {
+            cancelAudioRecording();
         }
     }
 

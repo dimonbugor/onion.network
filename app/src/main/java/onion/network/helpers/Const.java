@@ -13,6 +13,8 @@ public final class Const {
 
     public static final int REQUEST_CHOOSE_MEDIA = 30;
     public static final int REQUEST_TAKE_VIDEO = 32;
+    public static final int REQUEST_CHAT_PICK_MEDIA = 502;
+    public static final int REQUEST_PICK_VIDEO_POST = 120;
 
     public static final int REQUEST_CODE_MEDIA_PICKER = 25;
     public static final int REQUEST_QR = 12;

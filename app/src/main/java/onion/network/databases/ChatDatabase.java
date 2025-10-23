@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import onion.network.TorManager;
+import onion.network.models.ChatMessagePayload;
 
 public class ChatDatabase extends SQLiteOpenHelper {
 
@@ -57,7 +58,8 @@ public class ChatDatabase extends SQLiteOpenHelper {
         ContentValues v = new ContentValues();
         v.put("sender", sender);
         v.put("receiver", receiver);
-        v.put("content", content);
+        ChatMessagePayload payload = ChatMessagePayload.fromStorageString(content);
+        v.put("content", payload.toStorageString());
         v.put("time", time);
         v.put("incoming", incoming);
         v.put("outgoing", outgoing);

@@ -34,15 +34,82 @@
                     android:inputType="textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine|textLongMessage" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <ImageView
-                android:id="@+id/image"
+            <FrameLayout
+                android:id="@+id/mediaPreviewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:maxHeight="@dimen/dp148"
                 android:layout_marginTop="@dimen/dp8"
-                android:padding="@dimen/dp16" />
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:maxHeight="@dimen/dp148"
+                    android:padding="@dimen/dp16" />
+
+                <ImageView
+                    android:id="@+id/videoBadge"
+                    android:layout_width="@dimen/dp36"
+                    android:layout_height="@dimen/dp36"
+                    android:layout_gravity="center"
+                    android:alpha="0.8"
+                    android:src="@drawable/ic_videocam"
+                    android:visibility="gone"
+                    app:tint="@android:color/white" />
+
+                <ImageButton
+                    android:id="@+id/remove_media"
+                    android:layout_width="@dimen/dp32"
+                    android:layout_height="@dimen/dp32"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="@dimen/dp8"
+                    android:background="?selectableItemBackground"
+                    android:contentDescription="@string/dialog_button_delete"
+                    android:src="@drawable/ic_close"
+                    android:visibility="gone"
+                    app:tint="@android:color/white" />
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/audioContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp8"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/dp12"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="@dimen/dp24"
+                    android:layout_height="@dimen/dp24"
+                    android:src="@drawable/ic_mic"
+                    app:tint="?attr/colorOnBackground" />
+
+                <TextView
+                    android:id="@+id/audioLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp8"
+                    android:layout_weight="1"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="@dimen/sp12"
+                    tools:text="Voice message • 0:24" />
+
+                <ImageButton
+                    android:id="@+id/remove_audio"
+                    android:layout_width="@dimen/dp32"
+                    android:layout_height="@dimen/dp32"
+                    android:background="?selectableItemBackground"
+                    android:contentDescription="@string/dialog_button_delete"
+                    android:src="@drawable/ic_close"
+                    app:tint="?attr/colorOnBackground" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -71,6 +138,30 @@
                     android:background="?selectableItemBackground"
                     android:padding="@dimen/dp16"
                     android:src="@drawable/ic_photo_camera"
+                    app:tint="?attr/colorOnBackground" />
+
+                <ImageButton
+                    android:id="@+id/add_video"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="@dimen/dp8"
+                    android:alpha="0.8"
+                    android:background="?selectableItemBackground"
+                    android:padding="@dimen/dp16"
+                    android:src="@drawable/ic_videocam"
+                    app:tint="?attr/colorOnBackground" />
+
+                <ImageButton
+                    android:id="@+id/record_audio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="@dimen/dp8"
+                    android:alpha="0.8"
+                    android:background="?selectableItemBackground"
+                    android:padding="@dimen/dp16"
+                    android:src="@drawable/ic_mic"
                     app:tint="?attr/colorOnBackground" />
 
                 <FrameLayout

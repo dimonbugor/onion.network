@@ -170,7 +170,7 @@ public class Server {
         }
 
         if (uri.getPath().equals("/m")) {
-            response.setContentPlain(ChatServer.getInstance(context).handle(uri) ? "1" : "0");
+            response.setContentPlain(ChatServer.getInstance(context).handle(request) ? "1" : "0");
             return;
         }
 

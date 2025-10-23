@@ -7,14 +7,20 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.TorManager;
+import onion.network.helpers.ChatMediaStore;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.Utils;
+import onion.network.models.ChatMessagePayload;
 
 public class ChatClient {
 
@@ -50,41 +56,26 @@ public class ChatClient {
     }
 
     public Uri makeUri(String sender, String receiver, String content, long time) {
-
-        content = Ed25519Signature.base64Encode(content.getBytes(Utils.UTF_8));
-
-        String sig = Ed25519Signature.base64Encode(torManager.sign((receiver + " " + sender + " " + time + " " + content).getBytes(Utils.UTF_8)));
-
-        String name = ItemDatabase.getInstance(context).getstr("name");
-        if (name == null) name = "";
-
-        String uri = "http://" + receiver + ".onion/m?";
-        uri += "a=" + Uri.encode(sender) + "&";
-        uri += "b=" + Uri.encode(receiver) + "&";
-        uri += "t=" + Uri.encode("" + time) + "&";
-        uri += "m=" + Uri.encode(content) + "&";
-        uri += "p=" + Uri.encode(Ed25519Signature.base64Encode(torManager.pubkey())) + "&";
-        uri += "s=" + Uri.encode(sig) + "&";
-        uri += "n=" + Uri.encode(name);
-
-        return Uri.parse(uri);
+        Envelope envelope = buildEnvelope(sender, receiver, prepareContentForSend(content), time);
+        return envelope.toUri();
     }
 
     public boolean sendOne(String sender, String receiver, String content, long time) throws IOException {
 
-        Uri uri = makeUri(sender, receiver, content, time);
-        log("" + uri);
-
-        try {
-            boolean rs = HttpClient.get(uri).trim().equals("1");
-            if (!rs) {
-                log("declined");
-                return false;
+        String networkContent = prepareContentForSend(content);
+        Envelope envelope = buildEnvelope(sender, receiver, networkContent, time);
+        boolean sent = sendViaPost(envelope);
+        if (!sent) {
+            try {
+                sent = sendViaGet(envelope);
+            } catch (IOException ex) {
+                log("exception");
+                log("" + ex.getMessage());
+                ex.printStackTrace();
+                throw ex;
             }
-        } catch (IOException ex) {
-            log("exception");
-            log("" + ex.getMessage());
-            ex.printStackTrace();
+        }
+        if (!sent) {
             return false;
         }
 
@@ -136,6 +127,126 @@ public class ChatClient {
 
     public interface OnMessageSentListener {
         void onMessageSent();
+    }
+
+    private Envelope buildEnvelope(String sender, String receiver, String rawContent, long time) {
+        Envelope envelope = new Envelope();
+        envelope.sender = sender;
+        envelope.receiver = receiver;
+        envelope.time = Long.toString(time);
+        envelope.encodedContent = Ed25519Signature.base64Encode(rawContent.getBytes(Utils.UTF_8));
+        envelope.publicKey = Ed25519Signature.base64Encode(torManager.pubkey());
+        String displayName = ItemDatabase.getInstance(context).getstr("name");
+        envelope.name = displayName == null ? "" : displayName;
+        envelope.signature = Ed25519Signature.base64Encode(
+                torManager.sign((receiver + " " + sender + " " + envelope.time + " " + envelope.encodedContent).getBytes(Utils.UTF_8))
+        );
+        return envelope;
+    }
+
+    private boolean sendViaPost(Envelope envelope) {
+        JSONObject body = envelope.toJson();
+        try {
+            byte[] response = HttpClient.postbin(
+                    envelope.toPostUri(),
+                    body.toString().getBytes(Utils.UTF_8),
+                    "application/json; charset=utf-8"
+            );
+            String responseText = new String(response, Utils.UTF_8).trim();
+            if ("1".equals(responseText)) {
+                return true;
+            }
+            log("POST declined: " + responseText);
+            return false;
+        } catch (IOException ex) {
+            log("POST failed: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    private boolean sendViaGet(Envelope envelope) throws IOException {
+        Uri uri = envelope.toUri();
+        log("" + uri);
+        boolean rs = HttpClient.get(uri).trim().equals("1");
+        if (!rs) {
+            log("declined");
+        }
+        return rs;
+    }
+
+    private String prepareContentForSend(String rawContent) {
+        try {
+            boolean rawLooksJson = rawContent != null && rawContent.trim().startsWith("{");
+            ChatMessagePayload payload = ChatMessagePayload.fromStorageString(rawContent);
+            if (payload.getType() == ChatMessagePayload.Type.TEXT) {
+                if (!rawLooksJson) {
+                    return rawContent;
+                }
+                return payload.getText();
+            }
+            if (!payload.isInline()) {
+                String relativePath = payload.getData();
+                File file = ChatMediaStore.resolveFile(context, relativePath);
+                if (file != null && file.exists()) {
+                    byte[] bytes = Utils.readFileAsBytes(file);
+                    if (bytes.length > 0 && !ChatMediaStore.exceedsLimit(bytes.length)) {
+                        ChatMessagePayload inline = payload.copy();
+                        inline.setStorage(ChatMessagePayload.Storage.INLINE);
+                        inline.setData(Ed25519Signature.base64Encode(bytes));
+                        inline.setSizeBytes(bytes.length);
+                        return inline.toStorageString();
+                    }
+                }
+            }
+            return payload.toStorageString();
+        } catch (Exception ex) {
+            log("prepareContentForSend error: " + ex.getMessage());
+            return rawContent;
+        }
+    }
+
+    private static final class Envelope {
+        String sender;
+        String receiver;
+        String time;
+        String encodedContent;
+        String publicKey;
+        String signature;
+        String name;
+
+        Uri toUri() {
+            StringBuilder builder = new StringBuilder("http://")
+                    .append(receiver)
+                    .append(".onion/m?");
+            builder.append("a=").append(Uri.encode(sender)).append("&");
+            builder.append("b=").append(Uri.encode(receiver)).append("&");
+            builder.append("t=").append(Uri.encode(time)).append("&");
+            builder.append("m=").append(Uri.encode(encodedContent)).append("&");
+            builder.append("p=").append(Uri.encode(publicKey)).append("&");
+            builder.append("s=").append(Uri.encode(signature)).append("&");
+            builder.append("n=").append(Uri.encode(name == null ? "" : name));
+            return Uri.parse(builder.toString());
+        }
+
+        Uri toPostUri() {
+            return Uri.parse("http://" + receiver + ".onion/m");
+        }
+
+        JSONObject toJson() {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("a", sender);
+                o.put("b", receiver);
+                o.put("t", time);
+                o.put("m", encodedContent);
+                o.put("p", publicKey);
+                o.put("s", signature);
+                o.put("n", name == null ? "" : name);
+                o.put("v", 1);
+            } catch (JSONException ignore) {
+            }
+            return o;
+        }
     }
 
 }

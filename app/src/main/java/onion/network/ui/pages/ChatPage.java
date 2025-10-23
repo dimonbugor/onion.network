@@ -2,9 +2,17 @@
 
 package onion.network.ui.pages;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
@@ -12,9 +20,11 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.webkit.MimeTypeMap;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,18 +35,26 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import onion.network.clients.ChatClient;
-import onion.network.databases.ChatDatabase;
-import onion.network.helpers.ThemeManager;
-import onion.network.helpers.UiCustomizationManager;
-import onion.network.models.Item;
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.clients.ChatClient;
+import onion.network.databases.ChatDatabase;
+import onion.network.helpers.ChatMediaStore;
+import onion.network.helpers.Const;
+import onion.network.helpers.PermissionHelper;
+import onion.network.helpers.ThemeManager;
+import onion.network.helpers.UiCustomizationManager;
 import onion.network.helpers.Utils;
+import onion.network.models.ChatMessagePayload;
+import onion.network.models.Item;
 import onion.network.servers.ChatServer;
 import onion.network.services.UpdateScheduler;
 import onion.network.settings.Settings;
@@ -60,6 +78,19 @@ public class ChatPage extends BasePage
     private TextInputEditText editMessageView;
     private ImageButton microButton;
     private ImageButton sendButton;
+    private ImageButton attachButton;
+    private LinearLayout attachmentPreview;
+    private ImageView attachmentPreviewIcon;
+    private TextView attachmentPreviewText;
+    private ImageButton attachmentRemoveButton;
+
+    private AttachmentDraft pendingAttachment;
+    private MediaRecorder mediaRecorder;
+    private File currentRecordingFile;
+    private long recordingStartTimestamp;
+    private boolean isRecordingAudio;
+
+    private static final int REQUEST_CHAT_PICK_MEDIA = Const.REQUEST_CHAT_PICK_MEDIA;
 
     public ChatPage(final MainActivity activity) {
         super(activity);
@@ -80,15 +111,25 @@ public class ChatPage extends BasePage
         editMessageView = findViewById(R.id.editmessage);
         microButton = findViewById(R.id.micro);
         sendButton = findViewById(R.id.send);
+        attachButton = findViewById(R.id.attach);
+        attachmentPreview = findViewById(R.id.attachmentPreview);
+        attachmentPreviewIcon = findViewById(R.id.attachmentPreviewIcon);
+        attachmentPreviewText = findViewById(R.id.attachmentPreviewText);
+        attachmentRemoveButton = findViewById(R.id.attachmentRemove);
+
+        if (attachButton != null) {
+            attachButton.setOnClickListener(v -> requestMediaAttachment());
+        }
+
+        if (attachmentRemoveButton != null) {
+            attachmentRemoveButton.setOnClickListener(v -> clearPendingAttachment(true));
+        }
 
         if (microButton != null) {
-            microButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                activity.snack("Available soon");
-            }
-        });
+            microButton.setOnClickListener(v -> toggleAudioRecording());
         }
+
+        updateAttachmentPreview();
 
         if (sendButton != null) {
             sendButton.setOnClickListener(new View.OnClickListener() {
@@ -103,17 +144,29 @@ public class ChatPage extends BasePage
 
                 String message = editMessageView != null ? editMessageView.getText().toString() : "";
                 message = message.trim();
-                if (message.equals("")) return;
+                boolean hasAttachment = pendingAttachment != null;
+                if (!hasAttachment && message.equals("")) return;
+
+                ChatMessagePayload payload;
+                if (hasAttachment) {
+                    payload = pendingAttachment.payload.copy();
+                    if (!TextUtils.isEmpty(message)) {
+                        payload.setText(message);
+                    }
+                } else {
+                    payload = ChatMessagePayload.forText(message);
+                }
 
                 Log.i(TAG, "sender " + sender);
                 Log.i(TAG, "address " + address);
                 Log.i(TAG, "message " + message);
-                chatDatabase.addMessage(sender, address, message, System.currentTimeMillis(), false, true);
+                chatDatabase.addMessage(sender, address, payload.toStorageString(), System.currentTimeMillis(), false, true);
                 Log.i(TAG, "sent");
 
                 if (editMessageView != null) {
                     editMessageView.setText("");
                 }
+                clearPendingAttachment(false);
 
                 sendPendingAndUpdate();
 
@@ -243,9 +296,12 @@ public class ChatPage extends BasePage
 
     @Override
     public void onPause() {
-        timer.cancel();
-        timer.purge();
-        timer = null;
+        stopAudioRecording(false);
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+        }
         chatServer.removeOnMessageReceivedListener(this);
         chatClient.removeOnMessageSentListener(this);
         super.onPause();
@@ -339,6 +395,391 @@ public class ChatPage extends BasePage
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CHAT_PICK_MEDIA) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                handlePickedMedia(data.getData());
+            }
+            return;
+        }
+    }
+
+    private void requestMediaAttachment() {
+        PermissionHelper.runWithPermissions(
+                activity,
+                EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
+                this::openMediaPicker,
+                () -> activity.snack(getString(R.string.snackbar_storage_permission_required))
+        );
+    }
+
+    private void openMediaPicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            activity.startActivityForResult(intent, REQUEST_CHAT_PICK_MEDIA);
+        } catch (Exception ex) {
+            Log.e(TAG, "Unable to launch media picker", ex);
+            activity.snack(getString(R.string.chat_attachment_pick_failed));
+        }
+    }
+
+    private void handlePickedMedia(Uri uri) {
+        if (uri == null) {
+            activity.snack(getString(R.string.chat_attachment_pick_failed));
+            return;
+        }
+        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+            if (stream == null) {
+                activity.snack(getString(R.string.chat_attachment_pick_failed));
+                return;
+            }
+            byte[] bytes = Utils.readInputStream(stream);
+            if (ChatMediaStore.exceedsLimit(bytes.length)) {
+                activity.snack(getString(R.string.chat_attachment_file_too_large));
+                return;
+            }
+            String mime = activity.getContentResolver().getType(uri);
+            if (TextUtils.isEmpty(mime)) {
+                mime = guessMimeFromUri(uri);
+            }
+            ChatMessagePayload.Type type = inferTypeFromMime(mime);
+            if (type == ChatMessagePayload.Type.TEXT) {
+                activity.snack(getString(R.string.chat_attachment_unsupported));
+                return;
+            }
+            String path = ChatMediaStore.saveOutgoing(context, type, bytes, mime);
+            String name = resolveDisplayName(uri);
+            long duration = 0L;
+            if (type == ChatMessagePayload.Type.VIDEO) {
+                duration = extractDuration(uri);
+            }
+            ChatMessagePayload payload = ChatMessagePayload.forType(type)
+                    .setStorage(ChatMessagePayload.Storage.FILE)
+                    .setMime(mime)
+                    .setData(path)
+                    .setSizeBytes(bytes.length)
+                    .setDurationMs(duration);
+            AttachmentDraft draft = new AttachmentDraft();
+            draft.payload = payload;
+            draft.label = buildAttachmentLabel(type, name, bytes.length, duration);
+            draft.iconRes = resolveAttachmentIcon(type);
+            clearPendingAttachment(true);
+            pendingAttachment = draft;
+            updateAttachmentPreview();
+        } catch (IOException ex) {
+            Log.e(TAG, "Failed to import media", ex);
+            activity.snack(getString(R.string.chat_attachment_pick_failed));
+        }
+    }
+
+    private String resolveDisplayName(Uri uri) {
+        if (uri == null) return "";
+        Cursor cursor = null;
+        try {
+            cursor = activity.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getString(0);
+            }
+        } catch (Exception ignore) {
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return "";
+    }
+
+    private long extractDuration(Uri uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(context, uri);
+            String durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (!TextUtils.isEmpty(durationStr)) {
+                return Long.parseLong(durationStr);
+            }
+        } catch (Exception ignore) {
+        } finally {
+            try {
+                retriever.release();
+            } catch (Exception ignore) {
+            }
+        }
+        return 0L;
+    }
+
+    private void updateAttachmentPreview() {
+        if (attachmentPreview == null) return;
+        if (pendingAttachment == null) {
+            attachmentPreview.setVisibility(View.GONE);
+            return;
+        }
+        attachmentPreview.setVisibility(View.VISIBLE);
+        if (attachmentPreviewIcon != null) {
+            attachmentPreviewIcon.setImageResource(pendingAttachment.iconRes);
+        }
+        if (attachmentPreviewText != null) {
+            attachmentPreviewText.setText(pendingAttachment.label);
+        }
+    }
+
+    private void clearPendingAttachment(boolean deleteFile) {
+        if (pendingAttachment != null && deleteFile) {
+            deleteDraftFile(pendingAttachment.payload);
+        }
+        pendingAttachment = null;
+        updateAttachmentPreview();
+    }
+
+    private void deleteDraftFile(ChatMessagePayload payload) {
+        if (payload == null || payload.isInline()) return;
+        File file = ChatMediaStore.resolveFile(context, payload.getData());
+        if (file != null && file.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+        }
+    }
+
+    private void toggleAudioRecording() {
+        if (isRecordingAudio) {
+            stopAudioRecording(true);
+        } else {
+            PermissionHelper.runWithPermissions(
+                    activity,
+                    EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
+                    this::startAudioRecordingInternal,
+                    () -> activity.snack(getString(R.string.chat_attachment_mic_permission_required))
+            );
+        }
+    }
+
+    private void startAudioRecordingInternal() {
+        cancelAudioRecording();
+        clearPendingAttachment(true);
+        File dir = new File(activity.getCacheDir(), "chat_audio");
+        if (!dir.exists() && !dir.mkdirs()) {
+            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            return;
+        }
+        currentRecordingFile = new File(dir, "rec_" + System.currentTimeMillis() + ".m4a");
+        mediaRecorder = new MediaRecorder();
+        try {
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.setAudioChannels(1);
+            mediaRecorder.setAudioEncodingBitRate(96000);
+            mediaRecorder.setAudioSamplingRate(44100);
+            mediaRecorder.setOutputFile(currentRecordingFile.getAbsolutePath());
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+            isRecordingAudio = true;
+            recordingStartTimestamp = SystemClock.elapsedRealtime();
+            if (microButton != null) {
+                microButton.setImageResource(R.drawable.ic_close);
+            }
+            activity.snack(getString(R.string.chat_attachment_recording_started));
+        } catch (Exception ex) {
+            Log.e(TAG, "Unable to start recording", ex);
+            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            releaseRecorder();
+            if (currentRecordingFile != null) {
+                currentRecordingFile.delete();
+                currentRecordingFile = null;
+            }
+        }
+    }
+
+    private void stopAudioRecording(boolean keep) {
+        if (!isRecordingAudio) {
+            return;
+        }
+        long durationMs = Math.max(0, SystemClock.elapsedRealtime() - recordingStartTimestamp);
+        try {
+            mediaRecorder.stop();
+        } catch (RuntimeException ex) {
+            Log.w(TAG, "Recorder failed to stop cleanly", ex);
+            keep = false;
+        } finally {
+            releaseRecorder();
+        }
+        isRecordingAudio = false;
+        recordingStartTimestamp = 0L;
+        if (microButton != null) {
+            microButton.setImageResource(R.drawable.ic_mic);
+        }
+        if (!keep) {
+            if (currentRecordingFile != null) {
+                currentRecordingFile.delete();
+                currentRecordingFile = null;
+            }
+            return;
+        }
+        if (currentRecordingFile == null || !currentRecordingFile.exists()) {
+            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            return;
+        }
+        byte[] bytes = Utils.readFileAsBytes(currentRecordingFile);
+        currentRecordingFile.delete();
+        currentRecordingFile = null;
+        if (bytes.length == 0) {
+            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            return;
+        }
+        if (ChatMediaStore.exceedsLimit(bytes.length)) {
+            activity.snack(getString(R.string.chat_attachment_file_too_large));
+            return;
+        }
+        try {
+            String path = ChatMediaStore.saveOutgoing(context, ChatMessagePayload.Type.AUDIO, bytes, "audio/mp4");
+            ChatMessagePayload payload = ChatMessagePayload.forType(ChatMessagePayload.Type.AUDIO)
+                    .setStorage(ChatMessagePayload.Storage.FILE)
+                    .setMime("audio/mp4")
+                    .setData(path)
+                    .setSizeBytes(bytes.length)
+                    .setDurationMs(durationMs);
+            AttachmentDraft draft = new AttachmentDraft();
+            draft.payload = payload;
+            draft.label = buildAttachmentLabel(ChatMessagePayload.Type.AUDIO, getString(R.string.chat_attachment_voice_message), bytes.length, durationMs);
+            draft.iconRes = R.drawable.ic_mic;
+            clearPendingAttachment(true);
+            pendingAttachment = draft;
+            updateAttachmentPreview();
+            activity.snack(getString(R.string.chat_attachment_recording_saved));
+        } catch (IOException ex) {
+            Log.e(TAG, "Failed to persist audio", ex);
+            activity.snack(getString(R.string.chat_attachment_recording_failed));
+        }
+    }
+
+    private void cancelAudioRecording() {
+        if (!isRecordingAudio) {
+            return;
+        }
+        try {
+            mediaRecorder.stop();
+        } catch (Exception ignore) {
+        } finally {
+            releaseRecorder();
+        }
+        isRecordingAudio = false;
+        if (microButton != null) {
+            microButton.setImageResource(R.drawable.ic_mic);
+        }
+        if (currentRecordingFile != null) {
+            currentRecordingFile.delete();
+            currentRecordingFile = null;
+        }
+    }
+
+    private void releaseRecorder() {
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.reset();
+            } catch (Exception ignore) {
+            }
+            try {
+                mediaRecorder.release();
+            } catch (Exception ignore) {
+            }
+            mediaRecorder = null;
+        }
+    }
+
+    private String buildAttachmentLabel(ChatMessagePayload.Type type, String name, long sizeBytes, long durationMs) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(getAttachmentTypeLabel(type));
+        if (!TextUtils.isEmpty(name)) {
+            builder.append(" • ").append(name);
+        }
+        if (sizeBytes > 0) {
+            builder.append(" • ").append(formatSize(sizeBytes));
+        }
+        if (durationMs > 0) {
+            builder.append(" • ").append(formatDuration(durationMs));
+        }
+        return builder.toString();
+    }
+
+    private String getAttachmentTypeLabel(ChatMessagePayload.Type type) {
+        switch (type) {
+            case IMAGE:
+                return getString(R.string.chat_attachment_image);
+            case VIDEO:
+                return getString(R.string.chat_attachment_video);
+            case AUDIO:
+                return getString(R.string.chat_attachment_audio);
+            default:
+                return getString(R.string.chat_attachment_generic);
+        }
+    }
+
+    private int resolveAttachmentIcon(ChatMessagePayload.Type type) {
+        switch (type) {
+            case AUDIO:
+                return R.drawable.ic_mic;
+            default:
+                return R.drawable.ic_insert_photo_white_24dp;
+        }
+    }
+
+    private String formatSize(long bytes) {
+        if (bytes <= 0) return "0 B";
+        final long kb = 1024;
+        final long mb = kb * 1024;
+        if (bytes >= mb) {
+            return String.format(Locale.US, "%.1f MB", bytes / (float) mb);
+        }
+        if (bytes >= kb) {
+            return String.format(Locale.US, "%.1f KB", bytes / (float) kb);
+        }
+        return bytes + " B";
+    }
+
+    private String formatDuration(long durationMs) {
+        long totalSeconds = Math.max(1, durationMs / 1000);
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format(Locale.US, "%d:%02d", minutes, seconds);
+    }
+
+    private String guessMimeFromUri(Uri uri) {
+        if (uri == null) return null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+        if (TextUtils.isEmpty(extension)) {
+            String path = uri.getPath();
+            if (!TextUtils.isEmpty(path)) {
+                int idx = path.lastIndexOf('.');
+                if (idx >= 0 && idx + 1 < path.length()) {
+                    extension = path.substring(idx + 1);
+                }
+            }
+        }
+        if (TextUtils.isEmpty(extension)) {
+            return null;
+        }
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase(Locale.US));
+    }
+
+    private ChatMessagePayload.Type inferTypeFromMime(String mime) {
+        if (mime == null) {
+            return ChatMessagePayload.Type.TEXT;
+        }
+        String lower = mime.toLowerCase(Locale.US);
+        if (lower.startsWith("image")) {
+            return ChatMessagePayload.Type.IMAGE;
+        }
+        if (lower.startsWith("video")) {
+            return ChatMessagePayload.Type.VIDEO;
+        }
+        if (lower.startsWith("audio")) {
+            return ChatMessagePayload.Type.AUDIO;
+        }
+        return ChatMessagePayload.Type.TEXT;
+    }
+
+    @Override
     public String getPageIDString() {
         return "chat";
     }
@@ -365,6 +806,12 @@ public class ChatPage extends BasePage
         }
     }
 
+    private static final class AttachmentDraft {
+        ChatMessagePayload payload;
+        String label;
+        int iconRes;
+    }
+
     class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
 
         @Override
@@ -381,6 +828,7 @@ public class ChatPage extends BasePage
 
             final long id = cursor.getLong(cursor.getColumnIndex("_id"));
             String content = cursor.getString(cursor.getColumnIndex("content"));
+            ChatMessagePayload payload = ChatMessagePayload.fromStorageString(content);
             String sender = cursor.getString(cursor.getColumnIndex("sender"));
             String time = Utils.formatDate(cursor.getString(cursor.getColumnIndex("time")));
             boolean pending = cursor.getInt(cursor.getColumnIndex("outgoing")) > 0;
@@ -442,8 +890,10 @@ public class ChatPage extends BasePage
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 
+            String displayMessage = buildDisplayMessage(payload);
             holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-            holder.message.setText(Utils.linkify(context, content));
+            holder.message.setText(Utils.linkify(context, displayMessage));
+            holder.message.setVisibility(TextUtils.isEmpty(displayMessage) ? View.GONE : View.VISIBLE);
 
             applyMessageStyle(holder, tx);
 
@@ -540,6 +990,40 @@ public class ChatPage extends BasePage
                         resolvedRadius, resolvedRadius, 0f, 0f};
             }
             drawable.setCornerRadii(radii);
+        }
+
+        private String buildDisplayMessage(ChatMessagePayload payload) {
+            if (payload == null) {
+                return "";
+            }
+            StringBuilder builder = new StringBuilder();
+            String text = payload.getText();
+            if (!TextUtils.isEmpty(text)) {
+                builder.append(text);
+            }
+            if (!payload.isText()) {
+                if (builder.length() > 0) {
+                    builder.append('\n');
+                }
+                builder.append(payloadPlaceholder(payload));
+            }
+            if (builder.length() == 0) {
+                builder.append(payload.getDisplayText());
+            }
+            return builder.toString();
+        }
+
+        private String payloadPlaceholder(ChatMessagePayload payload) {
+            switch (payload.getType()) {
+                case IMAGE:
+                    return "[Image attachment]";
+                case VIDEO:
+                    return "[Video attachment]";
+                case AUDIO:
+                    return "[Audio message]";
+                default:
+                    return "[Attachment]";
+            }
         }
 
     }

@@ -81,6 +81,43 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp4" />
 
+    <LinearLayout
+        android:id="@+id/attachmentPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/dp16"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingVertical="@dimen/dp8"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/attachmentPreviewIcon"
+            android:layout_width="@dimen/dp24"
+            android:layout_height="@dimen/dp24"
+            android:src="@drawable/ic_insert_photo_white_24dp"
+            app:tint="?attr/white_80" />
+
+        <TextView
+            android:id="@+id/attachmentPreviewText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp8"
+            android:layout_weight="1"
+            android:textColor="?attr/colorOnBackground"
+            android:textSize="@dimen/sp12"
+            tools:text="Image • 1.2 MB" />
+
+        <ImageButton
+            android:id="@+id/attachmentRemove"
+            android:layout_width="@dimen/dp32"
+            android:layout_height="@dimen/dp32"
+            android:background="?selectableItemBackground"
+            android:contentDescription="@string/dialog_button_delete"
+            android:src="@drawable/ic_close"
+            app:tint="?attr/white_80" />
+    </LinearLayout>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/text_input_layout"
         android:layout_width="match_parent"
@@ -110,6 +147,19 @@
                 android:paddingEnd="@dimen/dp32"
                 android:textColor="?attr/colorOnBackground"
                 android:textSize="@dimen/sp12" />
+
+            <ImageButton
+                android:id="@+id/attach"
+                android:layout_width="@dimen/dp32"
+                android:layout_height="@dimen/dp32"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="@dimen/dp8"
+                android:layout_toStartOf="@id/micro"
+                android:background="?selectableItemBackground"
+                android:contentDescription="Attach"
+                android:src="@drawable/ic_insert_photo_white_24dp"
+                app:tint="?attr/white_80" />
 
             <ImageButton
                 android:id="@+id/micro"

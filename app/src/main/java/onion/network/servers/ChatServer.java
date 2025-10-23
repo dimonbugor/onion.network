@@ -4,8 +4,13 @@ package onion.network.servers;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -15,9 +20,11 @@ import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.models.Notifier;
 import onion.network.databases.RequestDatabase;
+import onion.network.helpers.ChatMediaStore;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
+import onion.network.models.ChatMessagePayload;
 
 public class ChatServer {
 
@@ -45,7 +52,43 @@ public class ChatServer {
     }
 
 
-    public boolean handle(Uri uri) {
+    public boolean handle(HttpServer.Request request) {
+        if (request == null) {
+            return false;
+        }
+        if ("POST".equalsIgnoreCase(request.getMethod()) && request.hasBody()) {
+            return handlePost(request);
+        }
+        Uri uri = Uri.parse(request.getPath());
+        return handleLegacy(uri);
+    }
+
+    private boolean handlePost(HttpServer.Request request) {
+        try {
+            String body = new String(request.getBody(), StandardCharsets.UTF_8);
+            if (TextUtils.isEmpty(body)) {
+                log("empty post body");
+                return false;
+            }
+            JSONObject json = new JSONObject(body);
+            String sender = json.optString("a", null);
+            String receiver = json.optString("b", null);
+            String time = json.optString("t", null);
+            String message = json.optString("m", null);
+            String pubkey = json.optString("p", null);
+            String signature = json.optString("s", null);
+            String name = json.optString("n", "");
+            return processMessage(sender, receiver, time, message, pubkey, signature, name);
+        } catch (JSONException ex) {
+            log("invalid post json");
+            return false;
+        } catch (Exception ex) {
+            log("post handler error: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    private boolean handleLegacy(Uri uri) {
         log("handle " + uri);
 
         // get & check params
@@ -58,6 +101,24 @@ public class ChatServer {
         final String signature = uri.getQueryParameter("s");
         final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
 
+        return processMessage(sender, receiver, time, m, pubkey, signature, name);
+    }
+
+    private boolean processMessage(String sender,
+                                   String receiver,
+                                   String time,
+                                   String encodedMessage,
+                                   String pubkey,
+                                   String signature,
+                                   String name) {
+
+        if (TextUtils.isEmpty(receiver) || TextUtils.isEmpty(sender) ||
+                TextUtils.isEmpty(time) || TextUtils.isEmpty(encodedMessage) ||
+                TextUtils.isEmpty(pubkey) || TextUtils.isEmpty(signature)) {
+            log("message missing fields");
+            return false;
+        }
+
         if (!receiver.equals(tor.getID())) {
             log("message wrong address");
             return false;
@@ -68,13 +129,43 @@ public class ChatServer {
         if (!tor.checksig(
                 Ed25519Signature.base64Decode(pubkey),
                 Ed25519Signature.base64Decode(signature),
-                (receiver + " " + sender + " " + time + " " + m).getBytes(StandardCharsets.UTF_8))) {
+                (receiver + " " + sender + " " + time + " " + encodedMessage).getBytes(StandardCharsets.UTF_8))) {
             log("message invalid signature");
             //return false;
         }
         log("message signature ok");
 
-        final String content = new String(Ed25519Signature.base64Decode(m), Charset.forName("UTF-8"));
+        final String decodedPayload;
+        try {
+            decodedPayload = new String(Ed25519Signature.base64Decode(encodedMessage), Charset.forName("UTF-8"));
+        } catch (Exception ex) {
+            log("failed to decode content");
+            return false;
+        }
+
+        ChatMessagePayload payload = ChatMessagePayload.fromStorageString(decodedPayload);
+        if (payload.getType() != ChatMessagePayload.Type.TEXT && payload.isInline()) {
+            String dataStr = payload.getData();
+            if (!TextUtils.isEmpty(dataStr)) {
+                byte[] rawData = Ed25519Signature.base64Decode(dataStr);
+                if (rawData == null) {
+                    log("unable to decode media payload");
+                    return false;
+                }
+                if (ChatMediaStore.exceedsLimit(rawData.length)) {
+                    log("media payload exceeds allowed size");
+                    return false;
+                }
+                try {
+                    String path = ChatMediaStore.saveIncoming(context, payload.getType(), rawData, payload.getMime());
+                    payload.setStorage(ChatMessagePayload.Storage.FILE).setData(path);
+                } catch (IOException ex) {
+                    log("failed to store media: " + ex.getMessage());
+                    return false;
+                }
+            }
+        }
+        final String storageContent = payload.toStorageString();
 
         final long ltime;
         try {
@@ -111,14 +202,14 @@ public class ChatServer {
         // handle message
 
         if (acceptMessage) {
-            chatDatabase.addMessage(sender, receiver, content, ltime, true, false);
+            chatDatabase.addMessage(sender, receiver, storageContent, ltime, true, false);
             callOnMessageReceivedListeners();
             Notifier.getInstance(context).msg(sender);
         }
 
         ChatBot chatBot = ChatBot.getInstance(context);
         if (chatBot.addr() != null) {
-            acceptMessage = chatBot.handle(sender, name, content, ltime, acceptMessage);
+            acceptMessage = chatBot.handle(sender, name, payload.getText(), ltime, acceptMessage);
         }
 
 

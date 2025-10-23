@@ -258,4 +258,17 @@
     <string name="dialog_set_photo_title">Set Photo</string>
     <string name="snackbar_photo_changed">Photo changed</string>
 
+    <string name="chat_attachment_image">Image</string>
+    <string name="chat_attachment_video">Video</string>
+    <string name="chat_attachment_audio">Audio</string>
+    <string name="chat_attachment_voice_message">Voice message</string>
+    <string name="chat_attachment_generic">Attachment</string>
+    <string name="chat_attachment_file_too_large">File exceeds 10 MB limit</string>
+    <string name="chat_attachment_unsupported">Unsupported media type</string>
+    <string name="chat_attachment_pick_failed">Unable to load selected file</string>
+    <string name="chat_attachment_recording_started">Recording... tap to stop</string>
+    <string name="chat_attachment_recording_saved">Voice message ready</string>
+    <string name="chat_attachment_recording_failed">Unable to record audio</string>
+    <string name="chat_attachment_mic_permission_required">Microphone permission required</string>
+
 </resources>
