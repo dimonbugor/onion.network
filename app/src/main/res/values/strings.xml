@@ -270,5 +270,8 @@
     <string name="chat_attachment_recording_saved">Voice message ready</string>
     <string name="chat_attachment_recording_failed">Unable to record audio</string>
     <string name="chat_attachment_mic_permission_required">Microphone permission required</string>
+    <string name="chat_attachment_unavailable">Attachment unavailable</string>
+    <string name="chat_audio_play">Play audio</string>
+    <string name="chat_audio_pause">Pause audio</string>
 
 </resources>

@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
@@ -26,6 +27,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -310,6 +312,9 @@ public class ChatPage extends BasePage
             timer.purge();
             timer = null;
         }
+        if (adapter != null) {
+            adapter.release();
+        }
         chatServer.removeOnMessageReceivedListener(this);
         chatClient.removeOnMessageSentListener(this);
         super.onPause();
@@ -418,7 +423,7 @@ public class ChatPage extends BasePage
                 activity,
                 EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
                 this::openMediaPicker,
-                () -> activity.snack(getString(R.string.snackbar_storage_permission_required))
+                () -> activity.snack(str(R.string.snackbar_storage_permission_required))
         );
     }
 
@@ -431,23 +436,23 @@ public class ChatPage extends BasePage
             activity.startActivityForResult(intent, REQUEST_CHAT_PICK_MEDIA);
         } catch (Exception ex) {
             Log.e(TAG, "Unable to launch media picker", ex);
-            activity.snack(getString(R.string.chat_attachment_pick_failed));
+            activity.snack(str(R.string.chat_attachment_pick_failed));
         }
     }
 
     private void handlePickedMedia(Uri uri) {
         if (uri == null) {
-            activity.snack(getString(R.string.chat_attachment_pick_failed));
+            activity.snack(str(R.string.chat_attachment_pick_failed));
             return;
         }
         try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
             if (stream == null) {
-                activity.snack(getString(R.string.chat_attachment_pick_failed));
+                activity.snack(str(R.string.chat_attachment_pick_failed));
                 return;
             }
             byte[] bytes = Utils.readInputStream(stream);
             if (ChatMediaStore.exceedsLimit(bytes.length)) {
-                activity.snack(getString(R.string.chat_attachment_file_too_large));
+                activity.snack(str(R.string.chat_attachment_file_too_large));
                 return;
             }
             String mime = activity.getContentResolver().getType(uri);
@@ -456,7 +461,7 @@ public class ChatPage extends BasePage
             }
             ChatMessagePayload.Type type = inferTypeFromMime(mime);
             if (type == ChatMessagePayload.Type.TEXT) {
-                activity.snack(getString(R.string.chat_attachment_unsupported));
+                activity.snack(str(R.string.chat_attachment_unsupported));
                 return;
             }
             String path = ChatMediaStore.saveOutgoing(context, type, bytes, mime);
@@ -480,7 +485,7 @@ public class ChatPage extends BasePage
             updateAttachmentPreview();
         } catch (IOException ex) {
             Log.e(TAG, "Failed to import media", ex);
-            activity.snack(getString(R.string.chat_attachment_pick_failed));
+            activity.snack(str(R.string.chat_attachment_pick_failed));
         }
     }
 
@@ -557,7 +562,7 @@ public class ChatPage extends BasePage
                     activity,
                     EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
                     this::startAudioRecordingInternal,
-                    () -> activity.snack(getString(R.string.chat_attachment_mic_permission_required))
+                    () -> activity.snack(str(R.string.chat_attachment_mic_permission_required))
             );
         }
     }
@@ -567,7 +572,7 @@ public class ChatPage extends BasePage
         clearPendingAttachment(true);
         File dir = new File(activity.getCacheDir(), "chat_audio");
         if (!dir.exists() && !dir.mkdirs()) {
-            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            activity.snack(str(R.string.chat_attachment_recording_failed));
             return;
         }
         currentRecordingFile = new File(dir, "rec_" + System.currentTimeMillis() + ".m4a");
@@ -587,10 +592,10 @@ public class ChatPage extends BasePage
             if (microButton != null) {
                 microButton.setImageResource(R.drawable.ic_close);
             }
-            activity.snack(getString(R.string.chat_attachment_recording_started));
+            activity.snack(str(R.string.chat_attachment_recording_started));
         } catch (Exception ex) {
             Log.e(TAG, "Unable to start recording", ex);
-            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            activity.snack(str(R.string.chat_attachment_recording_failed));
             releaseRecorder();
             if (currentRecordingFile != null) {
                 currentRecordingFile.delete();
@@ -625,18 +630,18 @@ public class ChatPage extends BasePage
             return;
         }
         if (currentRecordingFile == null || !currentRecordingFile.exists()) {
-            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            activity.snack(str(R.string.chat_attachment_recording_failed));
             return;
         }
         byte[] bytes = Utils.readFileAsBytes(currentRecordingFile);
         currentRecordingFile.delete();
         currentRecordingFile = null;
         if (bytes.length == 0) {
-            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            activity.snack(str(R.string.chat_attachment_recording_failed));
             return;
         }
         if (ChatMediaStore.exceedsLimit(bytes.length)) {
-            activity.snack(getString(R.string.chat_attachment_file_too_large));
+            activity.snack(str(R.string.chat_attachment_file_too_large));
             return;
         }
         try {
@@ -649,15 +654,15 @@ public class ChatPage extends BasePage
                     .setDurationMs(durationMs);
             AttachmentDraft draft = new AttachmentDraft();
             draft.payload = payload;
-            draft.label = buildAttachmentLabel(ChatMessagePayload.Type.AUDIO, getString(R.string.chat_attachment_voice_message), bytes.length, durationMs);
+            draft.label = buildAttachmentLabel(ChatMessagePayload.Type.AUDIO, str(R.string.chat_attachment_voice_message), bytes.length, durationMs);
             draft.iconRes = R.drawable.ic_mic;
             clearPendingAttachment(true);
             pendingAttachment = draft;
             updateAttachmentPreview();
-            activity.snack(getString(R.string.chat_attachment_recording_saved));
+            activity.snack(str(R.string.chat_attachment_recording_saved));
         } catch (IOException ex) {
             Log.e(TAG, "Failed to persist audio", ex);
-            activity.snack(getString(R.string.chat_attachment_recording_failed));
+            activity.snack(str(R.string.chat_attachment_recording_failed));
         }
     }
 
@@ -713,13 +718,13 @@ public class ChatPage extends BasePage
     private String getAttachmentTypeLabel(ChatMessagePayload.Type type) {
         switch (type) {
             case IMAGE:
-                return getString(R.string.chat_attachment_image);
+                return str(R.string.chat_attachment_image);
             case VIDEO:
-                return getString(R.string.chat_attachment_video);
+                return str(R.string.chat_attachment_video);
             case AUDIO:
-                return getString(R.string.chat_attachment_audio);
+                return str(R.string.chat_attachment_audio);
             default:
-                return getString(R.string.chat_attachment_generic);
+                return str(R.string.chat_attachment_generic);
         }
     }
 
@@ -750,6 +755,21 @@ public class ChatPage extends BasePage
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
         return String.format(Locale.US, "%d:%02d", minutes, seconds);
+    }
+
+    private String str(int resId) {
+        return context.getString(resId);
+    }
+
+    private long parseDuration(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
     }
 
     private String guessMimeFromUri(Uri uri) {
@@ -802,6 +822,10 @@ public class ChatPage extends BasePage
         public FrameLayout attachmentContainer;
         public ImageView attachmentImage;
         public ImageView attachmentVideoBadge;
+        public LinearLayout audioRow;
+        public ImageButton audioPlayButton;
+        public TextView audioDurationView;
+        public TextView audioStatusView;
 
         public ChatHolder(View v) {
             super(v);
@@ -817,6 +841,10 @@ public class ChatPage extends BasePage
             attachmentContainer = v.findViewById(R.id.attachmentContainer);
             attachmentImage = v.findViewById(R.id.attachmentImage);
             attachmentVideoBadge = v.findViewById(R.id.attachmentVideoBadge);
+            audioRow = v.findViewById(R.id.audioRow);
+            audioPlayButton = v.findViewById(R.id.audioPlay);
+            audioDurationView = v.findViewById(R.id.audioDuration);
+            audioStatusView = v.findViewById(R.id.audioStatus);
         }
     }
 
@@ -827,6 +855,9 @@ public class ChatPage extends BasePage
     }
 
     class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
+
+        private MediaPlayer audioPlayer;
+        private long playingMessageId = -1L;
 
         @Override
         public ChatHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -904,7 +935,7 @@ public class ChatPage extends BasePage
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 
-            boolean attachmentVisible = bindAttachment(holder, payload);
+            boolean attachmentVisible = bindAttachment(holder, payload, id);
             String displayMessage = buildDisplayMessage(payload);
             if (TextUtils.isEmpty(displayMessage)) {
                 if (attachmentVisible) {
@@ -1037,7 +1068,7 @@ public class ChatPage extends BasePage
             }
         }
 
-        private boolean bindAttachment(ChatHolder holder, ChatMessagePayload payload) {
+        private boolean bindAttachment(ChatHolder holder, ChatMessagePayload payload, long messageId) {
             if (holder.attachmentContainer == null || holder.attachmentImage == null) {
                 return false;
             }
@@ -1049,6 +1080,18 @@ public class ChatPage extends BasePage
                 holder.attachmentVideoBadge.setVisibility(View.GONE);
             }
             holder.attachmentContainer.setOnClickListener(null);
+            if (holder.audioRow != null) {
+                holder.audioRow.setVisibility(View.GONE);
+                if (holder.audioPlayButton != null) {
+                    holder.audioPlayButton.setOnClickListener(null);
+                }
+                if (holder.audioStatusView != null) {
+                    holder.audioStatusView.setText("");
+                }
+                if (holder.audioDurationView != null) {
+                    holder.audioDurationView.setText("0:00");
+                }
+            }
 
             if (payload == null) {
                 return false;
@@ -1059,6 +1102,8 @@ public class ChatPage extends BasePage
                     return bindImageAttachment(holder, payload);
                 case VIDEO:
                     return bindVideoAttachment(holder, payload);
+                case AUDIO:
+                    return bindAudioAttachment(holder, payload, messageId);
                 default:
                     return false;
             }
@@ -1104,11 +1149,56 @@ public class ChatPage extends BasePage
             return true;
         }
 
+        private boolean bindAudioAttachment(ChatHolder holder, ChatMessagePayload payload, long messageId) {
+            if (holder.audioRow == null || holder.audioPlayButton == null) {
+                return false;
+            }
+            holder.audioRow.setVisibility(View.VISIBLE);
+            String statusText = payloadPlaceholder(payload);
+            if (holder.audioStatusView != null) {
+                holder.audioStatusView.setText(statusText);
+            }
+            File file = resolveAudioFile(payload);
+            boolean available = file != null && file.exists();
+            long duration = payload.getDurationMs();
+            if (duration <= 0 && available) {
+                duration = extractMediaDuration(file);
+            }
+            if (holder.audioDurationView != null) {
+                holder.audioDurationView.setText(available ? formatDuration(duration) : "--:--");
+            }
+            updateAudioPlayIcon(holder.audioPlayButton, messageId);
+            holder.audioPlayButton.setEnabled(available);
+            holder.audioRow.setEnabled(available);
+            if (!available) {
+                if (holder.audioStatusView != null) {
+                    holder.audioStatusView.setText(activity.getString(R.string.chat_attachment_unavailable));
+                }
+                holder.audioRow.setOnClickListener(v -> activity.snack(activity.getString(R.string.chat_attachment_unavailable)));
+                holder.audioPlayButton.setOnClickListener(v -> activity.snack(activity.getString(R.string.chat_attachment_unavailable)));
+                return true;
+            }
+            holder.audioPlayButton.setOnClickListener(v -> toggleAudioPlayback(messageId, payload));
+            holder.audioRow.setOnClickListener(v -> toggleAudioPlayback(messageId, payload));
+            return true;
+        }
+
         private File resolvePayloadFile(ChatMessagePayload payload) {
             if (payload == null || payload.isInline()) {
                 return null;
             }
             return ChatMediaStore.resolveFile(context, payload.getData());
+        }
+
+        private File resolveAudioFile(ChatMessagePayload payload) {
+            if (payload == null) return null;
+            if (!payload.isInline()) {
+                File file = ChatMediaStore.resolveFile(context, payload.getData());
+                if (file != null && file.exists()) {
+                    return file;
+                }
+            }
+            return null;
         }
 
         private Bitmap loadImageBitmap(ChatMessagePayload payload) {
@@ -1177,6 +1267,89 @@ public class ChatPage extends BasePage
             } catch (Exception ex) {
                 Log.w(TAG, "Unable to create video thumbnail", ex);
                 return null;
+            }
+        }
+
+        private void toggleAudioPlayback(long messageId, ChatMessagePayload payload) {
+            File file = resolveAudioFile(payload);
+            if (file == null || !file.exists()) {
+                activity.snack(activity.getString(R.string.chat_attachment_unavailable));
+                return;
+            }
+            Uri uri = ChatMediaStore.createContentUri(context, payload.getData());
+            if (uri == null) {
+                uri = Uri.fromFile(file);
+            }
+            if (audioPlayer != null && playingMessageId == messageId) {
+                if (audioPlayer.isPlaying()) {
+                    audioPlayer.pause();
+                } else {
+                    audioPlayer.start();
+                }
+                notifyDataSetChanged();
+                return;
+            }
+            stopAudioPlayback(false);
+            audioPlayer = new MediaPlayer();
+            try {
+                audioPlayer.setDataSource(context, uri);
+                audioPlayer.setOnCompletionListener(mp -> stopAudioPlayback(true));
+                audioPlayer.prepare();
+                audioPlayer.start();
+                playingMessageId = messageId;
+                notifyDataSetChanged();
+            } catch (Exception ex) {
+                Log.e(TAG, "Unable to play audio", ex);
+                stopAudioPlayback(false);
+                activity.snack(activity.getString(R.string.chat_attachment_unavailable));
+            }
+        }
+
+        private void updateAudioPlayIcon(ImageButton button, long messageId) {
+            if (button == null) return;
+            if (audioPlayer != null && playingMessageId == messageId && audioPlayer.isPlaying()) {
+                button.setImageResource(R.drawable.ic_pause);
+                button.setContentDescription(activity.getString(R.string.chat_audio_pause));
+            } else {
+                button.setImageResource(R.drawable.ic_play);
+                button.setContentDescription(activity.getString(R.string.chat_audio_play));
+            }
+        }
+
+        private void stopAudioPlayback(boolean notify) {
+            if (audioPlayer != null) {
+                try {
+                    audioPlayer.stop();
+                } catch (Exception ignore) {
+                }
+                audioPlayer.release();
+                audioPlayer = null;
+            }
+            playingMessageId = -1;
+            if (notify) {
+                notifyDataSetChanged();
+            }
+        }
+
+        void release() {
+            stopAudioPlayback(false);
+        }
+
+        private long extractMediaDuration(File file) {
+            if (file == null || !file.exists()) return 0L;
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            try {
+                retriever.setDataSource(context, Uri.fromFile(file));
+                String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                return ChatPage.this.parseDuration(duration);
+            } catch (Exception ex) {
+                Log.w(TAG, "Unable to read audio duration", ex);
+                return 0L;
+            } finally {
+                try {
+                    retriever.release();
+                } catch (Exception ignore) {
+                }
             }
         }
 

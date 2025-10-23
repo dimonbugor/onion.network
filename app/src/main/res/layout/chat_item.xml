@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -77,6 +78,47 @@
                     app:tint="@android:color/white" />
 
             </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/audioRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp8"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/dp8"
+                android:paddingVertical="@dimen/dp4"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/audioPlay"
+                    android:layout_width="@dimen/dp32"
+                    android:layout_height="@dimen/dp32"
+                    android:background="?selectableItemBackground"
+                    android:contentDescription="@string/chat_audio_play"
+                    android:src="@drawable/ic_play"
+                    app:tint="?attr/colorOnBackground" />
+
+                <TextView
+                    android:id="@+id/audioDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp8"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="@dimen/sp12"
+                    tools:text="0:24" />
+
+                <TextView
+                    android:id="@+id/audioStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp8"
+                    android:layout_weight="1"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="@dimen/sp12"
+                    tools:text="Voice message" />
+
+            </LinearLayout>
 
         <LinearLayout
             android:id="@+id/metaRow"
