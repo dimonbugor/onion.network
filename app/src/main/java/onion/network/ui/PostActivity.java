@@ -14,13 +14,16 @@ import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -28,12 +31,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import onion.network.R;
 import onion.network.helpers.ThemeManager;
 import onion.network.models.Blog;
 
 public class PostActivity extends AppCompatActivity {
+
+    public static final String EXTRA_INITIAL_IMAGE_URI = "onion.network.ui.PostActivity.EXTRA_INITIAL_IMAGE_URI";
+    public static final String EXTRA_INITIAL_IMAGE_BITMAP = "onion.network.ui.PostActivity.EXTRA_INITIAL_IMAGE_BITMAP";
 
     String id;
     EditText title;
@@ -68,6 +75,8 @@ public class PostActivity extends AppCompatActivity {
         title = (EditText) findViewById(R.id.title);
         content = (EditText) findViewById(R.id.content);
         image = (ImageView) findViewById(R.id.image);
+        setBitmap(null);
+        loadInitialMedia(getIntent());
 
         /*
         Intent intent = getIntent();
@@ -136,19 +145,55 @@ public class PostActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         //if (resultCode != RESULT_OK)
         //    return;
         if (requestCode == REQUEST_CODE_MEDIA_PICKER) {
-            bitmap = null;
+            setBitmap(null);
             if (resultCode == RESULT_OK) {
                 try {
                     Uri uri = data.getData();
-                    bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                    Bitmap loaded = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                    setBitmap(loaded);
                 } catch (IOException ex) {
                     //Snackbar.make(title, "Error", Snackbar.LENGTH_SHORT).show();
+                    setBitmap(null);
                 }
             }
-            image.setImageBitmap(bitmap);
+        }
+    }
+
+    private void loadInitialMedia(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        String initialUri = intent.getStringExtra(EXTRA_INITIAL_IMAGE_URI);
+        if (!TextUtils.isEmpty(initialUri)) {
+            try (InputStream stream = getContentResolver().openInputStream(Uri.parse(initialUri))) {
+                Bitmap loaded = BitmapFactory.decodeStream(stream);
+                setBitmap(loaded);
+            } catch (IOException ex) {
+                setBitmap(null);
+            }
+            return;
+        }
+        Bitmap extraBitmap = intent.getParcelableExtra(EXTRA_INITIAL_IMAGE_BITMAP);
+        if (extraBitmap != null) {
+            setBitmap(extraBitmap);
+        }
+    }
+
+    private void setBitmap(Bitmap bmp) {
+        bitmap = bmp;
+        if (image == null) {
+            return;
+        }
+        if (bmp != null) {
+            image.setImageBitmap(bmp);
+            image.setVisibility(View.VISIBLE);
+        } else {
+            image.setImageDrawable(null);
+            image.setVisibility(View.GONE);
         }
     }
 

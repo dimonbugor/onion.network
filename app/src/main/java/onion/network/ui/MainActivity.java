@@ -2,10 +2,6 @@
 
 package onion.network.ui;
 
-import static onion.network.helpers.Const.REQUEST_CODE_MEDIA_PICKER;
-import static onion.network.helpers.Const.REQUEST_QR;
-import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_BLOG;
-
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
@@ -44,19 +40,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
-import androidx.media3.common.PlaybackException;
-import androidx.media3.exoplayer.DefaultLoadControl;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.Player;
-import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 
 import com.google.android.material.appbar.AppBarLayout;
@@ -78,7 +71,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import onion.network.helpers.DeepLinkParser;
 import onion.network.models.FriendTool;
+import onion.network.ui.controllers.LightboxController;
+import onion.network.ui.menu.MenuState;
 import onion.network.ui.pages.BlogPage;
 import onion.network.services.HostService;
 import onion.network.models.Item;
@@ -112,6 +108,8 @@ import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.settings.Settings;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -136,17 +134,14 @@ public class MainActivity extends AppCompatActivity {
     private View dimOverlay;
     private ImageView lightboxImageView;
     private PlayerView lightboxVideoView;
-    private ExoPlayer lightboxPlayer;
-    private final Player.Listener lightboxPlayerListener = new Player.Listener() {
-        @Override
-        public void onPlaybackStateChanged(int state) {
-            if (state == Player.STATE_READY && lightboxImageView != null) {
-                lightboxImageView.setVisibility(View.GONE);
-            }
-        }
-    };
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
+
+    private LightboxController lightbox;
+    private MenuState menuState = MenuState.normal();
+    private ActivityResultLauncher<Intent> qrLauncher;
+    private ActivityResultLauncher<Intent> mediaPickerLauncher;
+    private ActivityResultLauncher<Intent> cameraForBlogLauncher;
 
     public static void addFriendItem(final Context context, String a, String name) {
 
@@ -181,24 +176,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void blink(final int id) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
-                        if (pages[i].getIcon() == id) {
-                            View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
-                            ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
-                                    "backgroundColor",
-                                    new ArgbEvaluator(),
-                                    0x88ffffff,
-                                    0x00ffffff);
-                            backgroundColorAnimator.setDuration(300);
-                            backgroundColorAnimator.start();
-                        }
+        runOnUiThread(() -> {
+            try {
+                for (int i = 0; i < getChildrenViews(arcButtonLayout); i++) {
+                    if (pages[i].getIcon() == id) {
+                        View v = ((ViewGroup) arcButtonLayout.getChildAt(0)).getChildAt(i);
+                        ObjectAnimator backgroundColorAnimator = ObjectAnimator.ofObject(v,
+                                "backgroundColor",
+                                new ArgbEvaluator(),
+                                0x88ffffff,
+                                0x00ffffff);
+                        backgroundColorAnimator.setDuration(300);
+                        backgroundColorAnimator.start();
                     }
-                } catch (Exception ignore) {
                 }
+            } catch (Exception ignore) {
             }
         });
     }
@@ -231,64 +223,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, s);
     }
 
-    void handleIntent(Intent intent) {
-
-        if (intent != null) {
-            Log.i(TAG, intent.toString());
-            Uri uri = intent.getData();
-            if (uri != null) {
-
-                Log.i(TAG, uri.toString());
-
-                {
-                    try {
-                        String ur = intent.getDataString();
-                        log("ur " + ur);
-                        String scheme = ur.substring(0, ur.indexOf(':'));
-                        log("scheme " + scheme);
-                        String host = ur.substring(ur.indexOf(':') + 1);
-                        log("host1 " + host);
-                        if (host.charAt(0) == '/') host = host.substring(1);
-                        if (host.charAt(0) == '/') host = host.substring(1);
-                        host = host.substring(0, 16);
-                        log("host " + host);
-                        if ("onionnet".equals(scheme) || "onionet".equals(scheme) || "onnet".equals(scheme)) {
-                            address = host;
-                            log("onionnet");
-                            return;
-                        }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-
-                Log.i(TAG, "host " + uri.getHost());
-
-                if (uri.getHost() != null && uri.getHost().equals("network.onion")) {
-                    List<String> pp = uri.getPathSegments();
-                    address = pp.size() > 0 ? pp.get(0) : null;
-                    name = pp.size() > 1 ? pp.get(1) : "";
-                    Log.i(TAG, "ONION NETWORK URI " + address);
-                    return;
-                }
-
-                if (uri.getHost() != null && uri.getHost().endsWith(".onion") || uri.getHost() != null && uri.getHost().contains(".onion.")) {
-                    if (uri.getPath().equalsIgnoreCase("/network.onion") || uri.getPath().toLowerCase().startsWith("/network.onion/")) {
-                        for (String s : uri.getHost().split("\\.")) {
-                            if (s.length() == 16) {
-                                address = s;
-                                Log.i(TAG, "ONION NETWORK URI " + address);
-                                return;
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-
-    }
-
     boolean overlayVisible = false;
 
     @Override
@@ -302,6 +236,12 @@ public class MainActivity extends AppCompatActivity {
         appliedTheme = ThemeManager.init(this).getTheme();
 
         setContentView(R.layout.activity_main);
+
+        DeepLinkParser.Result dl = DeepLinkParser.parse(getIntent());
+        address = dl.address == null ? "" : dl.address;
+        name = dl.name == null ? "" : dl.name;
+        if (address.equals(TorManager.getInstance(this).getID())) address = "";
+
         setupPreferenceListener();
 
         lightboxImageView = findViewById(R.id.lightbox);
@@ -319,12 +259,25 @@ public class MainActivity extends AppCompatActivity {
             lightboxImageView.setClickable(false);
         }
 
-        address = getIntent().getStringExtra("address");
-        handleIntent(getIntent());
+        lightbox = new LightboxController(
+                findViewById(R.id.lightbox),      // ImageView
+                (PlayerView) findViewById(R.id.lightboxVideo),
+                new LightboxController.Host() {
+                    @Override
+                    public void pauseAvatarVideos() {
+                        if (wallPage != null) wallPage.pauseAvatarVideos();
+                    }
 
-        if (address == null) address = "";
-        address = address.trim().toLowerCase();
-        if (address.equals(TorManager.getInstance(this).getID())) address = "";
+                    @Override
+                    public void resumeAvatarVideos() {
+                        if (wallPage != null) wallPage.resumeAvatarVideos();
+                    }
+
+                    @Override
+                    public void onLightboxHidden() { /*no-op*/ }
+                },
+                findViewById(R.id.container)
+        );
 
         db = ItemDatabase.getInstance(this);
 
@@ -370,17 +323,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         // Встановити білий tint для всіх іконок меню
         toolbar.setTitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
         toolbar.setSubtitleTextColor(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor));
-        toolbar.getOverflowIcon().setColorFilter(ThemeManager.getColor(this, android.R.attr.actionMenuTextColor), PorterDuff.Mode.SRC_ATOP);
-
-        if (!address.isEmpty()) {
-
+        if (toolbar.getOverflowIcon() != null) {
+            toolbar.getOverflowIcon().setColorFilter(
+                    ThemeManager.getColor(this, android.R.attr.actionMenuTextColor),
+                    PorterDuff.Mode.SRC_ATOP
+            );
+        }
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null && !address.isEmpty()) {
             setTitle(address);
-
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
@@ -548,6 +502,105 @@ public class MainActivity extends AppCompatActivity {
 
         WallBot.getInstance(this);
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                boolean imgVisible = lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE;
+                boolean vidVisible = lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE;
+
+                if (imgVisible || vidVisible) {
+                    lightbox.hideAll();
+                    return;
+                }
+                setEnabled(false);
+                MainActivity.super.onBackPressed();
+            }
+        });
+
+        qrLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                activityResult -> {
+                    if (activityResult.getResultCode() != RESULT_OK) return;
+                    Intent data = activityResult.getData();
+                    if (data == null) return;
+
+                    Bundle extras = data.getExtras();
+                    if (extras == null) return;
+
+                    Bitmap bitmap = (Bitmap) extras.get("data");
+                    if (bitmap == null) return;
+
+                    int width = bitmap.getWidth(), height = bitmap.getHeight();
+                    int[] pixels = new int[width * height];
+                    bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+                    bitmap.recycle();
+
+                    RGBLuminanceSource source = new RGBLuminanceSource(width, height, pixels);
+                    BinaryBitmap bBitmap = new BinaryBitmap(new HybridBinarizer(source));
+                    MultiFormatReader reader = new MultiFormatReader();
+
+                    try {
+                        Result qrResult = reader.decode(bBitmap); // ← інша назва
+                        String str = qrResult.getText();
+                        Log.i("ID", str);
+
+                        String[] tokens = str.split(" ", 3);
+
+                        if (tokens.length < 2 || !tokens[0].equals("network.onion")) {
+                            snack(getString(R.string.snackbar_qr_invalid_incompatible));
+                            return;
+                        }
+
+                        String id = tokens[1].toLowerCase();
+                        if (id.length() != 16) {
+                            snack(getString(R.string.snackbar_qr_invalid));
+                            return;
+                        }
+
+                        String name = tokens.length > 2 ? tokens[2] : "";
+                        contactDialog(id, name);
+
+                    } catch (Exception ex) {
+                        snack(getString(R.string.snackbar_qr_invalid));
+                        ex.printStackTrace();
+                    }
+                }
+        );
+
+        mediaPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() != RESULT_OK || result.getData() == null) return;
+            Uri imageUri = result.getData().getData();
+            if (imageUri == null) return;
+            BasePage page = currentPage();
+            if (page instanceof BlogPage) {
+                launchPostActivityWithImageUri(imageUri);
+                return;
+            }
+            if (wallPage != null) {
+                try (java.io.InputStream is = getContentResolver().openInputStream(imageUri)) {
+                    Bitmap image = BitmapFactory.decodeStream(is);
+                    if (image != null) {
+                        wallPage.writePost(null, image);
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        });
+
+        cameraForBlogLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() != RESULT_OK || result.getData() == null) return;
+            Object data = result.getData().getExtras() != null ? result.getData().getExtras().get("data") : null;
+            Bitmap bmp = data instanceof Bitmap ? (Bitmap) data : null;
+            if (bmp != null) {
+                BasePage page = currentPage();
+                if (page instanceof BlogPage) {
+                    launchPostActivityWithImageBitmap(bmp);
+                } else if (wallPage != null) {
+                    wallPage.writePost(null, bmp);
+                }
+            }
+        });
     }
 
     @Override
@@ -630,7 +683,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startHostService() {
-        startService(new Intent(this, HostService.class));
+        ContextCompat.startForegroundService(this, new Intent(this, HostService.class));
+//        startService(new Intent(this, HostService.class));
     }
 
     void showEnterId() {
@@ -701,68 +755,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void scanQR() {
-
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(takePictureIntent, REQUEST_QR);
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        for (BasePage page : pages) {
-            page.onActivityResult(requestCode, resultCode, data);
-        }
-
-        if (resultCode != RESULT_OK) {
-            return;
-        }
-
-        if (requestCode == REQUEST_QR) {
-            Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-
-            int width = bitmap.getWidth(), height = bitmap.getHeight();
-            int[] pixels = new int[width * height];
-            bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
-            bitmap.recycle();
-            RGBLuminanceSource source = new RGBLuminanceSource(width, height, pixels);
-            BinaryBitmap bBitmap = new BinaryBitmap(new HybridBinarizer(source));
-            MultiFormatReader reader = new MultiFormatReader();
-
-            try {
-                Result result = reader.decode(bBitmap);
-                String str = result.getText();
-                Log.i("ID", str);
-
-                String[] tokens = str.split(" ", 3);
-
-                if (tokens.length < 2 || !tokens[0].equals("network.onion")) {
-                    snack(getString(R.string.snackbar_qr_invalid_incompatible));
-                    return;
-                }
-
-                String id = tokens[1].toLowerCase();
-
-                if (id.length() != 16) {
-                    snack(getString(R.string.snackbar_qr_invalid));
-                    return;
-                }
-
-                String name = "";
-                if (tokens.length > 2) {
-                    name = tokens[2];
-                }
-
-                contactDialog(id, name);
-
-                return;
-
-            } catch (Exception ex) {
-                snack(getString(R.string.snackbar_qr_invalid));
-                ex.printStackTrace();
-            }
-        }
-
+        qrLauncher.launch(new Intent(MediaStore.ACTION_IMAGE_CAPTURE));
     }
 
     public String getAppName() {
@@ -929,6 +922,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void updateActionBar() {
+        if (getSupportActionBar() == null) return;
         if (address.isEmpty()) {
             getSupportActionBar().setTitle(getAppName());
             getSupportActionBar().setSubtitle(null);
@@ -951,9 +945,8 @@ public class MainActivity extends AppCompatActivity {
 
     public BasePage currentPage() {
         if (viewPager == null) return null;
-        Object o = viewPager.getCurrentItem();
-        //Log.i(TAG, "" + o + " " + o.getClass().toString());
-        return pages[(Integer) o];
+        int index = viewPager.getCurrentItem();
+        return pages[index];
     }
 
     void fabvis() {
@@ -1115,100 +1108,47 @@ public class MainActivity extends AppCompatActivity {
         arcButtonLayout.setFabPosition(mapped);
     }
 
-    boolean actionPhotoOption = false;
-    boolean actionCameraOption = false;
-    boolean actionBlogTitleOption = false;
-    boolean actionShareOption = false;
-    boolean actionHomeOption = false;
-    boolean actionAddPostOption = false;
-    boolean actionStyleOption = false;
-
-    boolean actionCallOption = false;
-    boolean actionRefreshQrOption = true;
-    boolean actionMenuScanQrOption = true;
-    boolean actionMenuShowMyQrOption = true;
-    boolean actionMenuEnterIdOption = true;
-    boolean actionMenuShowMyIdOption = true;
-    boolean actionMenuShowUriOption = true;
-    boolean actionMenuInviteFriendsOption = true;
-
-    public void toggleChatMainMenu() {
-        boolean showChatScreen = currentPage() instanceof ChatPage;
-        if (showChatScreen) {
-            actionCallOption = true;
-        } else {
-            actionCallOption = false;
-        }
-        updateMenu();
-    }
-
-    public void togglePostMainMenu() {
-        toggleChatMainMenu();
-        boolean showBlogScreen = currentPage() instanceof BlogPage;
-        if (showBlogScreen) {
-            actionPhotoOption = true;
-            actionCameraOption = true;
-            actionBlogTitleOption = true;
-            actionShareOption = true;
-            actionHomeOption = true;
-            actionAddPostOption = true;
-            actionStyleOption = true;
-
-            actionRefreshQrOption = false;
-            actionMenuScanQrOption = false;
-            actionMenuShowMyQrOption = false;
-            actionMenuEnterIdOption = false;
-            actionMenuShowMyIdOption = false;
-            actionMenuShowUriOption = false;
-            actionMenuInviteFriendsOption = false;
-        } else {
-            actionPhotoOption = false;
-            actionCameraOption = false;
-            actionBlogTitleOption = false;
-            actionShareOption = false;
-            actionHomeOption = false;
-            actionAddPostOption = false;
-            actionStyleOption = false;
-
-            actionRefreshQrOption = true;
-            actionMenuScanQrOption = true;
-            actionMenuShowMyQrOption = true;
-            actionMenuEnterIdOption = true;
-            actionMenuShowMyIdOption = true;
-            actionMenuShowUriOption = true;
-            actionMenuInviteFriendsOption = true;
-        }
-        updateMenu();
-    }
-
     void updateMenu() {
         invalidateOptionsMenu();
     }
 
+    public void toggleChatMainMenu() {
+        menuState.call = currentPage() instanceof ChatPage;
+        updateMenu();
+    }
+
+    public void togglePostMainMenu() {
+        if (currentPage() instanceof BlogPage) {
+            menuState = MenuState.blog();
+        } else {
+            menuState = MenuState.normal();
+            menuState.call = currentPage() instanceof ChatPage;
+        }
+        updateMenu();
+    }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_photo).setVisible(actionPhotoOption);
-        menu.findItem(R.id.action_camera).setVisible(actionCameraOption);
-        menu.findItem(R.id.action_blog_title).setVisible(actionBlogTitleOption);
-        menu.findItem(R.id.action_share).setVisible(actionShareOption);
-        menu.findItem(R.id.action_home).setVisible(actionHomeOption);
-        menu.findItem(R.id.action_add_post).setVisible(actionAddPostOption);
-        menu.findItem(R.id.action_style).setVisible(actionStyleOption);
+        menu.findItem(R.id.action_photo).setVisible(menuState.photo);
+        menu.findItem(R.id.action_camera).setVisible(menuState.camera);
+        menu.findItem(R.id.action_blog_title).setVisible(menuState.blogTitle);
+        menu.findItem(R.id.action_share).setVisible(menuState.share);
+        menu.findItem(R.id.action_home).setVisible(menuState.home);
+        menu.findItem(R.id.action_add_post).setVisible(menuState.addPost);
+        menu.findItem(R.id.action_style).setVisible(menuState.style);
 
-        menu.findItem(R.id.action_call).setVisible(actionCallOption);
-        menu.findItem(R.id.action_refresh).setVisible(actionMenuScanQrOption);
-        menu.findItem(R.id.action_menu_scan_qr).setVisible(actionMenuScanQrOption);
-        menu.findItem(R.id.action_menu_show_my_qr).setVisible(actionMenuShowMyQrOption);
-        menu.findItem(R.id.action_menu_enter_id).setVisible(actionMenuEnterIdOption);
-        menu.findItem(R.id.action_menu_show_my_id).setVisible(actionMenuShowMyIdOption);
-        menu.findItem(R.id.action_menu_show_uri).setVisible(actionMenuShowUriOption);
-        menu.findItem(R.id.action_menu_invite_friends).setVisible(actionMenuInviteFriendsOption);
+        menu.findItem(R.id.action_call).setVisible(menuState.call);
+        menu.findItem(R.id.action_refresh).setVisible(menuState.refreshQr);
+        menu.findItem(R.id.action_menu_scan_qr).setVisible(menuState.scanQr);
+        menu.findItem(R.id.action_menu_show_my_qr).setVisible(menuState.showMyQr);
+        menu.findItem(R.id.action_menu_enter_id).setVisible(menuState.enterId);
+        menu.findItem(R.id.action_menu_show_my_id).setVisible(menuState.showMyId);
+        menu.findItem(R.id.action_menu_show_uri).setVisible(menuState.showUri);
+        menu.findItem(R.id.action_menu_invite_friends).setVisible(address.isEmpty() && menuState.inviteFriends);
 
         menu.findItem(R.id.action_add_friend).setVisible(!address.isEmpty() && !db.hasKey("friend", address));
         menu.findItem(R.id.action_friends).setVisible(!address.isEmpty() && db.hasKey("friend", address));
         menu.findItem(R.id.action_clear_chat).setVisible(!address.isEmpty());
-        menu.findItem(R.id.action_menu_invite_friends).setVisible(address.isEmpty());
-
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -1235,17 +1175,17 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_photo) {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             intent.setType("image/*");
-            startActivityForResult(Intent.createChooser(intent, "Complete action using"), REQUEST_CODE_MEDIA_PICKER);
+            mediaPickerLauncher.launch(Intent.createChooser(intent, "Complete action using"));
             return true;
         }
         if (id == R.id.action_camera) {
             PermissionHelper.runWithPermissions(
                     this,
-                    EnumSet.of(PermissionHelper.PermissionRequest.CAMERA, PermissionHelper.PermissionRequest.MEDIA),
-                    () -> {
-                        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO_BLOG);
-                    },
+                    EnumSet.of(
+                            PermissionHelper.PermissionRequest.CAMERA,
+                            PermissionHelper.PermissionRequest.MEDIA
+                    ),
+                    () -> cameraForBlogLauncher.launch(new Intent(MediaStore.ACTION_IMAGE_CAPTURE)),
                     () -> snack("Camera permission required")
             );
             return true;
@@ -1390,20 +1330,12 @@ public class MainActivity extends AppCompatActivity {
         final String id = getID();
         AlertDialog dialog = DialogHelper.themedBuilder(this)
                 .setTitle(getString(R.string.dialog_show_id_title, id))
-                .setNegativeButton(R.string.dialog_button_copy, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                        clipboard.setText(id);
-                        snack(getString(R.string.snackbar_id_copied));
-                    }
+                .setNegativeButton(R.string.dialog_button_copy, (dialog1, which) -> {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    cm.setPrimaryClip(ClipData.newPlainText("id", id));
+                    snack(getString(R.string.snackbar_id_copied));
                 })
-                .setPositiveButton(R.string.dialog_button_send, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, id).setType("text/plain"));
-                    }
-                })
+                .setPositiveButton(R.string.dialog_button_send, (dialog2, which) -> startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, id).setType("text/plain")))
                 .create();
         DialogHelper.show(dialog);
     }
@@ -1411,55 +1343,28 @@ public class MainActivity extends AppCompatActivity {
     void showUrl() {
 
         final View v = getLayoutInflater().inflate(R.layout.url_dialog, null);
+        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
         {
             final String onionLink = String.format("%s.onion/network.onion", getID());
             ((TextView) v.findViewById(R.id.onion_link_text)).setText(onionLink);
-            v.findViewById(R.id.onion_link_copy).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setText(onionLink);
-                    toast(getString(R.string.toast_link_copied));
-                }
+            v.findViewById(R.id.onion_link_copy).setOnClickListener(v1 -> {
+                cm.setPrimaryClip(ClipData.newPlainText("onion_link", onionLink));
+                toast(getString(R.string.toast_link_copied));
             });
-            v.findViewById(R.id.onion_link_share).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, "http://" + onionLink).setType("text/plain"));
-                }
-            });
-            v.findViewById(R.id.onion_link_view).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + onionLink)));
-                }
-            });
+            v.findViewById(R.id.onion_link_share).setOnClickListener(v2 -> startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, "http://" + onionLink).setType("text/plain")));
+            v.findViewById(R.id.onion_link_view).setOnClickListener(v3 -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + onionLink))));
         }
 
         {
             final String clearnetLink = String.format("%s.onion.to/network.onion", getID());
             ((TextView) v.findViewById(R.id.clearnet_link_text)).setText(clearnetLink);
-            v.findViewById(R.id.clearnet_link_copy).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setText(clearnetLink);
-                    toast(getString(R.string.toast_link_copied));
-                }
+            v.findViewById(R.id.clearnet_link_copy).setOnClickListener(v4 -> {
+                cm.setPrimaryClip(ClipData.newPlainText("clearnet_link", clearnetLink));
+                toast(getString(R.string.toast_link_copied));
             });
-            v.findViewById(R.id.clearnet_link_share).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, "http://" + clearnetLink).setType("text/plain"));
-                }
-            });
-            v.findViewById(R.id.clearnet_link_view).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + clearnetLink)));
-                }
-            });
+            v.findViewById(R.id.clearnet_link_share).setOnClickListener(v5 -> startActivity(new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, "http://" + clearnetLink).setType("text/plain")));
+            v.findViewById(R.id.clearnet_link_view).setOnClickListener(v6 -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://" + clearnetLink))));
         }
 
         AlertDialog dialog = DialogHelper.themedBuilder(this)
@@ -1529,10 +1434,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         try {
-
             super.onPause();
 
-            {
+            if (timer != null) {
                 timer.cancel();
                 timer.purge();
                 timer = null;
@@ -1541,17 +1445,14 @@ public class MainActivity extends AppCompatActivity {
             for (BasePage page : pages) {
                 page.onPause();
             }
-
         } finally {
-            if (instance == this) {
-                instance = null;
-            }
+            if (instance == this) instance = null;
         }
     }
 
     @Override
     protected void onDestroy() {
-        releaseLightboxPlayer();
+        if (lightbox != null) lightbox.release();
         super.onDestroy();
         if (preferences != null && preferenceListener != null) {
             preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener);
@@ -1560,239 +1461,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void lightbox(Bitmap bitmap) {
-        if (lightboxImageView == null) return;
-        lightboxVideoHide(true, true);
-        lightboxImageView.setImageBitmap(bitmap);
-        lightboxImageView.bringToFront();
-        lightboxImageView.setVisibility(View.VISIBLE);
-        lightboxImageView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
-        lightboxImageView.setOnClickListener(v -> lightboxHide());
-        lightboxImageView.setClickable(true);
-        if (wallPage != null) {
-            wallPage.pauseAvatarVideos();
-        }
+        if (bitmap == null) return;
+        lightbox.hideAll();
+        lightbox.showImage(bitmap);
     }
 
-    private void lightboxHide() {
-        if (lightboxImageView == null || lightboxImageView.getVisibility() != View.VISIBLE) return;
-        Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.lightbox_hide);
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override public void onAnimationStart(Animation animation) { }
-
-            @Override public void onAnimationEnd(Animation animation) {
-                lightboxImageView.clearAnimation();
-                lightboxImageView.setAlpha(0f);
-                lightboxImageView.setVisibility(View.GONE); // ← GONE, не INVISIBLE
-                lightboxImageView.setImageDrawable(null);
-                lightboxImageView.setOnClickListener(null);
-                lightboxImageView.setClickable(false);
-                checkAndResumeAvatarVideos(); // ← єдина точка перевірки після ховання
-            }
-
-            @Override public void onAnimationRepeat(Animation animation) { }
-        });
-        lightboxImageView.startAnimation(animation);
-    }
-
-    private void hideLightboxImageImmediate() {
-        if (lightboxImageView == null) return;
-        lightboxImageView.clearAnimation();
-        lightboxImageView.setAlpha(0f);
-        lightboxImageView.setVisibility(View.GONE); // ← GONE
-        lightboxImageView.setImageDrawable(null);
-        lightboxImageView.setOnClickListener(null);
-        lightboxImageView.setClickable(false);
-    }
-
-    private void checkAndResumeAvatarVideos() {
-        boolean imageVisible = lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE;
-        boolean videoVisible = lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE;
-        if (!imageVisible && !videoVisible && wallPage != null) {
-            wallPage.resumeAvatarVideos();
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (lightboxVideoView != null && lightboxVideoView.getVisibility() == View.VISIBLE) {
-            lightboxVideoHide(true, true);
-            return;
-        }
-        if (lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE) {
-            lightboxHide();
-            return;
-        }
-        super.onBackPressed();
-    }
-
-    private void ensureLightboxPlayer() {
-        if (lightboxPlayer != null) return;
-
-        DefaultLoadControl load = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(1000, 3000, 250, 500)
-                .build();
-
-        DefaultRenderersFactory rf = new DefaultRenderersFactory(this)
-                .setEnableDecoderFallback(true)
-                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
-
-        lightboxPlayer = new ExoPlayer.Builder(this)
-                .setRenderersFactory(rf)
-                .setLoadControl(load)
-                .build();
-
-        lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
-        lightboxPlayer.setVolume(1f);
-        lightboxVideoView.setPlayer(lightboxPlayer);
-
-        lightboxPlayer.addListener(new Player.Listener() {
-            @Override
-            public void onRenderedFirstFrame() {
-                crossfadePreviewToVideo();
-            }
-
-            @Override
-            public void onPlayerError(@NonNull PlaybackException error) {
-                // повертаємо прев’ю у разі помилки
-                if (lightboxImageView != null) {
-                    lightboxImageView.setVisibility(View.VISIBLE);
-                    lightboxImageView.setAlpha(1f);
-                }
-                lightboxVideoView.setAlpha(0f);
-                lightboxVideoView.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
-
-    private void crossfadePreviewToVideo() {
-        if (lightboxVideoView == null) return;
-
-        lightboxVideoView.animate().cancel();
-        lightboxVideoView.animate().alpha(1f).setDuration(180).start();
-
-        if (lightboxImageView != null && lightboxImageView.getVisibility() == View.VISIBLE) {
-            lightboxImageView.animate().cancel();
-            lightboxImageView.animate()
-                    .alpha(0f)
-                    .setDuration(120)
-                    .withEndAction(() -> {
-                        lightboxImageView.setVisibility(View.GONE);
-                        lightboxImageView.setImageDrawable(null);
-                        lightboxImageView.setOnClickListener(null);
-                        lightboxImageView.setClickable(false);
-                    })
-                    .start();
-        }
-    }
-
-    private void hideLightboxes() {
-        lightboxVideoHide(true, true); // ховає відео з анімацією
-        lightboxHide();      // ховає зображення з анімацією
-        // страховка від гонок/диявольських анімацій :)
-        lightboxVideoView.postDelayed(this::checkAndResumeAvatarVideos, 350);
-    }
-
-    private void lightboxVideoHide(boolean immediate, boolean suppressResume) {
-        if (lightboxVideoView == null || lightboxVideoView.getVisibility() != View.VISIBLE) {
-            if (!suppressResume) checkAndResumeAvatarVideos(); // ← новий метод нижче
-            return;
-        }
-        if (lightboxPlayer != null) {
-            lightboxPlayer.setPlayWhenReady(false);
-            lightboxPlayer.pause();
-            // optional: залиш, або прибери якщо відчуваєш лаг на наступному відкритті
-            lightboxPlayer.clearMediaItems();
-        }
-        lightboxVideoView.setOnClickListener(null);
-        lightboxVideoView.setClickable(false);
-
-        Runnable end = () -> {
-            lightboxVideoView.clearAnimation();
-            lightboxVideoView.setAlpha(0f);
-            lightboxVideoView.setVisibility(View.GONE); // ← GONE замість INVISIBLE
-            if (!suppressResume) checkAndResumeAvatarVideos();
-        };
-
-        if (immediate) {
-            end.run();
-        } else {
-            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_hide));
-            lightboxVideoView.postDelayed(end, 250);
-        }
+    public void lightboxVideo(Uri videoUri, Bitmap preview) {
+        if (videoUri == null) return;
+        lightbox.hideAll();
+        lightbox.showVideo(videoUri, preview);
     }
 
     public void showLightbox(AvatarView.AvatarContent content) {
-        // пауза бекграунд-аватарів
-        if (wallPage != null) wallPage.pauseAvatarVideos();
-
-        // Приховати попередній стейт
-        hideLightboxImageImmediate();
-        lightboxVideoHide(true, true);
-
         if (content.isVideo()) {
-            if (content.preview != null && lightboxImageView != null) {
-                lightboxImageView.setImageBitmap(content.preview);
-                lightboxImageView.setVisibility(View.VISIBLE);
-                lightboxImageView.bringToFront();
-                lightboxImageView.setOnClickListener(v -> hideLightboxes());
-            }
-
-            ensureLightboxPlayer();
-            lightboxPlayer.stop();
-            lightboxPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
-            lightboxPlayer.setVolume(1f);
-            lightboxPlayer.setMediaItem(MediaItem.fromUri(Uri.parse(content.videoUri)));
-            lightboxPlayer.prepare();
-            lightboxPlayer.play();
-
-            lightboxVideoView.setShutterBackgroundColor(0x00000000);
-            lightboxVideoView.setKeepContentOnPlayerReset(true);
-
-            lightboxVideoView.setVisibility(View.VISIBLE);
-            lightboxVideoView.bringToFront();
-            lightboxVideoView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.lightbox_show));
-            lightboxVideoView.setOnClickListener(v -> hideLightboxes());
-        } else {
-            if (content.photo != null && lightboxImageView != null) {
-                // прибрати все, що могло лишитись після hide
-                lightboxImageView.clearAnimation();
-                lightboxImageView.setOnClickListener(null);
-                lightboxImageView.setClickable(false);
-                lightboxImageView.setTranslationZ(1000f);
-
-                if (lightboxVideoView != null) {
-                    lightboxVideoView.clearAnimation();
-                    lightboxVideoView.setAlpha(0f);
-                    lightboxVideoView.setVisibility(View.GONE); // важливо: GONE
-                    lightboxVideoView.setOnClickListener(null);
-                    lightboxVideoView.setClickable(false);
-                }
-
-                // ставимо картинку і явно робимо видимою
-                lightboxImageView.setImageBitmap(content.photo);
-                lightboxImageView.setAlpha(1f);                 // ← критично
-                lightboxImageView.setVisibility(View.VISIBLE);
-                lightboxImageView.bringToFront();
-                lightboxImageView.setClickable(true);
-                lightboxImageView.setOnClickListener(v -> hideLightboxes());
-
-                lightboxImageView.setAlpha(0f);
-                lightboxImageView.animate().alpha(1f).setDuration(180).start();
-            }
-        }
-    }
-
-    private void releaseLightboxPlayer() {
-        if (lightboxPlayer != null) {
-            lightboxPlayer.removeListener(lightboxPlayerListener);
-            lightboxPlayer.release();
-            lightboxPlayer = null;
-        }
-        if (lightboxVideoView != null) {
-            lightboxVideoView.setPlayer(null);
-            lightboxVideoView.setOnClickListener(null);
-            lightboxVideoView.setClickable(false);
-            lightboxVideoView.setVisibility(View.INVISIBLE);
+            lightbox.showVideo(Uri.parse(content.videoUri), content.preview);
+        } else if (content.photo != null) {
+            lightbox.showImage(content.photo);
         }
     }
 
@@ -1803,6 +1487,25 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_TEXT, String.format(getString(R.string.invitation_text), TorManager.getInstance(this).getID(), Uri.encode(getName()), getAppName()));
         intent.setType("text/plain");
 
+        startActivity(intent);
+    }
+
+    private void launchPostActivityWithImageUri(Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        Intent intent = new Intent(this, PostActivity.class);
+        intent.putExtra(PostActivity.EXTRA_INITIAL_IMAGE_URI, uri.toString());
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(intent);
+    }
+
+    private void launchPostActivityWithImageBitmap(Bitmap bitmap) {
+        if (bitmap == null) {
+            return;
+        }
+        Intent intent = new Intent(this, PostActivity.class);
+        intent.putExtra(PostActivity.EXTRA_INITIAL_IMAGE_BITMAP, bitmap);
         startActivity(intent);
     }
 

@@ -803,11 +803,10 @@ public class WallPage extends BasePage {
         JSONObject rawData = parseJsonSafe(item.text());
         JSONObject data = item.json(getContext(), address);
 
-        bindInlineImage(holder, data);
-
         String postAddress = firstNonEmpty(rawData.optString("addr"), data.optString("addr"));
-        PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
         String ownerKey = resolveOwnerKey(postAddress, wallOwner, myAddress, item);
+        PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
+        bindPostMedia(holder, data, assets, ownerKey);
         bindAvatar(holder, assets, ownerKey);
 
         bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
@@ -947,7 +946,10 @@ public class WallPage extends BasePage {
         view.setImageTintList(tint);
     }
 
-    private void bindInlineImage(PostViewHolder holder, JSONObject data) {
+    private void bindPostMedia(PostViewHolder holder,
+                               JSONObject data,
+                               PostAssets assets,
+                               String ownerKey) {
         if (holder.imageContainer != null) {
             holder.imageContainer.setVisibility(View.GONE);
         }
@@ -956,29 +958,80 @@ public class WallPage extends BasePage {
             return;
         }
         imageView.setVisibility(View.GONE);
+        imageView.setOnClickListener(null);
+        imageView.setImageDrawable(null);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setContentDescription(null);
+        if (holder.videoOverlay != null) {
+            holder.videoOverlay.setVisibility(View.GONE);
+        }
         try {
             String encoded = data.optString("img", "").trim();
-            if (encoded.isEmpty()) {
-                return;
+            if (!encoded.isEmpty()) {
+                byte[] photoData = Base64.decode(encoded, Base64.DEFAULT);
+                if (photoData.length > 0) {
+                    final Bitmap bitmap = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
+                    if (bitmap != null) {
+                        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        imageView.setImageBitmap(bitmap);
+                        imageView.setVisibility(View.VISIBLE);
+                        if (holder.imageContainer != null) {
+                            holder.imageContainer.setVisibility(View.VISIBLE);
+                        }
+                        imageView.setOnClickListener(v -> activity.lightbox(bitmap));
+                        return;
+                    }
+                }
             }
-            byte[] photoData = Base64.decode(encoded, Base64.DEFAULT);
-            if (photoData.length == 0) {
-                return;
-            }
-            final Bitmap bitmap = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
-            imageView.setImageBitmap(bitmap);
-            imageView.setVisibility(View.VISIBLE);
-            if (holder.imageContainer != null) {
-                holder.imageContainer.setVisibility(View.VISIBLE);
-            }
-            imageView.setOnClickListener(v -> activity.lightbox(bitmap));
         } catch (Exception ex) {
             ex.printStackTrace();
-            imageView.setVisibility(View.GONE);
-            if (holder.imageContainer != null) {
-                holder.imageContainer.setVisibility(View.GONE);
+        }
+
+        if (assets == null) {
+            return;
+        }
+        boolean hasVideoData = assets.videoThumb != null
+                || !TextUtils.isEmpty(assets.videoMediaId)
+                || !TextUtils.isEmpty(assets.storedVideoUri)
+                || !TextUtils.isEmpty(assets.videoData);
+        if (!hasVideoData) {
+            return;
+        }
+
+        Uri playableVideo = VideoCacheManager.ensureVideoUri(
+                getContext(),
+                ownerKey,
+                assets.storedVideoUri,
+                assets.videoData);
+        if (playableVideo == null && !TextUtils.isEmpty(assets.storedVideoUri)) {
+            try {
+                playableVideo = Uri.parse(assets.storedVideoUri);
+            } catch (Exception ignore) {
             }
         }
+        if (playableVideo == null) {
+            return;
+        }
+
+        Bitmap thumb = assets.videoThumb;
+        if (thumb != null) {
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setImageBitmap(thumb);
+        } else {
+            imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            imageView.setImageResource(R.drawable.ic_videocam);
+        }
+        imageView.setVisibility(View.VISIBLE);
+        if (holder.imageContainer != null) {
+            holder.imageContainer.setVisibility(View.VISIBLE);
+        }
+        if (holder.videoOverlay != null) {
+            holder.videoOverlay.setVisibility(View.VISIBLE);
+        }
+        final Uri finalVideoUri = playableVideo;
+        final Bitmap preview = thumb;
+        imageView.setContentDescription(activity.getString(R.string.wall_post_video_content_description));
+        imageView.setOnClickListener(v -> activity.lightboxVideo(finalVideoUri, preview));
     }
 
     private void bindAvatar(PostViewHolder holder, PostAssets assets, String ownerKey) {
@@ -1913,6 +1966,7 @@ public class WallPage extends BasePage {
         final AvatarView thumb;
         final FrameLayout imageContainer;
         final ImageView image;
+        final ImageView videoOverlay;
         final MaterialCardView card;
         final LinearLayout container;
         final LinearLayout headerRow;
@@ -1936,6 +1990,7 @@ public class WallPage extends BasePage {
             thumb = root.findViewById(R.id.thumb);
             imageContainer = root.findViewById(R.id.imageContainer);
             image = root.findViewById(R.id.image);
+            videoOverlay = root.findViewById(R.id.videoOverlay);
             card = root.findViewById(R.id.card);
             container = root.findViewById(R.id.postContent);
             headerRow = root.findViewById(R.id.headerRow);

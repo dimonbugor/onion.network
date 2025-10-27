@@ -6,6 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context="onion.network.ui.PostActivity"
+    android:paddingTop="?actionBarSize"
     android:paddingBottom="@dimen/dp16">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -62,9 +63,12 @@
     <ImageView
         android:id="@+id/image"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp64"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
         android:paddingLeft="@dimen/dp16"
-        android:paddingRight="@dimen/dp16" />
+        android:paddingRight="@dimen/dp16"
+        android:visibility="gone" />
 
 
 </LinearLayout>

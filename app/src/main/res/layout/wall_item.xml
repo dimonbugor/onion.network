@@ -151,6 +151,18 @@
                         android:layout_height="wrap_content"
                         android:adjustViewBounds="true"
                         android:scaleType="centerCrop" />
+
+                    <ImageView
+                        android:id="@+id/videoOverlay"
+                        android:layout_width="@dimen/dp48"
+                        android:layout_height="@dimen/dp48"
+                        android:layout_gravity="center"
+                        android:background="@drawable/wall_video_overlay"
+                        android:padding="@dimen/dp8"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_play"
+                        android:visibility="gone"
+                        app:tint="@android:color/white" />
                 </FrameLayout>
 
                 <LinearLayout

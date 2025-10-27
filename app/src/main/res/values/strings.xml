@@ -260,6 +260,7 @@
 
     <string name="chat_attachment_image">Image</string>
     <string name="chat_attachment_video">Video</string>
+    <string name="wall_post_video_content_description">Video attachment preview</string>
     <string name="chat_attachment_audio">Audio</string>
     <string name="chat_attachment_voice_message">Voice message</string>
     <string name="chat_attachment_generic">Attachment</string>
