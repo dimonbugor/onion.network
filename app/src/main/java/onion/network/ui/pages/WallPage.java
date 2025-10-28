@@ -1,6 +1,36 @@
 
-
 package onion.network.ui.pages;
+
+import org.json.JSONObject;
+
+import onion.network.models.FriendPreview;
+import onion.network.models.Item;
+
+import android.graphics.Bitmap;
+import android.text.TextUtils;
+
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import onion.network.R;
+import onion.network.ui.controllers.PostComposer;
+import onion.network.utils.WallUtils;
+import onion.network.models.PostAssets;
+import onion.network.models.PostDraft;
+import onion.network.ui.adapters.FriendPreviewAdapter;
+import onion.network.ui.adapters.WallAdapter;
+import onion.network.ui.adapters.viewholders.PostViewHolder;
+import onion.network.ui.views.AvatarView;
+
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import static onion.network.helpers.Const.REQUEST_PICK_IMAGE_POST;
 import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
@@ -8,120 +38,106 @@ import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.media.AudioAttributes;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaRecorder;
+import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.SystemClock;
-import android.provider.MediaStore;
-import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
+import androidx.core.graphics.ColorUtils;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.google.android.material.textfield.TextInputEditText;
+
+import org.json.JSONException;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.EnumSet;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.lang.ref.WeakReference;
-import java.util.Locale;
 
-import com.google.android.material.card.MaterialCardView;
-
-import androidx.core.content.FileProvider;
-import androidx.core.graphics.ColorUtils;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import onion.network.helpers.DialogHelper;
-import onion.network.helpers.StreamMediaStore;
-import onion.network.helpers.Const;
-import onion.network.helpers.PermissionHelper;
-import onion.network.helpers.UiCustomizationManager;
-import onion.network.models.Item;
-import onion.network.models.ItemTask;
-import onion.network.R;
 import onion.network.TorManager;
-import onion.network.databases.ItemDatabase;
-import onion.network.helpers.ThemeManager;
-import onion.network.helpers.Utils;
-import onion.network.helpers.VideoCacheManager;
-import onion.network.helpers.ChatMediaStore;
-import onion.network.helpers.Ed25519Signature;
-import onion.network.models.ItemResult;
 import onion.network.cashes.ItemCache;
+import onion.network.databases.ItemDatabase;
+import onion.network.helpers.AudioCacheManager;
+import onion.network.helpers.Const;
+import onion.network.helpers.DialogHelper;
+import onion.network.helpers.MediaResolver;
+import onion.network.helpers.StreamMediaStore;
+import onion.network.helpers.ThemeManager;
+import onion.network.helpers.UiCustomizationManager;
+import onion.network.helpers.VideoCacheManager;
+import onion.network.models.ItemResult;
+import onion.network.models.ItemTask;
 import onion.network.ui.MainActivity;
-import onion.network.ui.views.AvatarView;
-import com.google.android.material.textfield.TextInputEditText;
 
 public class WallPage extends BasePage {
 
-    private static final int FRIEND_PREVIEW_LIMIT = 12;
+    static final int FRIEND_PREVIEW_LIMIT = 12;
+    static final int IMAGE_MAX_DIM_PX = 1080;
+    static final String TAG = "WallPage";
 
     RecyclerView recyclerView;
     WallAdapter wallAdapter;
     RecyclerView friendPreviewRecyclerView;
     FriendPreviewAdapter friendPreviewAdapter;
+
     final List<Item> posts = new ArrayList<>();
     final List<FriendPreview> friendPreviews = new ArrayList<>();
     final Map<String, FriendPreview> friendPreviewByAddress = new HashMap<>();
     final List<String> friendPreviewOrder = new ArrayList<>();
     final List<WeakReference<AvatarView>> activeAvatars = new ArrayList<>();
-    private int friendPreviewGeneration = 0;
-    int count = 5;
-    String TAG = "WallPage";
 
-    String smore;
-    int imore;
-    String currentWallOwner = "";
-    String currentMyAddress = "";
-    private Uri pendingPhotoUri;
-    private PostComposer activeComposer;
-    private PostDraft pendingDraftAfterActivity;
-    private Item pendingDraftItem;
+    int friendPreviewGeneration = 0;
+    int pageSize = 5;
 
+    public String nextMoreKey;
+    int nextInsertIndex;
+
+    public String currentWallOwner = "";
+    public String currentMyAddress = "";
+
+    public Uri pendingPhotoUri;
+    PostComposer activeComposer;
+    public PostDraft pendingDraftAfterActivity;
+    public Item pendingDraftItem;
+
+    MediaPlayer audioPlayer;
+    String playingAudioPostKey;
 
     public WallPage(MainActivity activity) {
         super(activity);
         activity.getLayoutInflater().inflate(R.layout.wall_page, this, true);
+        setupFriendPreviewList();
+        setupPostsList();
+    }
+
+    private void setupFriendPreviewList() {
         friendPreviewRecyclerView = findViewById(R.id.friendPreviewRecyclerView);
-        if (friendPreviewRecyclerView != null) {
-            friendPreviewRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-            friendPreviewAdapter = new FriendPreviewAdapter();
-            friendPreviewRecyclerView.setAdapter(friendPreviewAdapter);
-        }
+        if (friendPreviewRecyclerView == null) return;
+        friendPreviewRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        friendPreviewAdapter = new FriendPreviewAdapter(this, friendPreviews);
+        friendPreviewRecyclerView.setAdapter(friendPreviewAdapter);
+    }
+
+    private void setupPostsList() {
         recyclerView = findViewById(R.id.wallRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        wallAdapter = new WallAdapter();
+        wallAdapter = new WallAdapter(this);
         recyclerView.setAdapter(wallAdapter);
     }
 
@@ -129,1937 +145,434 @@ public class WallPage extends BasePage {
         PostDraft draft = initialDraft != null ? initialDraft.copy() : new PostDraft();
         View dialogView = activity.getLayoutInflater().inflate(R.layout.wall_dialog, null);
         TextInputEditText textEdit = dialogView.findViewById(R.id.text);
-        if (!TextUtils.isEmpty(draft.text)) {
-            textEdit.setText(draft.text);
-            textEdit.setSelection(textEdit.getText().length());
-        }
+        if (!TextUtils.isEmpty(draft.text)) { textEdit.setText(draft.text); textEdit.setSelection(textEdit.getText().length()); }
         AlertDialog.Builder builder = DialogHelper.themedBuilder(activity).setView(dialogView);
         builder.setTitle(item != null ? "Edit Post" : "Write Post");
-        builder.setCancelable(true);
         Dialog dialog = builder.create();
-        PostComposer composer = new PostComposer(item, draft, dialog, dialogView, textEdit);
-        dialog.setOnDismissListener(di -> {
-            if (activeComposer == composer) {
-                activeComposer = null;
-            }
-            composer.release();
-        });
-        activeComposer = composer;
-        composer.init();
-        dialog.show();
+        PostComposer composer = new PostComposer(this, item, draft, dialog, dialogView, textEdit);
+        dialog.setOnDismissListener(di -> { if (activeComposer == composer) activeComposer = null; composer.release(); });
+        activeComposer = composer; composer.init(); dialog.show();
     }
 
-    void editPost(final Item item) {
-        openPostComposer(item, PostDraft.fromItem(item));
-    }
+    void editPost(final Item item) { openPostComposer(item, PostDraft.fromItem(item)); }
+    public void writePost(final String text, final Bitmap bitmap) { PostDraft d = new PostDraft(); d.text = text; d.image = bitmap; openPostComposer(null, d); }
 
-    public void writePost(final String text, final Bitmap bitmap) {
-        PostDraft draft = new PostDraft();
-        draft.text = text;
-        draft.image = bitmap;
-        openPostComposer(null, draft);
-    }
-
-    private void doPostPublish(@Nullable Item item, PostDraft draft) {
-        if (draft == null) return;
-        draft.text = draft.text == null ? "" : draft.text;
+    public void doPostPublish(@Nullable Item item, PostDraft draft) {
+        if (draft == null) return; draft.text = draft.text == null ? "" : draft.text;
         try {
             if (item != null) {
-                JSONObject o = item.json();
-                o.put("text", draft.text);
-                applyDraftToJson(o, draft);
-                Item updated = new Item(item.type(), item.key(), item.index(), o);
-                ItemDatabase.getInstance(getContext()).put(updated);
-                activity.load();
+                JSONObject o = item.json(); o.put("text", draft.text); applyDraftToJson(o, draft);
+                Item updated = new Item(item.type(), item.key(), item.index(), o); ItemDatabase.getInstance(getContext()).put(updated);
             } else {
-                JSONObject data = new JSONObject();
-                data.put("text", draft.text);
-                data.put("date", "" + System.currentTimeMillis());
-                applyDraftToJson(data, draft);
-                activity.publishPost(data);
-                activity.load();
+                JSONObject data = new JSONObject(); data.put("text", draft.text); data.put("date", String.valueOf(System.currentTimeMillis())); applyDraftToJson(data, draft); activity.publishPost(data);
             }
-        } catch (JSONException ex) {
-            throw new RuntimeException(ex);
-        }
+            activity.load();
+        } catch (JSONException ex) { throw new RuntimeException(ex); }
     }
 
     private void applyDraftToJson(JSONObject o, PostDraft draft) throws JSONException {
-        if (draft.image != null) {
-            o.put("img", Utils.encodeImage(draft.image));
-        } else {
-            o.remove("img");
-        }
-        applyMediaReference(o, "video", draft.videoMediaId, draft.videoMime, draft.videoDurationMs, draft.videoThumb);
-        applyMediaReference(o, "audio", draft.audioMediaId, draft.audioMime, draft.audioDurationMs, null);
+        if (draft.image != null) o.put("img", onion.network.helpers.Utils.encodeImage(draft.image)); else o.remove("img");
+        applyMediaRef(o, "video", draft.videoMediaId, draft.videoMime, draft.videoDurationMs, draft.videoThumb);
+        applyMediaRef(o, "audio", draft.audioMediaId, draft.audioMime, draft.audioDurationMs, null);
     }
 
-    private boolean ensureDraftMediaReferences(PostDraft draft) {
-        if (draft == null) {
-            return true;
-        }
+    public boolean ensureDraftMediaReferences(PostDraft draft) {
+        if (draft == null) return true;
         try {
             if (TextUtils.isEmpty(draft.videoMediaId) && draft.videoData != null && draft.videoData.length > 0) {
-                StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, draft.videoData, draft.videoMime);
-                draft.videoMediaId = descriptor.id;
-                draft.videoMime = descriptor.mime;
-                draft.videoData = null;
+                StreamMediaStore.MediaDescriptor d = StreamMediaStore.save(context, draft.videoData, draft.videoMime); draft.videoMediaId = d.id; draft.videoMime = d.mime; draft.videoData = null;
             }
             if (TextUtils.isEmpty(draft.audioMediaId) && draft.audioData != null && draft.audioData.length > 0) {
-                StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(context, draft.audioData, draft.audioMime);
-                draft.audioMediaId = descriptor.id;
-                draft.audioMime = descriptor.mime;
-                draft.audioData = null;
+                StreamMediaStore.MediaDescriptor d = StreamMediaStore.save(context, draft.audioData, draft.audioMime); draft.audioMediaId = d.id; draft.audioMime = d.mime; draft.audioData = null;
             }
             return true;
-        } catch (IOException ex) {
-            Log.e(TAG, "Unable to persist media", ex);
-            activity.snack(activity.getString(R.string.wall_media_store_failed));
-            return false;
-        }
+        } catch (IOException ex) { Log.e(TAG, "Unable to persist media", ex); activity.snack(activity.getString(R.string.wall_media_store_failed)); return false; }
     }
 
-    private Bitmap scaleBitmap(Bitmap bitmap, int maxDim) {
-        if (bitmap == null) return null;
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        if (width <= maxDim && height <= maxDim) {
-            return bitmap;
-        }
-        if (width >= height) {
-            int newWidth = maxDim;
-            int newHeight = (int) ((double) height * maxDim / width);
-            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-        } else {
-            int newHeight = maxDim;
-            int newWidth = (int) ((double) width * maxDim / height);
-            return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-        }
-    }
-
-    private long parseDuration(String value) {
-        if (TextUtils.isEmpty(value)) {
-            return 0L;
-        }
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException ex) {
-            return 0L;
-        }
-    }
-
-    private void applyMediaReference(JSONObject target, String prefix, String mediaId, String mime, long durationMs, Bitmap thumbBitmap) throws JSONException {
+    private static void applyMediaRef(JSONObject target, String pfx, String mediaId, String mime, long durMs, Bitmap thumb) throws JSONException {
         if (!TextUtils.isEmpty(mediaId)) {
-            target.put(prefix + "_id", mediaId);
-            if (!TextUtils.isEmpty(mime)) {
-                target.put(prefix + "_mime", mime);
-            } else {
-                target.remove(prefix + "_mime");
-            }
-            if (durationMs > 0) {
-                target.put(prefix + "_duration", durationMs);
-            } else {
-                target.remove(prefix + "_duration");
-            }
-            if (thumbBitmap != null) {
-                target.put(prefix + "_thumb", Utils.encodeImage(thumbBitmap));
-            } else {
-                target.remove(prefix + "_thumb");
-            }
-            target.put(prefix + "_uri", "/media/" + mediaId);
-            target.remove(prefix);
-        } else {
-            target.remove(prefix + "_id");
-            target.remove(prefix + "_mime");
-            target.remove(prefix + "_duration");
-            target.remove(prefix + "_thumb");
-            target.remove(prefix + "_uri");
+            target.put(pfx + "_id", mediaId);
+            if (!TextUtils.isEmpty(mime)) target.put(pfx + "_mime", mime); else target.remove(pfx + "_mime");
+            if (durMs > 0) target.put(pfx + "_duration", durMs); else target.remove(pfx + "_duration");
+            if (thumb != null) target.put(pfx + "_thumb", onion.network.helpers.Utils.encodeImage(thumb)); else target.remove(pfx + "_thumb");
+            target.put(pfx + "_uri", "/media/" + mediaId); target.remove(pfx); return;
         }
+        target.remove(pfx + "_id"); target.remove(pfx + "_mime"); target.remove(pfx + "_duration"); target.remove(pfx + "_thumb"); target.remove(pfx + "_uri");
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_PICK_IMAGE_POST
-                || requestCode == REQUEST_TAKE_PHOTO_POST
-                || requestCode == Const.REQUEST_PICK_VIDEO_POST) {
-
-            PostDraft draft = pendingDraftAfterActivity;
-            Item draftItem = pendingDraftItem;
-            pendingDraftAfterActivity = null;
-            pendingDraftItem = null;
-
-            if (draft == null) {
-                deleteTempPhoto();
-                return;
-            }
-
-            boolean success = (resultCode == Activity.RESULT_OK);
-            if (success) {
-                if (requestCode == REQUEST_PICK_IMAGE_POST || requestCode == REQUEST_TAKE_PHOTO_POST) {
-                    Bitmap bmp = null;
-                    Uri uri = data != null ? data.getData() : null;
-                    if (requestCode == REQUEST_TAKE_PHOTO_POST) {
-                        uri = pendingPhotoUri;
-                        if (uri != null) {
-                            try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
-                                bmp = BitmapFactory.decodeStream(stream);
-                            } catch (IOException ex) {
-                                Log.e(TAG, "Failed to decode captured photo", ex);
-                            }
-                        } else if (data != null && data.getExtras() != null) {
-                            Object extra = data.getExtras().get("data");
-                            if (extra instanceof Bitmap) {
-                                bmp = (Bitmap) extra;
-                            }
-                        }
-                    } else if (data != null) {
-                        bmp = getActivityResultBitmap(data);
-                    }
-                    if (bmp != null && uri != null) {
-                        bmp = fixImageOrientation(bmp, uri);
-                    }
-                    if (bmp != null) {
-                        bmp = scaleBitmap(bmp, 1080);
-                        draft.image = bmp;
-                        draft.clearVideo();
-                        draft.clearAudio();
-                    } else {
-                        activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
-                    }
-                } else if (requestCode == Const.REQUEST_PICK_VIDEO_POST && data != null) {
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
-                            byte[] bytes = Utils.readInputStream(stream);
-                            if (ChatMediaStore.exceedsLimit(bytes.length)) {
-                                activity.snack(activity.getString(R.string.chat_attachment_file_too_large));
-                            } else {
-                                String mime = activity.getContentResolver().getType(uri);
-                                if (TextUtils.isEmpty(mime)) {
-                                    String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                                    if (!TextUtils.isEmpty(extension)) {
-                                        mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                                    }
-                                }
-                                MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-                                Bitmap thumb = null;
-                                long duration = 0L;
-                                try {
-                                    retriever.setDataSource(activity, uri);
-                                    duration = parseDuration(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                                    thumb = retriever.getFrameAtTime(0);
-                                } catch (Exception ex) {
-                                    Log.w(TAG, "Unable to extract video metadata", ex);
-                                } finally {
-                                    try {
-                                        retriever.release();
-                                    } catch (Exception ignore) {
-                                    }
-                                }
-                                if (thumb != null) {
-                                    thumb = scaleBitmap(thumb, 1080);
-                                }
-                                draft.clearImage();
-                                draft.clearAudio();
-                                draft.videoData = bytes;
-                                draft.videoMime = mime;
-                                draft.videoThumb = thumb;
-                                draft.videoDurationMs = duration;
-                                draft.videoMediaId = null;
-                            }
-                        } catch (IOException ex) {
-                            Log.e(TAG, "Unable to read selected video", ex);
-                            activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
-                        }
-                    }
-                }
-            } else {
-                activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
-            }
-
-            deleteTempPhoto();
-            openPostComposer(draftItem, draft);
-            return;
-        }
-
-        if (resultCode != Activity.RESULT_OK) {
-            deleteTempPhoto();
-            return;
-        }
-
+    @Override public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_PICK_IMAGE_POST || requestCode == REQUEST_TAKE_PHOTO_POST || requestCode == Const.REQUEST_PICK_VIDEO_POST) { handleComposerActivityResult(requestCode, resultCode, data); return; }
+        if (resultCode != Activity.RESULT_OK) { deleteTempPhoto(); return; }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    @Override
-    public String getTitle() {
-        return "Wall";
+    private void handleComposerActivityResult(int requestCode, int resultCode, Intent data) {
+        PostComposer composer = activeComposer; PostDraft draft = composer != null ? composer.draft : pendingDraftAfterActivity; Item draftItem = composer != null ? composer.item : pendingDraftItem;
+        boolean ok = (resultCode == Activity.RESULT_OK);
+        if (!ok || draft == null) { activity.snack(activity.getString(R.string.chat_attachment_pick_failed)); cleanupAfterExternalAction(); if (composer == null && draft != null) openPostComposer(draftItem, draft); return; }
+        switch (requestCode) {
+            case REQUEST_PICK_IMAGE_POST:
+            case REQUEST_TAKE_PHOTO_POST: handleImagePicked(requestCode, data, draft); break;
+            case Const.REQUEST_PICK_VIDEO_POST: handleVideoPicked(data, draft); break;
+        }
+        cleanupAfterExternalAction();
+        if (composer != null) composer.updatePreview(); else openPostComposer(draftItem, draft);
     }
 
-    @Override
-    public int getIcon() {
-        return R.drawable.ic_format_list_bulleted;
+    private void handleImagePicked(int requestCode, Intent data, PostDraft draft) {
+        Bitmap bmp = null; Uri uri = data != null ? data.getData() : null;
+        try {
+            if (requestCode == REQUEST_TAKE_PHOTO_POST) {
+                uri = pendingPhotoUri;
+                if (uri != null) try (InputStream s = activity.getContentResolver().openInputStream(uri)) { bmp = BitmapFactory.decodeStream(s); }
+                else if (data != null && data.getExtras() != null) { Object extra = data.getExtras().get("data"); if (extra instanceof Bitmap) bmp = (Bitmap) extra; }
+            } else if (data != null) { bmp = WallUtils.getActivityResultBitmap(activity, data); }
+        } catch (IOException ex) { Log.e(TAG, "Failed to decode captured/picked photo", ex); }
+        if (bmp != null && uri != null) bmp = WallUtils.fixImageOrientation(activity, bmp, uri);
+        if (bmp == null) { activity.snack(activity.getString(R.string.chat_attachment_pick_failed)); return; }
+        draft.image = WallUtils.scaleBitmap(bmp, IMAGE_MAX_DIM_PX); draft.clearVideo(); draft.clearAudio();
     }
 
-    @Override
-    public void load() {
-        loadFriendPostPreviews();
-        load(0, "");
+    private void handleVideoPicked(@Nullable Intent data, PostDraft draft) {
+        if (data == null) { activity.snack(activity.getString(R.string.chat_attachment_pick_failed)); return; }
+        Uri uri = data.getData(); if (uri == null) { activity.snack(activity.getString(R.string.chat_attachment_pick_failed)); return; }
+        try (InputStream stream = activity.getContentResolver().openInputStream(uri)) {
+            byte[] bytes = onion.network.helpers.Utils.readInputStream(stream);
+            if (onion.network.helpers.ChatMediaStore.exceedsLimit(bytes.length)) { activity.snack(activity.getString(R.string.chat_attachment_file_too_large)); return; }
+            String mime = WallUtils.resolveMimeFromUri(activity, uri);
+            MediaMetadataRetriever retr = new MediaMetadataRetriever(); Bitmap thumb = null; long duration = 0L;
+            try { retr.setDataSource(activity, uri); duration = WallUtils.parseDuration(retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)); thumb = retr.getFrameAtTime(0); }
+            catch (Exception ex) { Log.w(TAG, "Unable to extract video metadata", ex); }
+            finally { try { retr.release(); } catch (Exception ignore) {} }
+            if (thumb != null) thumb = WallUtils.scaleBitmap(thumb, IMAGE_MAX_DIM_PX);
+            draft.clearImage(); draft.clearAudio(); draft.videoData = bytes; draft.videoMime = mime; draft.videoThumb = thumb; draft.videoDurationMs = duration; draft.videoMediaId = null;
+        } catch (IOException ex) { Log.e(TAG, "Unable to read selected video", ex); activity.snack(activity.getString(R.string.chat_attachment_pick_failed)); }
     }
 
-    @Override
-    public int getFab() {
-        return R.id.wallFab;
-    }
+    private void cleanupAfterExternalAction() { deleteTempPhoto(); pendingDraftAfterActivity = null; pendingDraftItem = null; }
 
-    @Override
-    public void onFab() {
-        openPostComposer(null, new PostDraft());
-    }
+    @Override public String getTitle() { return "Wall"; }
+    @Override public int getIcon() { return R.drawable.ic_format_list_bulleted; }
+    @Override public void load() { loadFriendPostPreviews(); load(0, ""); }
+    @Override public int getFab() { return R.id.wallFab; }
+    @Override public void onFab() { openPostComposer(null, new PostDraft()); }
+    @Override public void onResume() { loadFriendPostPreviews(); }
+    @Override public void onPause() { stopPostAudioPlayback(false); }
 
-
-    @Override
-    public void onResume() {
-        loadFriendPostPreviews();
-    }
-
-    private boolean isViewingOwnWall() {
-        MainActivity a = activity;
-        return a != null && TextUtils.isEmpty(a.address);
-    }
+    private boolean isViewingOwnWall() { MainActivity a = activity; return a != null && TextUtils.isEmpty(a.address); }
 
     private void loadFriendPostPreviews() {
-        if (friendPreviewRecyclerView == null || friendPreviewAdapter == null) {
-            return;
-        }
-
-        if (!isViewingOwnWall()) {
-            friendPreviewByAddress.clear();
-            friendPreviews.clear();
-            friendPreviewOrder.clear();
-            friendPreviewAdapter.notifyDataSetChanged();
-            friendPreviewRecyclerView.setVisibility(View.GONE);
-            return;
-        }
-
-        friendPreviewGeneration++;
-        final int generation = friendPreviewGeneration;
-
+        if (friendPreviewRecyclerView == null || friendPreviewAdapter == null) return;
+        if (!isViewingOwnWall()) { friendPreviewByAddress.clear(); friendPreviews.clear(); friendPreviewOrder.clear(); friendPreviewAdapter.notifyDataSetChanged(); friendPreviewRecyclerView.setVisibility(View.GONE); return; }
+        friendPreviewGeneration++; final int generation = friendPreviewGeneration;
         new ItemTask(getContext(), "", "friend", "", FRIEND_PREVIEW_LIMIT) {
-
-            @Override
-            protected void onProgressUpdate(ItemResult... results) {
-                ItemResult result = safeFirst(results);
-                handleFriendPreviewResult(result, generation);
-            }
-
-            @Override
-            protected void onPostExecute(ItemResult itemResult) {
-                handleFriendPreviewResult(itemResult, generation);
-            }
-
-            private ItemResult safeFirst(ItemResult[] results) {
-                return results != null && results.length > 0 ? results[0] : null;
-            }
+            @Override protected void onProgressUpdate(ItemResult... results) { handleFriendPreviewResult(safeFirst(results), generation); }
+            @Override protected void onPostExecute(ItemResult res) { handleFriendPreviewResult(res, generation); }
+            private ItemResult safeFirst(ItemResult[] results) { return results != null && results.length > 0 ? results[0] : null; }
         }.execute2();
     }
 
-    private void handleFriendPreviewResult(ItemResult itemResult, int generation) {
-        if (generation != friendPreviewGeneration) {
-            return;
-        }
-        if (itemResult == null) {
-            updateFriendPreviewVisibility();
-            return;
-        }
-
+    private void handleFriendPreviewResult(@Nullable ItemResult itemResult, int generation) {
+        if (generation != friendPreviewGeneration) return;
+        if (itemResult == null) { updateFriendPreviewVisibility(); return; }
         Map<String, FriendPreview> retained = new HashMap<>(friendPreviewByAddress);
-        friendPreviewByAddress.clear();
-        friendPreviewOrder.clear();
-
-        for (int idx = 0; idx < itemResult.size(); idx++) {
-            Item friendItem = itemResult.at(idx);
-            if (friendItem == null) continue;
+        friendPreviewByAddress.clear(); friendPreviewOrder.clear();
+        for (int i = 0; i < itemResult.size(); i++) {
+            Item friendItem = itemResult.at(i); if (friendItem == null) continue;
             JSONObject friendData = friendItem.json(getContext(), activity.address);
-            String friendAddress = friendData.optString("addr").trim();
-            if (TextUtils.isEmpty(friendAddress)) {
-                continue;
-            }
-
-            FriendPreview preview = retained.remove(friendAddress);
-            if (preview == null) {
-                preview = new FriendPreview(friendAddress);
-            }
-
-            preview.friendItem = friendItem;
-            preview.friendData = friendData;
-            preview.displayName = resolveFriendDisplayName(friendData);
-
-            friendPreviewByAddress.put(friendAddress, preview);
-            friendPreviewOrder.add(friendAddress);
+            String friendAddress = friendData.optString("addr").trim(); if (TextUtils.isEmpty(friendAddress)) continue;
+            FriendPreview preview = retained.remove(friendAddress); if (preview == null) preview = new FriendPreview(friendAddress);
+            preview.friendItem = friendItem; preview.friendData = friendData; preview.displayName = resolveFriendDisplayName(friendData);
+            friendPreviewByAddress.put(friendAddress, preview); friendPreviewOrder.add(friendAddress);
         }
-
         refreshDisplayedFriendPreviews();
-
-        for (String friendAddress : friendPreviewOrder) {
-            FriendPreview preview = friendPreviewByAddress.get(friendAddress);
-            if (preview == null) continue;
-            if (preview.lastRequestedGeneration == generation) continue;
-            loadLatestPostForFriend(preview, generation);
+        for (String addr : friendPreviewOrder) {
+            FriendPreview preview = friendPreviewByAddress.get(addr); if (preview == null) continue; if (preview.lastRequestedGeneration == generation) continue; loadLatestPostForFriend(preview, generation);
         }
     }
 
     private void loadLatestPostForFriend(final FriendPreview preview, final int generation) {
-        if (preview == null) return;
-        preview.lastRequestedGeneration = generation;
-
+        if (preview == null) return; preview.lastRequestedGeneration = generation;
         new ItemTask(getContext(), preview.friendAddress, "post", "", 1) {
-
-            @Override
-            protected void onProgressUpdate(ItemResult... results) {
-                ItemResult result = safeFirst(results);
-                handleFriendPostResult(preview, generation, result);
-            }
-
-            @Override
-            protected void onPostExecute(ItemResult itemResult) {
-                handleFriendPostResult(preview, generation, itemResult);
-            }
-
-            private ItemResult safeFirst(ItemResult[] results) {
-                return results != null && results.length > 0 ? results[0] : null;
-            }
+            @Override protected void onProgressUpdate(ItemResult... results) { handleFriendPostResult(preview, generation, safeFirst(results)); }
+            @Override protected void onPostExecute(ItemResult res) { handleFriendPostResult(preview, generation, res); }
+            private ItemResult safeFirst(ItemResult[] results) { return results != null && results.length > 0 ? results[0] : null; }
         }.execute2();
     }
 
-    private void handleFriendPostResult(FriendPreview preview, int generation, ItemResult itemResult) {
-        if (preview == null) {
-            return;
-        }
-        if (generation != friendPreviewGeneration) {
-            return;
-        }
-        if (!friendPreviewByAddress.containsKey(preview.friendAddress)) {
-            return;
-        }
-
-        if (itemResult == null) {
-            refreshDisplayedFriendPreviews();
-            return;
-        }
-
-        if (itemResult.size() > 0) {
-            Item post = itemResult.at(0);
-            preview.latestPost = post;
-        } else if (!itemResult.loading() && itemResult.ok()) {
-            preview.latestPost = null;
-        }
-
-        refreshDisplayedFriendPreviews();
+    private void handleFriendPostResult(FriendPreview preview, int generation, @Nullable ItemResult res) {
+        if (preview == null || generation != friendPreviewGeneration || !friendPreviewByAddress.containsKey(preview.friendAddress)) return;
+        if (res == null) { refreshDisplayedFriendPreviews(); return; }
+        preview.latestPost = res.size() > 0 ? res.at(0) : null; refreshDisplayedFriendPreviews();
     }
 
     private void refreshDisplayedFriendPreviews() {
-        friendPreviews.clear();
-        for (String friendAddress : friendPreviewOrder) {
-            FriendPreview preview = friendPreviewByAddress.get(friendAddress);
-            if (preview == null) continue;
-            if (preview.latestPost != null) {
-                friendPreviews.add(preview);
-            }
-        }
-        if (friendPreviewAdapter != null) {
-            friendPreviewAdapter.notifyDataSetChanged();
-        }
-        updateFriendPreviewVisibility();
+        friendPreviews.clear(); for (String addr : friendPreviewOrder) { FriendPreview p = friendPreviewByAddress.get(addr); if (p != null && p.latestPost != null) friendPreviews.add(p); }
+        if (friendPreviewAdapter != null) friendPreviewAdapter.notifyDataSetChanged(); updateFriendPreviewVisibility();
     }
 
-    private void updateFriendPreviewVisibility() {
-        if (friendPreviewRecyclerView == null) return;
-        if (!isViewingOwnWall()) {
-            friendPreviewRecyclerView.setVisibility(View.GONE);
-            return;
-        }
-        friendPreviewRecyclerView.setVisibility(friendPreviews.isEmpty() ? View.GONE : View.VISIBLE);
-    }
+    private void updateFriendPreviewVisibility() { if (friendPreviewRecyclerView == null) return; friendPreviewRecyclerView.setVisibility(isViewingOwnWall() && !friendPreviews.isEmpty() ? View.VISIBLE : View.GONE); }
 
-    private String resolveFriendDisplayName(JSONObject friendData) {
-        if (friendData == null) {
-            return "Anonymous";
-        }
-        String displayName = friendData.optString("name", "").trim();
-        if (displayName.isEmpty()) {
-            displayName = "Anonymous";
-        }
-        return displayName;
-    }
-
-
-
+    private static String resolveFriendDisplayName(@Nullable JSONObject friendData) { if (friendData == null) return "Anonymous"; String name = friendData.optString("name", "").trim(); return name.isEmpty() ? "Anonymous" : name; }
 
     void load(final int startIndex, String startKey) {
-
-        Log.i(TAG, "load: ");
-
-        new ItemTask(getContext(), address, "post", startKey, count) {
-
-            @Override
-            protected void onProgressUpdate(ItemResult... results) {
-                renderPosts(startIndex, safeFirst(results), false);
-            }
-
-            @Override
-            protected void onPostExecute(ItemResult itemResult) {
-                renderPosts(startIndex, itemResult, true);
-            }
-
-            private ItemResult safeFirst(ItemResult[] results) {
-                return results != null && results.length > 0 ? results[0] : null;
-            }
-
+        Log.i(TAG, "load()");
+        new ItemTask(getContext(), address, "post", startKey, pageSize) {
+            @Override protected void onProgressUpdate(ItemResult... results) { renderPosts(startIndex, safeFirst(results), false); }
+            @Override protected void onPostExecute(ItemResult itemResult) { renderPosts(startIndex, itemResult, true); }
+            private ItemResult safeFirst(ItemResult[] results) { return results != null && results.length > 0 ? results[0] : null; }
         }.execute2();
     }
 
-    void loadMore() {
-        if (smore == null) return;
-        String smore2 = smore;
-        smore = null;
-        if (wallAdapter != null) {
-            wallAdapter.setLoadMoreVisible(false);
-        }
-        load(imore, smore2);
+    public void loadMore() { if (nextMoreKey == null) return; String key = nextMoreKey; nextMoreKey = null; if (wallAdapter != null) wallAdapter.setLoadMoreVisible(false); load(nextInsertIndex, key); }
+
+    private void renderPosts(int insertIndex, @Nullable ItemResult res, boolean finished) {
+        if (res == null) return;
+        currentMyAddress = TorManager.getInstance(context).getID(); currentWallOwner = TextUtils.isEmpty(address) ? currentMyAddress : address;
+        int insertionPoint = Math.min(insertIndex, posts.size()); if (insertionPoint < posts.size()) posts.subList(insertionPoint, posts.size()).clear();
+        for (int i = 0; i < res.size(); i++) { Item it = res.at(i); if (it != null) posts.add(it); }
+        findViewById(R.id.loading).setVisibility(res.loading() ? View.VISIBLE : View.GONE);
+        boolean showEmpty = insertionPoint == 0 && posts.isEmpty() && !res.loading(); boolean showLoadMore = updatePaginationControls(insertIndex, res, finished);
+        if (wallAdapter != null) wallAdapter.submit(posts, showLoadMore, showEmpty);
     }
 
-    private void renderPosts(int insertIndex, ItemResult itemResult, boolean finished) {
-        if (itemResult == null) {
-            return;
-        }
+    private boolean updatePaginationControls(int insertIndex, ItemResult res, boolean finished) { nextMoreKey = finished ? res.more() : null; nextInsertIndex = insertIndex + pageSize; return nextMoreKey != null; }
 
-        currentMyAddress = TorManager.getInstance(context).getID();
-        currentWallOwner = TextUtils.isEmpty(address) ? currentMyAddress : address;
-
-        int insertionPoint = Math.min(insertIndex, posts.size());
-        if (insertionPoint < posts.size()) {
-            posts.subList(insertionPoint, posts.size()).clear();
-        }
-
-        for (int pos = 0; pos < itemResult.size(); pos++) {
-            Item item = itemResult.at(pos);
-            if (item == null) continue;
-            posts.add(item);
-        }
-
-        findViewById(R.id.loading).setVisibility(itemResult.loading() ? View.VISIBLE : View.GONE);
-
-        boolean showEmpty = insertionPoint == 0 && posts.isEmpty() && !itemResult.loading();
-        boolean showLoadMore = updatePaginationControls(insertIndex, itemResult, finished);
-
-        if (wallAdapter != null) {
-            wallAdapter.submit(posts, showLoadMore, showEmpty);
-        }
-    }
-
-    private void bindFriendPreview(FriendPreviewAdapter.FriendPreviewHolder holder, FriendPreview preview) {
-        if (holder == null || preview == null) {
-            return;
-        }
-
-        applyFriendPreviewStyle(holder);
-        bindFriendPreviewAvatar(holder, preview);
-
-        if (holder.name != null) {
-            holder.name.setText(preview.displayName);
-        }
-
-        View.OnClickListener openWallListener = v -> {
-            if (TextUtils.isEmpty(preview.friendAddress)) {
-                return;
-            }
-            Context ctx = getContext();
-            if (ctx == null) return;
-            ctx.startActivity(new Intent(ctx, MainActivity.class).putExtra("address", preview.friendAddress));
-        };
-
-        if (holder.card != null) {
-            holder.card.setOnClickListener(openWallListener);
-        } else {
-            holder.itemView.setOnClickListener(openWallListener);
-        }
-
-        if (preview.latestPost == null) {
-            return;
-        }
-
+    // ===== Binding methods used by adapters =====
+    public void bindFriendPreview(FriendPreviewAdapter.FriendPreviewHolder holder, FriendPreview preview) {
+        if (holder == null || preview == null) return;
+        applyFriendPreviewStyle(holder); bindFriendPreviewAvatar(holder, preview);
+        if (holder.name != null) holder.name.setText(preview.displayName);
+        View.OnClickListener openWall = v -> { if (TextUtils.isEmpty(preview.friendAddress)) return; Context ctx = getContext(); if (ctx == null) return; ctx.startActivity(new Intent(ctx, MainActivity.class).putExtra("address", preview.friendAddress)); };
+        if (holder.card != null) holder.card.setOnClickListener(openWall); else holder.itemView.setOnClickListener(openWall);
+        if (preview.latestPost == null) return;
         holder.itemView.setVisibility(View.VISIBLE);
         JSONObject postData = preview.latestPost.json(getContext(), preview.friendAddress);
-        String dateValue = Utils.formatDate(postData.optString("date"));
-        if (holder.date != null) {
-            if (!TextUtils.isEmpty(dateValue)) {
-                holder.date.setText(dateValue);
-                holder.date.setVisibility(View.VISIBLE);
-            } else {
-                holder.date.setVisibility(View.GONE);
-            }
-        }
-
+        String dateValue = onion.network.helpers.Utils.formatDate(postData.optString("date"));
+        if (holder.date != null) { if (!TextUtils.isEmpty(dateValue)) { holder.date.setText(dateValue); holder.date.setVisibility(View.VISIBLE);} else holder.date.setVisibility(View.GONE);}
         String text = postData.optString("text", "").trim();
-        if (holder.postText != null) {
-            if (!TextUtils.isEmpty(text)) {
-                holder.postText.setText(text);
-                holder.postText.setVisibility(View.VISIBLE);
-                holder.postText.setAlpha(1f);
-            } else {
-                holder.postText.setText("");
-                holder.postText.setVisibility(View.GONE);
-            }
-        }
-
+        if (holder.postText != null) { if (!TextUtils.isEmpty(text)) { holder.postText.setText(text); holder.postText.setVisibility(View.VISIBLE); holder.postText.setAlpha(1f);} else { holder.postText.setText(""); holder.postText.setVisibility(View.GONE);} }
         Bitmap postImage = preview.latestPost.bitmap("img");
-        if (holder.postImage != null) {
-            if (postImage != null) {
-                holder.postImage.setImageBitmap(postImage);
-                holder.postImage.setVisibility(View.VISIBLE);
-                if (holder.imageContainer != null) {
-                    holder.imageContainer.setVisibility(View.VISIBLE);
-                }
-            } else {
-                holder.postImage.setImageDrawable(null);
-                holder.postImage.setVisibility(View.GONE);
-                if (holder.imageContainer != null) {
-                    holder.imageContainer.setVisibility(View.GONE);
-                }
-            }
-        }
+        if (holder.postImage != null) { if (postImage != null) { holder.postImage.setImageBitmap(postImage); holder.postImage.setVisibility(View.VISIBLE); if (holder.imageContainer != null) holder.imageContainer.setVisibility(View.VISIBLE);} else { holder.postImage.setImageDrawable(null); holder.postImage.setVisibility(View.GONE); if (holder.imageContainer != null) holder.imageContainer.setVisibility(View.GONE);} }
     }
 
     private void applyFriendPreviewStyle(FriendPreviewAdapter.FriendPreviewHolder holder) {
-        UiCustomizationManager.FriendCardConfig config = UiCustomizationManager.getFriendCardConfig(getContext());
-        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
-
-        if (holder.card != null) {
-            float radius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), config.cornerRadiusPx);
-            holder.card.setRadius(radius);
-            holder.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
-            holder.card.setStrokeColor(preset.getAccentColor(getContext()));
-            int background = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                    ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorPrimaryContainer)
-                    : preset.getSurfaceColor(getContext());
-            holder.card.setCardBackgroundColor(background);
-            holder.card.setContentPadding(config.horizontalPaddingPx, config.verticalPaddingPx,
-                    config.horizontalPaddingPx, config.verticalPaddingPx);
-        }
-
-        if (holder.avatarCard != null) {
-            holder.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
-            holder.avatarCard.setStrokeColor(preset.getAccentColor(getContext()));
-            ViewGroup.LayoutParams params = holder.avatarCard.getLayoutParams();
-            if (params != null) {
-                params.width = config.avatarSizePx;
-                params.height = config.avatarSizePx;
-                holder.avatarCard.setLayoutParams(params);
-            }
-        }
-
-        if (holder.name != null) {
-            holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
-        }
-
-        if (holder.date != null) {
-            holder.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
-        }
-
-        if (holder.postText != null) {
-            holder.postText.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.addressTextSizeSp);
-        }
+        UiCustomizationManager.FriendCardConfig cfg = UiCustomizationManager.getFriendCardConfig(getContext()); UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
+        if (holder.card != null) { float r = UiCustomizationManager.resolveCornerRadiusPx(getContext(), cfg.cornerRadiusPx); holder.card.setRadius(r); holder.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1)); holder.card.setStrokeColor(preset.getAccentColor(getContext())); int bg = preset == UiCustomizationManager.ColorPreset.SYSTEM ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorPrimaryContainer) : preset.getSurfaceColor(getContext()); holder.card.setCardBackgroundColor(bg); holder.card.setContentPadding(cfg.horizontalPaddingPx, cfg.verticalPaddingPx, cfg.horizontalPaddingPx, cfg.verticalPaddingPx); }
+        if (holder.avatarCard != null) { holder.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1)); holder.avatarCard.setStrokeColor(preset.getAccentColor(getContext())); ViewGroup.LayoutParams p = holder.avatarCard.getLayoutParams(); if (p != null) { p.width = cfg.avatarSizePx; p.height = cfg.avatarSizePx; holder.avatarCard.setLayoutParams(p);} }
+        if (holder.name != null) holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.nameTextSizeSp);
+        if (holder.date != null) holder.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.addressTextSizeSp);
+        if (holder.postText != null) holder.postText.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.addressTextSizeSp);
     }
 
     private void bindFriendPreviewAvatar(FriendPreviewAdapter.FriendPreviewHolder holder, FriendPreview preview) {
-        if (holder.avatar == null) {
-            return;
-        }
-        Item friendItem = preview.friendItem;
-        JSONObject friendData = preview.friendData;
-        Bitmap photoThumb = friendItem != null ? friendItem.bitmap("thumb") : null;
-        Bitmap videoThumb = friendItem != null ? friendItem.bitmap("video_thumb") : null;
-        String storedVideoUri = friendData != null ? friendData.optString("video_uri", "").trim() : "";
-        String videoData = friendData != null ? friendData.optString("video", "").trim() : "";
-        String videoId = friendData != null ? friendData.optString("video_id", "").trim() : "";
-        if (!TextUtils.isEmpty(videoId)) {
-            Uri local = StreamMediaStore.createContentUri(context, videoId);
-            if (local != null) {
-                storedVideoUri = local.toString();
-            } else {
-                String host = preview.friendAddress.contains(".") ? preview.friendAddress : preview.friendAddress + ".onion";
-                storedVideoUri = "http://" + host + "/media/" + videoId;
-            }
-        }
-        Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(),
-                preview.friendAddress,
-                storedVideoUri,
-                videoData);
-        holder.avatar.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null);
-        registerAvatar(holder.avatar);
+        if (holder.avatar == null) return;
+        Item friendItem = preview.friendItem; JSONObject friendData = preview.friendData; Bitmap photoThumb = friendItem != null ? friendItem.bitmap("thumb") : null; Bitmap videoThumb = friendItem != null ? friendItem.bitmap("video_thumb") : null; String storedVideoUri = friendData != null ? friendData.optString("video_uri", "").trim() : ""; String videoData = friendData != null ? friendData.optString("video", "").trim() : ""; String videoId = friendData != null ? friendData.optString("video_id", "").trim() : "";
+        if (!TextUtils.isEmpty(videoId)) { Uri local = StreamMediaStore.createContentUri(context, videoId); if (local != null) { storedVideoUri = local.toString(); } else { String host = preview.friendAddress.contains(".") ? preview.friendAddress : preview.friendAddress + ".onion"; storedVideoUri = "http://" + host + "/media/" + videoId; } }
+        Uri playableVideo = VideoCacheManager.ensureVideoUri(getContext(), preview.friendAddress, storedVideoUri, videoData);
+        holder.avatar.bind(photoThumb, videoThumb, playableVideo != null ? playableVideo.toString() : null); registerAvatar(holder.avatar);
     }
 
-    private void bindPostView(PostViewHolder holder, Item item, String wallOwner, String myAddress) {
-        JSONObject rawData = parseJsonSafe(item.text());
-        JSONObject data = item.json(getContext(), address);
-
-        String postAddress = firstNonEmpty(rawData.optString("addr"), data.optString("addr"));
-        String ownerKey = resolveOwnerKey(postAddress, wallOwner, myAddress, item);
-        PostAssets assets = resolvePostAssets(item, rawData, data, wallOwner, myAddress, postAddress);
-        bindPostMedia(holder, data, assets, ownerKey);
-        bindAvatar(holder, assets, ownerKey);
-
-        bindPostTexts(holder, data, assets.displayName, postAddress, wallOwner);
-        bindPostActions(holder, item, data, wallOwner, myAddress, postAddress);
-        applyPostAppearance(holder);
+    public void bindPostView(PostViewHolder h, Item item, String wallOwner, String myAddress) {
+        JSONObject raw = WallUtils.parseJsonSafe(item.text()); JSONObject data = item.json(getContext(), address);
+        String postAddress = WallUtils.firstNonEmpty(raw.optString("addr"), data.optString("addr")); String ownerKey = resolveOwnerKey(postAddress, wallOwner, myAddress, item); PostAssets a = resolvePostAssets(item, raw, data, wallOwner, myAddress, postAddress);
+        bindPostMedia(h, item, raw, data, a, ownerKey); bindPostAudio(h, item, raw, data, a, ownerKey);
+        bindAvatar(h, a, ownerKey); bindPostTexts(h, data, a.displayName, postAddress, wallOwner); bindPostActions(h, item, data, wallOwner, myAddress, postAddress); applyPostAppearance(h);
     }
 
-    private void applyPostAppearance(PostViewHolder holder) {
-        UiCustomizationManager.PostCardConfig config = UiCustomizationManager.getPostCardConfig(getContext());
-        UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
-
-        if (holder.card != null) {
-            float radius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), config.cardCornerRadiusPx);
-            holder.card.setRadius(radius);
-            int cardColor = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                    ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorSurface)
-                    : preset.getSurfaceColor(getContext());
-            holder.card.setCardBackgroundColor(cardColor);
-            holder.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
-            holder.card.setStrokeColor(preset.getAccentColor(getContext()));
+    private void applyPostAppearance(PostViewHolder h) {
+        UiCustomizationManager.PostCardConfig cfg = UiCustomizationManager.getPostCardConfig(getContext()); UiCustomizationManager.ColorPreset preset = UiCustomizationManager.getColorPreset(getContext());
+        if (h.card != null) { float radius = UiCustomizationManager.resolveCornerRadiusPx(getContext(), cfg.cardCornerRadiusPx); h.card.setRadius(radius); int cardColor = preset == UiCustomizationManager.ColorPreset.SYSTEM ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorSurface) : preset.getSurfaceColor(getContext()); h.card.setCardBackgroundColor(cardColor); h.card.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1)); h.card.setStrokeColor(preset.getAccentColor(getContext())); }
+        if (h.container != null) { h.container.setPadding(0, cfg.containerPaddingVerticalPx, 0, cfg.containerPaddingVerticalPx); }
+        if (h.link != null) { h.link.setPadding(cfg.linkPaddingHorizontalPx, h.link.getPaddingTop(), cfg.linkPaddingHorizontalPx, h.link.getPaddingBottom()); }
+        if (h.text != null) {
+            h.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.bodyTextSizeSp);
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) h.text.getLayoutParams(); if (lp != null) { lp.topMargin = cfg.textTopMarginPx; lp.bottomMargin = cfg.textBottomMarginPx; lp.leftMargin = cfg.containerPaddingHorizontalPx; lp.rightMargin = cfg.containerPaddingHorizontalPx; h.text.setLayoutParams(lp); }
         }
-
-        if (holder.container != null) {
-            holder.container.setPadding(
-                    0, //config.containerPaddingHorizontalPx,
-                    config.containerPaddingVerticalPx,
-                    0, //config.containerPaddingHorizontalPx,
-                    config.containerPaddingVerticalPx);
-        }
-
-        if (holder.link != null) {
-            holder.link.setPadding(
-                    config.linkPaddingHorizontalPx,
-                    holder.link.getPaddingTop(),
-                    config.linkPaddingHorizontalPx,
-                    holder.link.getPaddingBottom());
-        }
-
-        if (holder.text != null) {
-            holder.text.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.bodyTextSizeSp);
-            holder.text.setPadding(0, 0, 0, 0);
-            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) holder.text.getLayoutParams();
-            if (lp != null) {
-                lp.topMargin = config.textTopMarginPx;
-                lp.bottomMargin = config.textBottomMarginPx;
-                lp.leftMargin = config.containerPaddingHorizontalPx;
-                lp.rightMargin = config.containerPaddingHorizontalPx;
-                holder.text.setLayoutParams(lp);
-            }
-        }
-
-        if (holder.name != null) {
-            holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);
-        }
-        if (holder.address != null) {
-            holder.address.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
-        }
-        if (holder.date != null) {
-            holder.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.metadataTextSizeSp);
-        }
-
-        int onSurface = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnSurface)
-                : preset.getOnSurfaceColor(getContext());
-        int accent = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnPrimary)
-                : preset.getAccentColor(getContext());
-        int secondary = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                ? ThemeManager.getColor(getContext(), R.attr.white_80)
-                : ColorUtils.setAlphaComponent(onSurface, 180);
-
-        holder.name.setTextColor(onSurface);
-        holder.text.setTextColor(onSurface);
-        holder.text.setLinkTextColor(accent);
-        holder.address.setTextColor(secondary);
-        holder.date.setTextColor(secondary);
-
-        if (holder.imageContainer != null) {
-            ViewGroup.MarginLayoutParams imageLp = (ViewGroup.MarginLayoutParams) holder.imageContainer.getLayoutParams();
-            if (imageLp != null) {
-                imageLp.topMargin = config.imageTopMarginPx;
-                holder.imageContainer.setLayoutParams(imageLp);
-            }
-        }
-
-        if (holder.avatarCard != null) {
-            ViewGroup.LayoutParams avatarLp = holder.avatarCard.getLayoutParams();
-            if (avatarLp != null) {
-                avatarLp.width = config.avatarSizePx;
-                avatarLp.height = config.avatarSizePx;
-                holder.avatarCard.setLayoutParams(avatarLp);
-            }
-            holder.avatarCard.setRadius(config.avatarSizePx / 2f);
-            holder.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1));
-            holder.avatarCard.setStrokeColor(preset.getAccentColor(getContext()));
-        }
-
-        if (holder.actionRow != null) {
-            holder.actionRow.setPadding(
-                    config.containerPaddingHorizontalPx,
-                    config.actionRowPaddingVerticalPx,
-                    config.containerPaddingHorizontalPx,
-                    config.actionRowPaddingVerticalPx);
-        }
-
-        ColorStateList iconTint = ColorStateList.valueOf(onSurface);
-        styleActionIcon(holder.like, config.actionIconPaddingPx, iconTint);
-        styleActionIcon(holder.comments, config.actionIconPaddingPx, iconTint);
-        styleActionIcon(holder.share, config.actionIconPaddingPx, iconTint);
-        styleActionIcon(holder.edit, config.actionIconPaddingPx, iconTint);
-        styleActionIcon(holder.delete, config.actionIconPaddingPx, iconTint);
-
-        if (holder.headerRow != null && holder.avatarContainer != null && holder.link != null) {
-            LinearLayout header = holder.headerRow;
-            View avatarContainer = holder.avatarContainer;
-            FrameLayout linkContainer = holder.link;
-
-            LinearLayout.LayoutParams avatarParams = (LinearLayout.LayoutParams) avatarContainer.getLayoutParams();
-            LinearLayout.LayoutParams linkParams = (LinearLayout.LayoutParams) linkContainer.getLayoutParams();
-
-            avatarParams.setMarginStart(0);
-            avatarParams.setMarginEnd(config.avatarSpacingHorizontalPx);
-            linkParams.setMarginStart(config.avatarSpacingHorizontalPx);
-            linkParams.setMarginEnd(0);
-
-//            header.addView(avatarContainer);
-//            header.addView(linkContainer);
-
-            avatarContainer.setLayoutParams(avatarParams);
-            linkContainer.setLayoutParams(linkParams);
+        if (h.name != null) h.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.nameTextSizeSp);
+        if (h.address != null) h.address.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.metadataTextSizeSp);
+        if (h.date != null) h.date.setTextSize(TypedValue.COMPLEX_UNIT_SP, cfg.metadataTextSizeSp);
+        int onSurface = preset == UiCustomizationManager.ColorPreset.SYSTEM ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnSurface) : preset.getOnSurfaceColor(getContext());
+        int accent = preset == UiCustomizationManager.ColorPreset.SYSTEM ? ThemeManager.getColor(getContext(), com.google.android.material.R.attr.colorOnPrimary) : preset.getAccentColor(getContext());
+        int secondary = preset == UiCustomizationManager.ColorPreset.SYSTEM ? ThemeManager.getColor(getContext(), R.attr.white_80) : ColorUtils.setAlphaComponent(onSurface, 180);
+        h.name.setTextColor(onSurface); h.text.setTextColor(onSurface); h.text.setLinkTextColor(accent); h.address.setTextColor(secondary); h.date.setTextColor(secondary);
+        if (h.imageContainer != null) { ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) h.imageContainer.getLayoutParams(); if (lp != null) { lp.topMargin = cfg.imageTopMarginPx; h.imageContainer.setLayoutParams(lp); } }
+        if (h.avatarCard != null) { ViewGroup.LayoutParams lp = h.avatarCard.getLayoutParams(); if (lp != null) { lp.width = cfg.avatarSizePx; lp.height = cfg.avatarSizePx; h.avatarCard.setLayoutParams(lp); } h.avatarCard.setRadius(cfg.avatarSizePx/2f); h.avatarCard.setStrokeWidth(UiCustomizationManager.dpToPx(getContext(), 1)); h.avatarCard.setStrokeColor(preset.getAccentColor(getContext())); }
+        if (h.actionRow != null) { h.actionRow.setPadding(cfg.containerPaddingHorizontalPx, cfg.actionRowPaddingVerticalPx, cfg.containerPaddingHorizontalPx, cfg.actionRowPaddingVerticalPx); }
+        ColorStateList tint = ColorStateList.valueOf(onSurface); styleActionIcon(h.like, cfg.actionIconPaddingPx, tint); styleActionIcon(h.comments, cfg.actionIconPaddingPx, tint); styleActionIcon(h.share, cfg.actionIconPaddingPx, tint); styleActionIcon(h.edit, cfg.actionIconPaddingPx, tint); styleActionIcon(h.delete, cfg.actionIconPaddingPx, tint);
+        if (h.headerRow != null && h.avatarContainer != null && h.link != null) {
+            LinearLayout.LayoutParams ap = (LinearLayout.LayoutParams) h.avatarContainer.getLayoutParams(); LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) h.link.getLayoutParams(); ap.setMarginStart(0); ap.setMarginEnd(cfg.avatarSpacingHorizontalPx); lp.setMarginStart(cfg.avatarSpacingHorizontalPx); lp.setMarginEnd(0); h.avatarContainer.setLayoutParams(ap); h.link.setLayoutParams(lp);
         }
     }
 
-    private void styleActionIcon(ImageView view, int paddingPx, ColorStateList tint) {
-        if (view == null) return;
-        view.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-        view.setImageTintList(tint);
-    }
+    private void styleActionIcon(ImageView v, int paddingPx, ColorStateList tint) { if (v == null) return; v.setPadding(paddingPx, paddingPx, paddingPx, paddingPx); v.setImageTintList(tint); }
 
-    private void bindPostMedia(PostViewHolder holder,
-                               JSONObject data,
-                               PostAssets assets,
-                               String ownerKey) {
-        if (holder.imageContainer != null) {
-            holder.imageContainer.setVisibility(View.GONE);
-        }
-        ImageView imageView = holder.image;
-        if (imageView == null) {
-            return;
-        }
-        imageView.setVisibility(View.GONE);
-        imageView.setOnClickListener(null);
-        imageView.setImageDrawable(null);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        imageView.setContentDescription(null);
-        if (holder.videoOverlay != null) {
-            holder.videoOverlay.setVisibility(View.GONE);
-        }
+    private void bindPostMedia(PostViewHolder h, Item item, JSONObject raw, JSONObject data, PostAssets a, String ownerKey) {
+        if (h.imageContainer != null) h.imageContainer.setVisibility(View.GONE);
+        ImageView iv = h.image; if (iv == null) return; iv.setVisibility(View.GONE); iv.setOnClickListener(null); iv.setImageDrawable(null); iv.setScaleType(ImageView.ScaleType.CENTER_CROP); iv.setContentDescription(null);
+        if (h.videoOverlay != null) h.videoOverlay.setVisibility(View.GONE);
         try {
-            String encoded = data.optString("img", "").trim();
+            String encoded = raw != null ? raw.optString("img", "").trim() : "";
             if (!encoded.isEmpty()) {
                 byte[] photoData = Base64.decode(encoded, Base64.DEFAULT);
                 if (photoData.length > 0) {
-                    final Bitmap bitmap = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
-                    if (bitmap != null) {
-                        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        imageView.setImageBitmap(bitmap);
-                        imageView.setVisibility(View.VISIBLE);
-                        if (holder.imageContainer != null) {
-                            holder.imageContainer.setVisibility(View.VISIBLE);
-                        }
-                        imageView.setOnClickListener(v -> activity.lightbox(bitmap));
-                        return;
-                    }
+                    final Bitmap bmp = BitmapFactory.decodeByteArray(photoData, 0, photoData.length);
+                    if (bmp != null) { iv.setScaleType(ImageView.ScaleType.CENTER_CROP); iv.setImageBitmap(bmp); iv.setVisibility(View.VISIBLE); if (h.imageContainer != null) h.imageContainer.setVisibility(View.VISIBLE); iv.setOnClickListener(v -> activity.lightbox(bmp)); return; }
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Exception ignore) {}
+        if (!hasVideoAttachment(raw)) return;
+        String videoId = raw != null ? raw.optString("video_id", "").trim() : "";
+        String videoUriStr = raw != null ? raw.optString("video_uri", "").trim() : "";
+        String videoData = raw != null ? raw.optString("video", "").trim() : "";
+        Bitmap thumb = WallUtils.decodeBitmapBase64(raw != null ? raw.optString("video_thumb", "") : ""); if (thumb == null && item != null) thumb = item.bitmap("video_thumb");
+        if (!TextUtils.isEmpty(videoId) && a != null && TextUtils.equals(videoId, a.videoMediaId)) { if (thumb == null) thumb = a.videoThumb; if (TextUtils.isEmpty(videoUriStr)) videoUriStr = a.storedVideoUri; if (TextUtils.isEmpty(videoData)) videoData = a.videoData; }
+        Uri playable = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, WallUtils.emptyToNull(videoUriStr), WallUtils.emptyToNull(videoData));
+        if (playable == null && !TextUtils.isEmpty(videoId)) {
+            Uri local = StreamMediaStore.createContentUri(context, videoId);
+            if (local != null) playable = local; else if (!TextUtils.isEmpty(ownerKey)) { String host = ownerKey.contains(".") ? ownerKey : ownerKey + ".onion"; try { playable = Uri.parse("http://" + host + "/media/" + videoId); } catch (Exception ignore) {} }
         }
-
-        if (assets == null) {
-            return;
-        }
-        boolean hasVideoData = assets.videoThumb != null
-                || !TextUtils.isEmpty(assets.videoMediaId)
-                || !TextUtils.isEmpty(assets.storedVideoUri)
-                || !TextUtils.isEmpty(assets.videoData);
-        if (!hasVideoData) {
-            return;
-        }
-
-        Uri playableVideo = VideoCacheManager.ensureVideoUri(
-                getContext(),
-                ownerKey,
-                assets.storedVideoUri,
-                assets.videoData);
-        if (playableVideo == null && !TextUtils.isEmpty(assets.storedVideoUri)) {
-            try {
-                playableVideo = Uri.parse(assets.storedVideoUri);
-            } catch (Exception ignore) {
-            }
-        }
-        if (playableVideo == null) {
-            return;
-        }
-
-        Bitmap thumb = assets.videoThumb;
-        if (thumb != null) {
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setImageBitmap(thumb);
-        } else {
-            imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            imageView.setImageResource(R.drawable.ic_videocam);
-        }
-        imageView.setVisibility(View.VISIBLE);
-        if (holder.imageContainer != null) {
-            holder.imageContainer.setVisibility(View.VISIBLE);
-        }
-        if (holder.videoOverlay != null) {
-            holder.videoOverlay.setVisibility(View.VISIBLE);
-        }
-        final Uri finalVideoUri = playableVideo;
-        final Bitmap preview = thumb;
-        imageView.setContentDescription(activity.getString(R.string.wall_post_video_content_description));
-        imageView.setOnClickListener(v -> activity.lightboxVideo(finalVideoUri, preview));
+        if (playable == null && !TextUtils.isEmpty(videoUriStr)) { try { playable = Uri.parse(videoUriStr); } catch (Exception ignore) {} }
+        if (playable == null) return;
+        if (thumb == null && data != null && a != null && !TextUtils.isEmpty(videoId) && TextUtils.equals(videoId, a.videoMediaId)) { thumb = WallUtils.decodeBitmapBase64(data.optString("video_thumb", "")); }
+        if (thumb != null) { iv.setScaleType(ImageView.ScaleType.CENTER_CROP); iv.setImageBitmap(thumb);} else { iv.setScaleType(ImageView.ScaleType.CENTER_INSIDE); iv.setImageResource(R.drawable.ic_videocam);} iv.setVisibility(View.VISIBLE); if (h.imageContainer != null) h.imageContainer.setVisibility(View.VISIBLE); if (h.videoOverlay != null) h.videoOverlay.setVisibility(View.VISIBLE);
+        final Uri finalVideoUri = playable; final Bitmap preview = thumb; iv.setContentDescription(activity.getString(R.string.wall_post_video_content_description)); iv.setOnClickListener(v -> activity.lightboxVideo(finalVideoUri, preview));
     }
 
-    private void bindAvatar(PostViewHolder holder, PostAssets assets, String ownerKey) {
-        Uri playableVideo = VideoCacheManager.ensureVideoUri(
-                getContext(),
-                ownerKey,
-                assets.storedVideoUri,
-                assets.videoData
-        );
-        holder.thumb.bind(assets.photoThumb, assets.videoThumb, playableVideo != null ? playableVideo.toString() : null);
-        registerAvatar(holder.thumb);
-
-        holder.thumblink.setOnClickListener(null);
-        holder.thumblink.setOnLongClickListener(null);
-        holder.thumblink.setClickable(false);
-        holder.thumblink.setLongClickable(false);
-
-        holder.thumb.setOnClickListener(null);
-        holder.thumb.setOnLongClickListener(null);
-
-        holder.thumb.setOnAvatarClickListener(content -> {
-            if (content.isVideo()) {
-                activity.showLightbox(content); // один універсальний метод
-            } else {
-                activity.showLightbox(content); // той самий
-            }
-        });
-        holder.thumb.setClickable(true);
-        holder.thumblink.setClickable(true);
+    private void bindPostAudio(PostViewHolder h, Item item, JSONObject raw, JSONObject data, PostAssets a, String ownerKey) {
+        if (h.audioContainer != null) h.audioContainer.setVisibility(View.GONE); if (h.audioPlay != null) h.audioPlay.setOnClickListener(null); if (h.audioDuration != null) h.audioDuration.setText(""); if (a == null) return;
+        String audioMediaId = a.audioMediaId, audioData = a.audioData, audioUriStr = a.audioUri, audioMime = a.audioMime; long audioDuration = a.audioDurationMs;
+        if (TextUtils.isEmpty(audioMediaId) && TextUtils.isEmpty(audioData) && TextUtils.isEmpty(audioUriStr)) return;
+        Uri audioUri = resolveAudioUri(ownerKey, audioMediaId, audioUriStr, audioData, audioMime); if (audioUri == null) return;
+        if (h.audioContainer != null) h.audioContainer.setVisibility(View.VISIBLE); if (h.audioDuration != null) h.audioDuration.setText(formatAudioLabel(audioDuration)); if (h.audioPlay != null) { final String postKey = item.key(); updateAudioPlayButton(h.audioPlay, postKey); h.audioPlay.setOnClickListener(v -> togglePostAudio(postKey, audioUri)); }
     }
 
-    private void bindPostTexts(PostViewHolder holder,
-                               JSONObject data,
-                               String displayName,
-                               String postAddress,
-                               String wallOwner) {
-        int primaryTextColor = ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnBackground);
-        int secondaryTextColor = ThemeManager.getColor(context, R.attr.white_80);
+    private void bindAvatar(PostViewHolder h, PostAssets a, String ownerKey) {
+        Uri playable = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, a.storedVideoUri, a.videoData); h.thumb.bind(a.photoThumb, a.videoThumb, playable != null ? playable.toString() : null); registerAvatar(h.thumb);
+        h.thumblink.setOnClickListener(null); h.thumblink.setOnLongClickListener(null); h.thumblink.setClickable(false); h.thumblink.setLongClickable(false); h.thumb.setOnClickListener(null); h.thumb.setOnLongClickListener(null);
+        h.thumb.setOnAvatarClickListener(content -> activity.showLightbox(content)); h.thumb.setClickable(true); h.thumblink.setClickable(true);
+    }
 
-        holder.name.setTextColor(primaryTextColor);
-        holder.text.setTextColor(primaryTextColor);
-        holder.text.setLinkTextColor(ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnPrimary));
-        holder.address.setTextColor(secondaryTextColor);
-        holder.date.setTextColor(secondaryTextColor);
-
-        if (!TextUtils.isEmpty(displayName)) {
-            holder.name.setText(displayName);
-        }
-        holder.address.setText(postAddress);
-
-        holder.text.setMovementMethod(LinkMovementMethod.getInstance());
-        String textValue = data.optString("text");
-        holder.text.setText(Utils.linkify(context, textValue));
-        holder.text.setVisibility(textValue.isEmpty() ? View.GONE : View.VISIBLE);
-
-        holder.date.setText(Utils.formatDate(data.optString("date")));
-
-        boolean isForeignPost = !TextUtils.isEmpty(postAddress) && !postAddress.equals(wallOwner);
-        if (isForeignPost) {
-            holder.address.setPaintFlags(holder.address.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            holder.name.setPaintFlags(holder.name.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            View.OnClickListener openProfile = v ->
-                    getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
-            holder.link.setOnClickListener(openProfile);
-            View.OnLongClickListener openProfileLong = v -> {
-                openProfile.onClick(v);
-                return true;
-            };
-            holder.thumblink.setOnLongClickListener(openProfileLong);
-            holder.thumblink.setLongClickable(true);
-            holder.thumb.setOnLongClickListener(openProfileLong);
-            holder.thumb.setLongClickable(true);
+    private void bindPostTexts(PostViewHolder h, JSONObject data, String displayName, String postAddress, String wallOwner) {
+        int primary = ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnBackground), secondary = ThemeManager.getColor(context, R.attr.white_80);
+        h.name.setTextColor(primary); h.text.setTextColor(primary); h.text.setLinkTextColor(ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnPrimary)); h.address.setTextColor(secondary); h.date.setTextColor(secondary);
+        if (!TextUtils.isEmpty(displayName)) h.name.setText(displayName); h.address.setText(postAddress);
+        h.text.setMovementMethod(LinkMovementMethod.getInstance()); String textValue = data.optString("text"); h.text.setText(onion.network.helpers.Utils.linkify(context, textValue)); h.text.setVisibility(textValue.isEmpty() ? View.GONE : View.VISIBLE);
+        h.date.setText(onion.network.helpers.Utils.formatDate(data.optString("date")));
+        boolean isForeign = !TextUtils.isEmpty(postAddress) && !postAddress.equals(wallOwner);
+        if (isForeign) {
+            underline(h.address, true); underline(h.name, true);
+            View.OnClickListener open = v -> getContext().startActivity(new Intent(getContext(), MainActivity.class).putExtra("address", postAddress));
+            h.link.setOnClickListener(open); View.OnLongClickListener openLong = v -> { open.onClick(v); return true; };
+            h.thumblink.setOnLongClickListener(openLong); h.thumblink.setLongClickable(true); h.thumb.setOnLongClickListener(openLong); h.thumb.setLongClickable(true);
         } else {
-            holder.address.setPaintFlags(holder.address.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
-            holder.name.setPaintFlags(holder.name.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
-            holder.link.setOnClickListener(null);
-            holder.thumblink.setOnLongClickListener(null);
-            holder.thumblink.setLongClickable(false);
-            holder.thumb.setOnLongClickListener(null);
-            holder.thumb.setLongClickable(false);
+            underline(h.address, false); underline(h.name, false);
+            h.link.setOnClickListener(null); h.thumblink.setOnLongClickListener(null); h.thumblink.setLongClickable(false); h.thumb.setOnLongClickListener(null); h.thumb.setLongClickable(false);
         }
     }
 
-    private void bindPostActions(PostViewHolder holder,
-                                 Item item,
-                                 JSONObject data,
-                                 String wallOwner,
-                                 String myAddress,
-                                 String postAddress) {
-
-        holder.like.setOnClickListener(v -> activity.snack("Available soon"));
-        holder.comments.setOnClickListener(v -> activity.snack("Available soon"));
-
-        boolean isMyWall = wallOwner.equals(myAddress);
-        boolean isMyPost = myAddress.equals(postAddress);
-
-        if (isMyWall) {
-            holder.delete.setVisibility(View.VISIBLE);
-            holder.delete.setOnClickListener(v -> DialogHelper.showConfirm(
-                    context,
-                    R.string.dialog_delete_post_title,
-                    R.string.dialog_delete_post_message,
-                    R.string.dialog_button_delete,
-                    () -> {
-                        ItemDatabase.getInstance(context).delete(item.type(), item.key());
-                        load();
-                    },
-                    R.string.dialog_button_cancel,
-                    null
-            ));
-        } else {
-            holder.delete.setVisibility(View.GONE);
-            holder.delete.setOnClickListener(null);
-        }
-
-        if (isMyWall && isMyPost) {
-            holder.edit.setVisibility(View.VISIBLE);
-            holder.edit.setOnClickListener(v -> editPost(item));
-        } else {
-            holder.edit.setVisibility(View.GONE);
-            holder.edit.setOnClickListener(null);
-        }
-
-        boolean canShare = !isMyWall
-                && !isMyPost
-                && TextUtils.isEmpty(data.optString("access"));
-        if (canShare) {
-            holder.share.setVisibility(View.VISIBLE);
-            holder.share.setOnClickListener(v -> activity.sharePost(data));
-        } else {
-            holder.share.setVisibility(View.GONE);
-            holder.share.setOnClickListener(null);
-        }
+    private void bindPostActions(PostViewHolder h, Item item, JSONObject data, String wallOwner, String myAddress, String postAddress) {
+        h.like.setOnClickListener(v -> activity.snack("Available soon")); h.comments.setOnClickListener(v -> activity.snack("Available soon")); boolean isMyWall = wallOwner.equals(myAddress); boolean isMyPost = myAddress.equals(postAddress);
+        if (isMyWall) { h.delete.setVisibility(View.VISIBLE); h.delete.setOnClickListener(v -> DialogHelper.showConfirm(context, R.string.dialog_delete_post_title, R.string.dialog_delete_post_message, R.string.dialog_button_delete, () -> { ItemDatabase.getInstance(context).delete(item.type(), item.key()); load(); }, R.string.dialog_button_cancel, null)); }
+        else { h.delete.setVisibility(View.GONE); h.delete.setOnClickListener(null); }
+        if (isMyWall && isMyPost) { h.edit.setVisibility(View.VISIBLE); h.edit.setOnClickListener(v -> editPost(item)); } else { h.edit.setVisibility(View.GONE); h.edit.setOnClickListener(null); }
+        boolean canShare = !isMyWall && !isMyPost && TextUtils.isEmpty(data.optString("access")); if (canShare) { h.share.setVisibility(View.VISIBLE); h.share.setOnClickListener(v -> activity.sharePost(data)); } else { h.share.setVisibility(View.GONE); h.share.setOnClickListener(null); }
     }
 
-    private PostAssets resolvePostAssets(Item item,
-                                         JSONObject rawData,
-                                         JSONObject data,
-                                         String wallOwner,
-                                         String myAddress,
-                                         String postAddress) {
-        PostAssets assets = new PostAssets();
-        assets.photoThumb = decodeBitmapBase64(rawData.optString("thumb", ""));
-        if (assets.photoThumb == null) {
-            assets.photoThumb = item.bitmap("thumb");
-            if (assets.photoThumb == null) {
-                assets.photoThumb = decodeBitmapBase64(data.optString("thumb", ""));
-            }
-        }
-        assets.videoThumb = decodeBitmapBase64(rawData.optString("video_thumb", ""));
-        if (assets.videoThumb == null) {
-            assets.videoThumb = item.bitmap("video_thumb");
-            if (assets.videoThumb == null) {
-                assets.videoThumb = decodeBitmapBase64(data.optString("video_thumb", ""));
-            }
-        }
-        assets.videoMediaId = firstNonEmpty(data.optString("video_id", "").trim(), rawData.optString("video_id", "").trim());
-        assets.storedVideoUri = firstNonEmpty(data.optString("video_uri", "").trim(), rawData.optString("video_uri", "").trim());
-        assets.videoData = firstNonEmpty(rawData.optString("video", "").trim(), data.optString("video", "").trim());
-        assets.audioMediaId = firstNonEmpty(data.optString("audio_id", "").trim(), rawData.optString("audio_id", "").trim());
-        assets.displayName = firstNonEmpty(rawData.optString("name", ""), data.optString("name", ""));
-        if (!TextUtils.isEmpty(assets.videoMediaId)) {
-            Uri localUri = StreamMediaStore.createContentUri(context, assets.videoMediaId);
-            if (localUri != null) {
-                assets.storedVideoUri = localUri.toString();
-            } else if (TextUtils.isEmpty(assets.storedVideoUri)) {
-                assets.storedVideoUri = "/media/" + assets.videoMediaId;
-            }
-        }
+    private void underline(TextView tv, boolean on) { tv.setPaintFlags(on ? (tv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG) : (tv.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG)); }
 
+    private static boolean hasVideoAttachment(JSONObject raw) { return hasNonEmptyField(raw, "video_id", "video", "video_uri"); }
+    private static boolean hasNonEmptyField(JSONObject src, String... fields) { if (src == null || fields == null) return false; for (String f : fields) if (!TextUtils.isEmpty(src.optString(f, "").trim())) return true; return false; }
+
+    public void registerAvatar(AvatarView view) { synchronized (activeAvatars) { for (int i = activeAvatars.size() - 1; i >= 0; i--) { AvatarView ex = activeAvatars.get(i).get(); if (ex == null) activeAvatars.remove(i); } activeAvatars.add(new WeakReference<>(view)); } }
+
+    private PostAssets resolvePostAssets(Item item, JSONObject raw, JSONObject data, String wallOwner, String myAddress, String postAddress) {
+        PostAssets a = new PostAssets();
+        a.photoThumb = WallUtils.decodeBitmapBase64(raw.optString("thumb", "")); if (a.photoThumb == null) { a.photoThumb = item.bitmap("thumb"); if (a.photoThumb == null) a.photoThumb = WallUtils.decodeBitmapBase64(data.optString("thumb", "")); }
+        a.videoThumb = WallUtils.decodeBitmapBase64(raw.optString("video_thumb", "")); if (a.videoThumb == null) { a.videoThumb = item.bitmap("video_thumb"); if (a.videoThumb == null) a.videoThumb = WallUtils.decodeBitmapBase64(data.optString("video_thumb", "")); }
+        a.videoMediaId = WallUtils.firstNonEmpty(data.optString("video_id", "").trim(), raw.optString("video_id", "").trim());
+        a.storedVideoUri = WallUtils.firstNonEmpty(data.optString("video_uri", "").trim(), raw.optString("video_uri", "").trim());
+        a.videoData = WallUtils.firstNonEmpty(raw.optString("video", "").trim(), data.optString("video", "").trim());
+        a.videoMime = WallUtils.firstNonEmpty(data.optString("video_mime", "").trim(), raw.optString("video_mime", "").trim());
+        a.videoDurationMs = data.optLong("video_duration", raw.optLong("video_duration", 0L));
+        a.audioMediaId = WallUtils.firstNonEmpty(data.optString("audio_id", "").trim(), raw.optString("audio_id", "").trim());
+        a.audioUri = WallUtils.firstNonEmpty(data.optString("audio_uri", "").trim(), raw.optString("audio_uri", "").trim());
+        a.audioData = WallUtils.firstNonEmpty(raw.optString("audio", "").trim(), data.optString("audio", "").trim());
+        a.audioMime = WallUtils.firstNonEmpty(data.optString("audio_mime", "").trim(), raw.optString("audio_mime", "").trim());
+        a.audioDurationMs = data.optLong("audio_duration", raw.optLong("audio_duration", 0L));
+        a.displayName = WallUtils.firstNonEmpty(raw.optString("name", ""), data.optString("name", ""));
+        if (!TextUtils.isEmpty(a.videoMediaId)) { Uri localUri = StreamMediaStore.createContentUri(context, a.videoMediaId); if (localUri != null) a.storedVideoUri = localUri.toString(); else if (TextUtils.isEmpty(a.storedVideoUri)) a.storedVideoUri = "/media/" + a.videoMediaId; }
         boolean belongsToFriend = !TextUtils.isEmpty(postAddress) && !postAddress.equals(myAddress);
         if (belongsToFriend) {
             ItemCache cache = ItemCache.getInstance(getContext());
-            if (assets.photoThumb == null) {
-                ItemResult thumbResult = cache.get(postAddress, "thumb");
-                if (thumbResult.size() > 0) {
-                    assets.photoThumb = thumbResult.one().bitmap("thumb");
-                }
-            }
-            if (assets.videoThumb == null) {
-                ItemResult videoThumbResult = cache.get(postAddress, "video_thumb");
-                if (videoThumbResult.size() > 0) {
-                    assets.videoThumb = videoThumbResult.one().bitmap("video_thumb");
-                }
-            }
-            if (TextUtils.isEmpty(assets.videoData)) {
-                ItemResult videoResult = cache.get(postAddress, "video");
-                if (videoResult.size() > 0) {
-                    assets.videoData = videoResult.one().json().optString("video", "").trim();
-                }
-            }
-            if (TextUtils.isEmpty(assets.displayName)) {
-                ItemResult nameResult = cache.get(postAddress, "name");
-                if (nameResult.size() > 0) {
-                    String cachedName = nameResult.one().json().optString("name", "");
-                    if (!TextUtils.isEmpty(cachedName)) {
-                        assets.displayName = cachedName;
-                    }
-                }
-            }
-            if (assets.photoThumb == null || TextUtils.isEmpty(assets.displayName) || (TextUtils.isEmpty(assets.videoData) && assets.videoThumb == null)) {
+            if (a.photoThumb == null) { ItemResult r = cache.get(postAddress, "thumb"); if (r.size() > 0) a.photoThumb = r.one().bitmap("thumb"); }
+            if (a.videoThumb == null) { ItemResult r = cache.get(postAddress, "video_thumb"); if (r.size() > 0) a.videoThumb = r.one().bitmap("video_thumb"); }
+            if (TextUtils.isEmpty(a.videoData)) { ItemResult r = cache.get(postAddress, "video"); if (r.size() > 0) a.videoData = r.one().json().optString("video", "").trim(); }
+            if (TextUtils.isEmpty(a.audioData)) { ItemResult r = cache.get(postAddress, "audio"); if (r.size() > 0) { JSONObject j = r.one().json(); String b64 = j.optString("audio", "").trim(); if (!TextUtils.isEmpty(b64)) a.audioData = b64; if (TextUtils.isEmpty(a.audioMime)) { String m = j.optString("audio_mime", ""); if (!TextUtils.isEmpty(m)) a.audioMime = m; } if (a.audioDurationMs <= 0) a.audioDurationMs = j.optLong("audio_duration", a.audioDurationMs); } }
+            if (TextUtils.isEmpty(a.displayName)) { ItemResult r = cache.get(postAddress, "name"); if (r.size() > 0) { String n = r.one().json().optString("name", ""); if (!TextUtils.isEmpty(n)) a.displayName = n; } }
+            if (a.photoThumb == null || TextUtils.isEmpty(a.displayName) || (TextUtils.isEmpty(a.videoData) && a.videoThumb == null) || TextUtils.isEmpty(a.audioData)) {
                 Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
                 if (friendItem != null) {
-                    if (assets.photoThumb == null) {
-                        assets.photoThumb = friendItem.bitmap("thumb");
-                    }
-                    if (assets.videoThumb == null) {
-                        assets.videoThumb = friendItem.bitmap("video_thumb");
-                    }
-                    if (TextUtils.isEmpty(assets.videoData)) {
-                        assets.videoData = friendItem.json().optString("video", "").trim();
-                    }
-                    if (TextUtils.isEmpty(assets.displayName)) {
-                        String friendName = friendItem.json().optString("name", "");
-                        if (!TextUtils.isEmpty(friendName)) {
-                            assets.displayName = friendName;
-                        }
-                    }
+                    if (a.photoThumb == null) a.photoThumb = friendItem.bitmap("thumb");
+                    if (a.videoThumb == null) a.videoThumb = friendItem.bitmap("video_thumb");
+                    if (TextUtils.isEmpty(a.videoData)) a.videoData = friendItem.json().optString("video", "").trim();
+                    if (TextUtils.isEmpty(a.audioData)) { String s = friendItem.json().optString("audio", "").trim(); if (!TextUtils.isEmpty(s)) a.audioData = s; }
+                    if (TextUtils.isEmpty(a.audioMime)) { String s = friendItem.json().optString("audio_mime", ""); if (!TextUtils.isEmpty(s)) a.audioMime = s; }
+                    if (a.audioDurationMs <= 0) a.audioDurationMs = friendItem.json().optLong("audio_duration", a.audioDurationMs);
+                    if (TextUtils.isEmpty(a.audioUri)) { String s = friendItem.json().optString("audio_uri", ""); if (!TextUtils.isEmpty(s)) a.audioUri = s; }
+                    if (TextUtils.isEmpty(a.displayName)) { String s = friendItem.json().optString("name", ""); if (!TextUtils.isEmpty(s)) a.displayName = s; }
                 }
             }
         }
-
-        boolean isWallOwner = !TextUtils.isEmpty(postAddress)
-                && postAddress.equals(wallOwner)
-                && !postAddress.equals(myAddress);
+        boolean isWallOwner = !TextUtils.isEmpty(postAddress) && postAddress.equals(wallOwner) && !postAddress.equals(myAddress);
         if (isWallOwner) {
             Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
             if (friendItem != null) {
-                Bitmap friendThumb = friendItem.bitmap("thumb");
-                if (friendThumb != null) {
-                    assets.photoThumb = friendThumb;
-                }
-                Bitmap friendVideoThumb = friendItem.bitmap("video_thumb");
-                if (friendVideoThumb != null) {
-                    assets.videoThumb = friendVideoThumb;
-                }
-                String friendVideo = friendItem.json().optString("video", "").trim();
-                if (!TextUtils.isEmpty(friendVideo)) {
-                    assets.videoData = friendVideo;
-                }
-                String friendName = friendItem.json().optString("name", "");
-                if (!TextUtils.isEmpty(friendName)) {
-                    assets.displayName = friendName;
-                }
+                Bitmap ft = friendItem.bitmap("thumb"); if (ft != null) a.photoThumb = ft;
+                Bitmap vt = friendItem.bitmap("video_thumb"); if (vt != null) a.videoThumb = vt;
+                String fv = friendItem.json().optString("video", "").trim(); if (!TextUtils.isEmpty(fv)) a.videoData = fv;
+                if (TextUtils.isEmpty(a.audioData)) { String fa = friendItem.json().optString("audio", "").trim(); if (!TextUtils.isEmpty(fa)) a.audioData = fa; }
+                if (TextUtils.isEmpty(a.audioMime)) { String m = friendItem.json().optString("audio_mime", ""); if (!TextUtils.isEmpty(m)) a.audioMime = m; }
+                if (a.audioDurationMs <= 0) a.audioDurationMs = friendItem.json().optLong("audio_duration", a.audioDurationMs);
+                if (TextUtils.isEmpty(a.audioUri)) { String u = friendItem.json().optString("audio_uri", ""); if (!TextUtils.isEmpty(u)) a.audioUri = u; }
+                String fn = friendItem.json().optString("name", ""); if (!TextUtils.isEmpty(fn)) a.displayName = fn;
             }
         }
-        if (!TextUtils.isEmpty(assets.storedVideoUri) && assets.storedVideoUri.startsWith("/media/")) {
-            if (!TextUtils.isEmpty(postAddress)) {
-                String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";
-                assets.storedVideoUri = "http://" + host + assets.storedVideoUri;
-            }
-        }
-        return assets;
-    }
-
-    private boolean updatePaginationControls(int insertIndex, ItemResult itemResult, boolean finished) {
-        smore = finished ? itemResult.more() : null;
-        imore = insertIndex + count;
-
-        return smore != null;
-    }
-
-    private JSONObject parseJsonSafe(String data) {
-        try {
-            return data == null ? new JSONObject() : new JSONObject(data);
-        } catch (JSONException ex) {
-            return new JSONObject();
-        }
-    }
-
-    private static Bitmap decodeBitmapBase64(String encoded) {
-        if (TextUtils.isEmpty(encoded)) {
-            return null;
-        }
-        try {
-            byte[] bytes = Base64.decode(encoded.trim(), Base64.DEFAULT);
-            if (bytes.length == 0) {
-                return null;
-            }
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
-    }
-
-    private static String firstNonEmpty(String... values) {
-        if (values == null) return "";
-        for (String value : values) {
-            if (!TextUtils.isEmpty(value)) {
-                return value;
-            }
-        }
-        return "";
+        if (!TextUtils.isEmpty(a.storedVideoUri) && a.storedVideoUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) { String host = postAddress.contains(".") ? postAddress : postAddress + ".onion"; a.storedVideoUri = "http://" + host + a.storedVideoUri; }
+        if (!TextUtils.isEmpty(a.audioUri) && a.audioUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) { String host = postAddress.contains(".") ? postAddress : postAddress + ".onion"; a.audioUri = "http://" + host + a.audioUri; }
+        return a;
     }
 
     private String resolveOwnerKey(String postAddress, String wallOwner, String myAddress, Item item) {
-        if (!TextUtils.isEmpty(postAddress)) {
-            return postAddress;
-        }
-        if (!TextUtils.isEmpty(wallOwner) && !wallOwner.equals(myAddress)) {
-            return wallOwner;
-        }
-        if (!TextUtils.isEmpty(myAddress)) {
-            return myAddress;
-        }
-        return "post_" + item.key();
+        if (!TextUtils.isEmpty(postAddress)) return postAddress; if (!TextUtils.isEmpty(wallOwner) && !wallOwner.equals(myAddress)) return wallOwner; if (!TextUtils.isEmpty(myAddress)) return myAddress; return "post_" + item.key();
     }
 
-    private final class FriendPreviewAdapter extends RecyclerView.Adapter<FriendPreviewAdapter.FriendPreviewHolder> {
-
-        @Override
-        public FriendPreviewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(R.layout.wall_friend_preview_item, parent, false);
-            return new FriendPreviewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(FriendPreviewHolder holder, int position) {
-            FriendPreview preview = position >= 0 && position < friendPreviews.size()
-                    ? friendPreviews.get(position)
-                    : null;
-            bindFriendPreview(holder, preview);
-        }
-
-        @Override
-        public int getItemCount() {
-            return friendPreviews.size();
-        }
-
-        final class FriendPreviewHolder extends RecyclerView.ViewHolder {
-            final MaterialCardView card;
-            final MaterialCardView avatarCard;
-            final AvatarView avatar;
-            final TextView name;
-            final TextView date;
-            final TextView postText;
-            final ImageView postImage;
-            final View imageContainer;
-
-            FriendPreviewHolder(View itemView) {
-                super(itemView);
-                card = itemView.findViewById(R.id.previewCard);
-                avatarCard = itemView.findViewById(R.id.avatarCard);
-                avatar = itemView.findViewById(R.id.avatar);
-                name = itemView.findViewById(R.id.friendName);
-                date = itemView.findViewById(R.id.postDate);
-                postText = itemView.findViewById(R.id.postText);
-                postImage = itemView.findViewById(R.id.postImage);
-                imageContainer = itemView.findViewById(R.id.postImageContainer);
-            }
-        }
+    // ===== Audio =====
+    private Uri resolveAudioUri(String ownerKey, @Nullable String mediaId, @Nullable String storedUri, @Nullable String audioData, @Nullable String audioMime) {
+        Context ctx = getContext(); if (ctx == null) return null;
+        Uri local = MediaResolver.resolveMediaUri(ctx, mediaId); if (local != null) return local;
+        Uri cached = AudioCacheManager.ensureAudioUri(ctx, ownerKey, storedUri, audioData, audioMime); if (cached != null) return cached;
+        if (!TextUtils.isEmpty(storedUri)) try { return Uri.parse(storedUri); } catch (Exception ignore) {}
+        return null;
     }
 
-    private static final class FriendPreview {
-        final String friendAddress;
-        Item friendItem;
-        JSONObject friendData;
-        String displayName;
-        Item latestPost;
-        int lastRequestedGeneration = -1;
-
-        FriendPreview(String friendAddress) {
-            this.friendAddress = friendAddress;
-        }
-    }
-
-    private static final class PostDraft {
-        String text;
-        Bitmap image;
-        byte[] videoData;
-        Bitmap videoThumb;
-        String videoMime;
-        long videoDurationMs;
-        String videoMediaId;
-        byte[] audioData;
-        String audioMime;
-        long audioDurationMs;
-        String audioMediaId;
-
-        PostDraft copy() {
-            PostDraft copy = new PostDraft();
-            copy.text = text;
-            copy.image = image;
-            copy.videoData = videoData;
-            copy.videoThumb = videoThumb;
-            copy.videoMime = videoMime;
-            copy.videoDurationMs = videoDurationMs;
-            copy.videoMediaId = videoMediaId;
-            copy.audioData = audioData;
-            copy.audioMime = audioMime;
-            copy.audioDurationMs = audioDurationMs;
-            copy.audioMediaId = audioMediaId;
-            return copy;
-        }
-
-        static PostDraft fromItem(Item item) {
-            PostDraft draft = new PostDraft();
-            if (item == null) {
-                return draft;
-            }
-            try {
-                JSONObject data = item.json();
-                draft.text = data.optString("text", "");
-                Bitmap bmp = item.bitmap("img");
-                if (bmp != null) {
-                    draft.image = bmp;
-                }
-                draft.videoMediaId = data.optString("video_id", null);
-                if (!TextUtils.isEmpty(draft.videoMediaId)) {
-                    draft.videoMime = data.optString("video_mime", null);
-                    draft.videoDurationMs = data.optLong("video_duration", 0L);
-                    String thumbBase64 = data.optString("video_thumb", "").trim();
-                    if (!TextUtils.isEmpty(thumbBase64)) {
-                        draft.videoThumb = Utils.decodeImage(thumbBase64);
-                    }
-                } else {
-                    String videoBase64 = data.optString("video", "").trim();
-                    if (!TextUtils.isEmpty(videoBase64)) {
-                        try {
-                            draft.videoData = Ed25519Signature.base64Decode(videoBase64);
-                        } catch (Exception ignore) {
-                            draft.videoData = null;
-                        }
-                        String thumbBase64 = data.optString("video_thumb", "").trim();
-                        if (!TextUtils.isEmpty(thumbBase64)) {
-                            draft.videoThumb = Utils.decodeImage(thumbBase64);
-                        }
-                        draft.videoMime = data.optString("video_mime", null);
-                        draft.videoDurationMs = data.optLong("video_duration", 0L);
-                    }
-                }
-
-        String audioId = data.optString("audio_id", null);
-        if (!TextUtils.isEmpty(audioId)) {
-            draft.audioMediaId = audioId;
-            draft.audioMime = data.optString("audio_mime", "audio/mp4");
-            draft.audioDurationMs = data.optLong("audio_duration", 0L);
-        } else {
-            String audioBase64 = data.optString("audio", "").trim();
-            if (!TextUtils.isEmpty(audioBase64)) {
-                try {
-                    draft.audioData = Ed25519Signature.base64Decode(audioBase64);
-                } catch (Exception ignore) {
-                    draft.audioData = null;
-                }
-                draft.audioMime = data.optString("audio_mime", "audio/mp4");
-                draft.audioDurationMs = data.optLong("audio_duration", 0L);
-            }
-        }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            return draft;
-        }
-
-        void clearImage() {
-            image = null;
-        }
-
-        void clearVideo() {
-            videoData = null;
-            videoThumb = null;
-            videoMime = null;
-            videoDurationMs = 0L;
-            videoMediaId = null;
-        }
-
-        void clearAudio() {
-            audioData = null;
-            audioMime = null;
-            audioDurationMs = 0L;
-            audioMediaId = null;
-        }
-    }
-
-    private final class PostComposer {
-        final Item item;
-        final PostDraft draft;
-        final Dialog dialog;
-        final View root;
-        final TextInputEditText textField;
-        final FrameLayout mediaContainer;
-        final ImageView imageView;
-        final ImageView videoBadge;
-        final ImageButton removeMediaButton;
-        final LinearLayout audioContainer;
-        final TextView audioLabel;
-        final ImageButton removeAudioButton;
-        final ImageButton addImageButton;
-        final ImageButton takePhotoButton;
-        final ImageButton addVideoButton;
-        final ImageButton recordAudioButton;
-        final View publishButton;
-
-        MediaRecorder recorder;
-        File tempAudioFile;
-        boolean recording;
-        long recordingStartMs;
-
-        PostComposer(Item item, PostDraft draft, Dialog dialog, View root, TextInputEditText textField) {
-            this.item = item;
-            this.draft = draft;
-            this.dialog = dialog;
-            this.root = root;
-            this.textField = textField;
-            this.mediaContainer = root.findViewById(R.id.mediaPreviewContainer);
-            this.imageView = root.findViewById(R.id.image);
-            this.videoBadge = root.findViewById(R.id.videoBadge);
-            this.removeMediaButton = root.findViewById(R.id.remove_media);
-            this.audioContainer = root.findViewById(R.id.audioContainer);
-            this.audioLabel = root.findViewById(R.id.audioLabel);
-            this.removeAudioButton = root.findViewById(R.id.remove_audio);
-            this.addImageButton = root.findViewById(R.id.add_image);
-            this.takePhotoButton = root.findViewById(R.id.take_photo);
-            this.addVideoButton = root.findViewById(R.id.add_video);
-            this.recordAudioButton = root.findViewById(R.id.record_audio);
-            this.publishButton = root.findViewById(R.id.publish);
-        }
-
-        void init() {
-            updatePreview();
-
-            if (removeMediaButton != null) {
-                removeMediaButton.setOnClickListener(v -> {
-                    draft.clearImage();
-                    draft.clearVideo();
-                    updatePreview();
-                });
-            }
-            if (removeAudioButton != null) {
-                removeAudioButton.setOnClickListener(v -> {
-                    draft.clearAudio();
-                    updatePreview();
-                });
-            }
-            if (addImageButton != null) {
-                addImageButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
-                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
-                        () -> prepareExternalAction(() -> startImageChooser(REQUEST_PICK_IMAGE_POST)),
-                        () -> activity.snack(activity.getString(R.string.snackbar_storage_permission_required))));
-            }
-            if (takePhotoButton != null) {
-                takePhotoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
-                        EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
-                        () -> {
-                            try {
-                                pendingPhotoUri = createPhotoOutputUri();
-                            } catch (IOException ex) {
-                                pendingPhotoUri = null;
-                                activity.snack("Unable to create photo file");
-                                return;
-                            }
-                            prepareExternalAction(() -> {
-                                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                                intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
-                                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                try {
-                                    activity.startActivityForResult(intent, REQUEST_TAKE_PHOTO_POST);
-                                } catch (ActivityNotFoundException ex) {
-                                    activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
-                                }
-                            });
-                        },
-                        () -> activity.snack("Camera permission required")));
-            }
-            if (addVideoButton != null) {
-                addVideoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(activity,
-                        EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
-                        () -> prepareExternalAction(() -> {
-                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                            intent.setType("video/*");
-                            intent.addCategory(Intent.CATEGORY_OPENABLE);
-                            try {
-                                activity.startActivityForResult(intent, Const.REQUEST_PICK_VIDEO_POST);
-                            } catch (ActivityNotFoundException ex) {
-                                activity.snack(activity.getString(R.string.chat_attachment_pick_failed));
-                            }
-                        }),
-                        () -> activity.snack(activity.getString(R.string.snackbar_storage_permission_required))));
-            }
-            if (recordAudioButton != null) {
-                recordAudioButton.setOnClickListener(v -> {
-                    if (recording) {
-                        stopAudioRecording(true);
-                    } else {
-                        PermissionHelper.runWithPermissions(activity,
-                                EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
-                                this::startAudioRecording,
-                                () -> activity.snack(activity.getString(R.string.chat_attachment_mic_permission_required)));
-                    }
-                });
-            }
-            if (publishButton != null) {
-                publishButton.setOnClickListener(v -> {
-                    captureText();
-                    if (!ensureDraftMediaReferences(draft)) {
-                        return;
-                    }
-                    doPostPublish(item, draft.copy());
-                    dialog.dismiss();
-                });
-            }
-        }
-
-        void captureText() {
-            draft.text = textField.getText() != null ? textField.getText().toString() : "";
-        }
-
-        void prepareExternalAction(Runnable action) {
-            captureText();
-            pendingDraftAfterActivity = draft.copy();
-            pendingDraftItem = item;
-            cancelAudioRecording();
-            dialog.dismiss();
-            if (action != null) {
-                action.run();
-            }
-        }
-
-        void startAudioRecording() {
-            cancelAudioRecording();
-            File dir = new File(activity.getCacheDir(), "post_audio");
-            if (!dir.exists() && !dir.mkdirs()) {
-                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
-                return;
-            }
-            tempAudioFile = new File(dir, "rec_" + System.currentTimeMillis() + ".m4a");
-            recorder = new MediaRecorder();
-            try {
-                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                recorder.setAudioChannels(1);
-                recorder.setAudioEncodingBitRate(96000);
-                recorder.setAudioSamplingRate(44100);
-                recorder.setOutputFile(tempAudioFile.getAbsolutePath());
-                recorder.prepare();
-                recorder.start();
-                recording = true;
-                recordingStartMs = SystemClock.elapsedRealtime();
-                if (recordAudioButton != null) {
-                    recordAudioButton.setImageResource(R.drawable.ic_close);
-                }
-                activity.snack(activity.getString(R.string.chat_attachment_recording_started));
-            } catch (Exception ex) {
-                Log.e(TAG, "Unable to start audio recording", ex);
-                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
-                cancelAudioRecording();
-            }
-        }
-
-        void stopAudioRecording(boolean keep) {
-            if (!recording) {
-                return;
-            }
-            try {
-                recorder.stop();
-            } catch (Exception ex) {
-                Log.w(TAG, "Recorder stop failed", ex);
-                keep = false;
-            }
-            recording = false;
-            if (recordAudioButton != null) {
-                recordAudioButton.setImageResource(R.drawable.ic_mic);
-            }
-            if (recorder != null) {
-                try {
-                    recorder.reset();
-                } catch (Exception ignore) {
-                }
-                try {
-                    recorder.release();
-                } catch (Exception ignore) {
-                }
-                recorder = null;
-            }
-            if (!keep) {
-                if (tempAudioFile != null && tempAudioFile.exists()) {
-                    tempAudioFile.delete();
-                }
-                tempAudioFile = null;
-                return;
-            }
-            if (tempAudioFile == null || !tempAudioFile.exists()) {
-                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
-                return;
-            }
-            byte[] bytes = Utils.readFileAsBytes(tempAudioFile);
-            tempAudioFile.delete();
-            tempAudioFile = null;
-            if (bytes.length == 0) {
-                activity.snack(activity.getString(R.string.chat_attachment_recording_failed));
-                return;
-            }
-            if (ChatMediaStore.exceedsLimit(bytes.length)) {
-                activity.snack(activity.getString(R.string.chat_attachment_file_too_large));
-                return;
-            }
-            long duration = SystemClock.elapsedRealtime() - recordingStartMs;
-            draft.clearImage();
-            draft.clearVideo();
-            draft.audioData = bytes;
-            draft.audioMime = "audio/mp4";
-            draft.audioDurationMs = duration;
-            draft.audioMediaId = null;
-            updatePreview();
-            activity.snack(activity.getString(R.string.chat_attachment_recording_saved));
-        }
-
-        void cancelAudioRecording() {
-            if (recorder != null) {
-                try {
-                    recorder.stop();
-                } catch (Exception ignore) {
-                }
-                try {
-                    recorder.reset();
-                } catch (Exception ignore) {
-                }
-                try {
-                    recorder.release();
-                } catch (Exception ignore) {
-                }
-                recorder = null;
-            }
-            recording = false;
-            if (recordAudioButton != null) {
-                recordAudioButton.setImageResource(R.drawable.ic_mic);
-            }
-            if (tempAudioFile != null && tempAudioFile.exists()) {
-                tempAudioFile.delete();
-                tempAudioFile = null;
-            }
-        }
-
-        void updatePreview() {
-            boolean hasImage = draft.image != null;
-            boolean hasVideo = (draft.videoData != null && draft.videoData.length > 0) || !TextUtils.isEmpty(draft.videoMediaId);
-            if (mediaContainer != null) {
-                if (hasImage || hasVideo) {
-                    mediaContainer.setVisibility(View.VISIBLE);
-                    if (hasImage) {
-                        imageView.setImageBitmap(draft.image);
-                    } else if (draft.videoThumb != null) {
-                        imageView.setImageBitmap(draft.videoThumb);
-                    } else {
-                        imageView.setImageBitmap(null);
-                    }
-                    if (videoBadge != null) {
-                        videoBadge.setVisibility(hasVideo ? View.VISIBLE : View.GONE);
-                    }
-                    if (removeMediaButton != null) {
-                        removeMediaButton.setVisibility(View.VISIBLE);
-                    }
-                } else {
-                    mediaContainer.setVisibility(View.GONE);
-                    if (removeMediaButton != null) {
-                        removeMediaButton.setVisibility(View.GONE);
-                    }
-                }
-            }
-            if (audioContainer != null) {
-                if ((draft.audioData != null && draft.audioData.length > 0) || !TextUtils.isEmpty(draft.audioMediaId)) {
-                    audioContainer.setVisibility(View.VISIBLE);
-                    if (audioLabel != null) {
-                        audioLabel.setText(buildAudioLabel(draft.audioDurationMs));
-                    }
-                } else {
-                    audioContainer.setVisibility(View.GONE);
-                }
-            }
-        }
-
-        String buildAudioLabel(long durationMs) {
-            long totalSeconds = Math.max(1, durationMs / 1000);
-            long minutes = totalSeconds / 60;
-            long seconds = totalSeconds % 60;
-            return activity.getString(R.string.chat_attachment_voice_message) + " • " + String.format(Locale.US, "%d:%02d", minutes, seconds);
-        }
-
-        void release() {
-            cancelAudioRecording();
-        }
-    }
-
-    private final class WallAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-        private static final int TYPE_POST = 0;
-        private static final int TYPE_LOAD_MORE = 1;
-        private static final int TYPE_EMPTY = 2;
-
-        private final List<Item> adapterItems = new ArrayList<>();
-        private boolean showLoadMore;
-        private boolean showEmpty;
-        private boolean videosPaused;
-
-        void submit(List<Item> source, boolean displayLoadMore, boolean displayEmpty) {
-            adapterItems.clear();
-            adapterItems.addAll(source);
-            showEmpty = displayEmpty;
-            showLoadMore = showEmpty ? false : displayLoadMore;
-            notifyDataSetChanged();
-        }
-
-        void setLoadMoreVisible(boolean visible) {
-            boolean normalized = showEmpty ? false : visible;
-            if (showLoadMore != normalized) {
-                showLoadMore = normalized;
-                notifyDataSetChanged();
-            }
-        }
-
-        void setVideosPaused(boolean paused) {
-            if (videosPaused != paused) {
-                videosPaused = paused;
-                notifyDataSetChanged();
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            if (showEmpty) {
-                return 1;
-            }
-            int total = adapterItems.size();
-            if (showLoadMore) {
-                total += 1;
-            }
-            return total;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (showEmpty) {
-                return TYPE_EMPTY;
-            }
-            if (position < adapterItems.size()) {
-                return TYPE_POST;
-            }
-            return TYPE_LOAD_MORE;
-        }
-
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            if (viewType == TYPE_POST) {
-                View view = inflater.inflate(R.layout.wall_item, parent, false);
-                return new PostViewHolder(view);
-            } else if (viewType == TYPE_LOAD_MORE) {
-                View view = inflater.inflate(R.layout.wall_more, parent, false);
-                return new LoadMoreViewHolder(view);
-            } else {
-                View view = inflater.inflate(R.layout.wall_empty, parent, false);
-                return new EmptyViewHolder(view);
-            }
-        }
-
-        @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            if (holder instanceof PostViewHolder) {
-                Item item = adapterItems.get(position);
-                PostViewHolder postHolder = (PostViewHolder) holder;
-                bindPostView(postHolder, item, currentWallOwner, currentMyAddress);
-                if (videosPaused) {
-                    postHolder.thumb.pause();
-                } else {
-                    postHolder.thumb.resume();
-                }
-            } else if (holder instanceof LoadMoreViewHolder) {
-                ((LoadMoreViewHolder) holder).bind();
-            }
-        }
-
-        private class LoadMoreViewHolder extends RecyclerView.ViewHolder {
-            private final View button;
-
-            LoadMoreViewHolder(View itemView) {
-                super(itemView);
-                button = itemView.findViewById(R.id.wallLoadMore);
-                button.setOnClickListener(v -> loadMore());
-                itemView.setOnClickListener(v -> loadMore());
-            }
-
-            void bind() {
-                button.setEnabled(smore != null);
-                itemView.setEnabled(smore != null);
-            }
-        }
-
-        private class EmptyViewHolder extends RecyclerView.ViewHolder {
-            EmptyViewHolder(View itemView) {
-                super(itemView);
-            }
-        }
-    }
-
-    private static final class PostAssets {
-        Bitmap photoThumb;
-        Bitmap videoThumb;
-        String storedVideoUri;
-        String videoData;
-        String videoMediaId;
-        String audioMediaId;
-        String displayName;
-    }
-
-    private void registerAvatar(AvatarView avatarView) {
-        synchronized (activeAvatars) {
-            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
-                AvatarView existing = activeAvatars.get(i).get();
-                if (existing == null) {
-                    activeAvatars.remove(i);
-                }
-            }
-            activeAvatars.add(new WeakReference<>(avatarView));
-        }
-    }
-
-    private static final class PostViewHolder extends RecyclerView.ViewHolder {
-        final FrameLayout link;
-        final View thumblink;
-        final TextView address;
-        final TextView name;
-        final TextView date;
-        final TextView text;
-        final ImageView like;
-        final ImageView comments;
-        final ImageView share;
-        final ImageView delete;
-        final ImageView edit;
-        final AvatarView thumb;
-        final FrameLayout imageContainer;
-        final ImageView image;
-        final ImageView videoOverlay;
-        final MaterialCardView card;
-        final LinearLayout container;
-        final LinearLayout headerRow;
-        final FrameLayout avatarContainer;
-        final MaterialCardView avatarCard;
-        final LinearLayout actionRow;
-
-        PostViewHolder(View root) {
-            super(root);
-            link = root.findViewById(R.id.link);
-            thumblink = root.findViewById(R.id.thumblink);
-            address = root.findViewById(R.id.address);
-            name = root.findViewById(R.id.name);
-            date = root.findViewById(R.id.date);
-            text = root.findViewById(R.id.text);
-            like = root.findViewById(R.id.like);
-            comments = root.findViewById(R.id.comments);
-            share = root.findViewById(R.id.share);
-            delete = root.findViewById(R.id.delete);
-            edit = root.findViewById(R.id.edit);
-            thumb = root.findViewById(R.id.thumb);
-            imageContainer = root.findViewById(R.id.imageContainer);
-            image = root.findViewById(R.id.image);
-            videoOverlay = root.findViewById(R.id.videoOverlay);
-            card = root.findViewById(R.id.card);
-            container = root.findViewById(R.id.postContent);
-            headerRow = root.findViewById(R.id.headerRow);
-            avatarContainer = root.findViewById(R.id.avatarContainer);
-            avatarCard = root.findViewById(R.id.avatarCard);
-            actionRow = root.findViewById(R.id.actionRow);
-        }
-    }
-
-    public void refreshAppearance() {
-        if (wallAdapter != null) {
-            wallAdapter.notifyDataSetChanged();
-        }
-    }
-
-    public void pauseAvatarVideos() {
-        synchronized (activeAvatars) {
-            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
-                AvatarView avatar = activeAvatars.get(i).get();
-                if (avatar == null) {
-                    activeAvatars.remove(i);
-                } else {
-                    avatar.pause();
-                }
-            }
-        }
-        if (wallAdapter != null) {
-            wallAdapter.setVideosPaused(true);
-        }
-    }
-
-    public void resumeAvatarVideos() {
-        synchronized (activeAvatars) {
-            for (int i = activeAvatars.size() - 1; i >= 0; i--) {
-                AvatarView avatar = activeAvatars.get(i).get();
-                if (avatar == null) {
-                    activeAvatars.remove(i);
-                } else {
-                    avatar.resume();
-                }
-            }
-        }
-        if (wallAdapter != null) {
-            wallAdapter.setVideosPaused(false);
-        }
-    }
-
-    private Uri createPhotoOutputUri() throws IOException {
-        File dir = new File(getContext().getExternalCacheDir(), "camera");
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new IOException("Unable to create directory for photo capture");
-        }
-        String name = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
-        File file = new File(dir, name);
-        if (!file.createNewFile()) {
-            throw new IOException("Unable to create photo file");
-        }
-        return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
-    }
-
-    private void deleteTempPhoto() {
-        if (pendingPhotoUri == null) return;
+    private void togglePostAudio(String postKey, Uri audioUri) {
+        Context ctx = getContext(); if (ctx == null || audioUri == null) { MainActivity a = activity != null ? activity : MainActivity.getInstance(); if (a != null) a.snack(a.getString(R.string.chat_attachment_unavailable)); return; }
         try {
-            getContext().getContentResolver().delete(pendingPhotoUri, null, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            pendingPhotoUri = null;
-        }
+            if (audioPlayer != null && TextUtils.equals(playingAudioPostKey, postKey)) { if (audioPlayer.isPlaying()) audioPlayer.pause(); else audioPlayer.start(); }
+            else { stopPostAudioPlayback(false); audioPlayer = new MediaPlayer(); audioPlayer.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build()); audioPlayer.setDataSource(ctx, audioUri); audioPlayer.setOnCompletionListener(mp -> stopPostAudioPlayback(true)); audioPlayer.prepare(); audioPlayer.start(); playingAudioPostKey = postKey; }
+            if (wallAdapter != null) wallAdapter.notifyDataSetChanged();
+        } catch (Exception ex) { Log.e(TAG, "Unable to play post audio", ex); MainActivity a = activity != null ? activity : MainActivity.getInstance(); if (a != null) a.snack(a.getString(R.string.chat_attachment_unavailable)); stopPostAudioPlayback(true); }
     }
 
+    private void updateAudioPlayButton(ImageButton btn, String postKey) { if (btn == null) return; boolean isCurrent = audioPlayer != null && TextUtils.equals(playingAudioPostKey, postKey); boolean playing = isCurrent && audioPlayer.isPlaying(); MainActivity a = activity != null ? activity : MainActivity.getInstance(); btn.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play); if (a != null) btn.setContentDescription(a.getString(playing ? R.string.chat_audio_pause : R.string.chat_audio_play)); }
+    private void stopPostAudioPlayback(boolean notify) { if (audioPlayer != null) { try { audioPlayer.stop(); } catch (Exception ignore) {} try { audioPlayer.release(); } catch (Exception ignore) {} audioPlayer = null; } playingAudioPostKey = null; if (notify && wallAdapter != null) wallAdapter.notifyDataSetChanged(); }
+    private String formatAudioLabel(long durationMs) { long total = durationMs > 0 ? Math.max(1, durationMs/1000) : 1; long m = total/60, s = total%60; MainActivity a = activity != null ? activity : MainActivity.getInstance(); String prefix = a != null ? a.getString(R.string.chat_attachment_voice_message) : "Voice message"; return prefix + " • " + String.format(java.util.Locale.US, "%d:%02d", m, s); }
+
+    public void refreshAppearance() { if (wallAdapter != null) wallAdapter.notifyDataSetChanged(); }
+    public void pauseAvatarVideos() { synchronized (activeAvatars) { for (int i = activeAvatars.size()-1; i>=0; i--) { AvatarView av = activeAvatars.get(i).get(); if (av == null) activeAvatars.remove(i); else av.pause(); } } stopPostAudioPlayback(false); if (wallAdapter != null) wallAdapter.setVideosPaused(true); }
+    public void resumeAvatarVideos() { synchronized (activeAvatars) { for (int i = activeAvatars.size()-1; i>=0; i--) { AvatarView av = activeAvatars.get(i).get(); if (av == null) activeAvatars.remove(i); else av.resume(); } } if (wallAdapter != null) wallAdapter.setVideosPaused(false); }
+
+    public Uri createPhotoOutputUri() throws IOException { File dir = new File(getContext().getExternalCacheDir(), "camera"); if (!dir.exists() && !dir.mkdirs()) throw new IOException("Unable to create directory for photo capture"); String name = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg"; File file = new File(dir, name); if (!file.createNewFile()) throw new IOException("Unable to create photo file"); return FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file); }
+    private void deleteTempPhoto() { if (pendingPhotoUri == null) return; try { getContext().getContentResolver().delete(pendingPhotoUri, null, null); } catch (Exception ignored) {} finally { pendingPhotoUri = null; } }
 }

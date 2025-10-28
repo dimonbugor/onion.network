@@ -166,6 +166,39 @@
                 </FrameLayout>
 
                 <LinearLayout
+                    android:id="@+id/audioContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/dp16"
+                    android:paddingRight="@dimen/dp16"
+                    android:visibility="gone">
+
+                    <ImageButton
+                        android:id="@+id/audioPlay"
+                        android:layout_width="@dimen/dp48"
+                        android:layout_height="@dimen/dp48"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:padding="@dimen/dp8"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_play"
+                        android:tint="?attr/white_80"
+                        android:contentDescription="@string/chat_audio_play" />
+
+                    <TextView
+                        android:id="@+id/audioDuration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/dp8"
+                        android:textColor="?attr/white_80"
+                        android:textSize="@dimen/sp14"
+                        android:textStyle="bold"
+                        android:text="@string/chat_attachment_voice_message" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/actionRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
