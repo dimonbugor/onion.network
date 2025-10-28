@@ -276,4 +276,20 @@
     <string name="chat_audio_pause">Pause audio</string>
     <string name="wall_media_store_failed">Unable to store media</string>
 
+    <!-- Profile / avatars -->
+    <string name="dialog_set_video_title">Set Video Avatar</string>
+    <string name="snackbar_video_changed">Video avatar set</string>
+
+    <!-- Validations & errors -->
+    <string name="snackbar_no_video_uri">No video URI</string>
+    <string name="snackbar_video_too_long">Video must be 5 seconds or shorter</string>
+    <string name="snackbar_video_too_large">Video file is too large for an avatar</string>
+    <string name="snackbar_failed_save_video">Failed to save video</string>
+    <string name="snackbar_failed_prepare_video">Failed to prepare video</string>
+    <string name="snackbar_video_permissions_required">Camera &amp; Microphone permissions are required for video</string>
+
+    <!-- Composer titles -->
+    <string name="dialog_write_post_title">Write Post</string>
+    <string name="dialog_edit_post_title">Edit Post</string>
+
 </resources>

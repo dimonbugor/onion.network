@@ -5,9 +5,11 @@ import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST;
 
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.media.MediaRecorder;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -22,12 +24,14 @@ import java.io.IOException;
 
 import onion.network.R;
 import onion.network.helpers.ChatMediaStore;
+import onion.network.helpers.Const;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.Utils;
 import onion.network.models.Item;
 import onion.network.models.PostDraft;
 import onion.network.ui.pages.WallPage;
 
+import java.lang.ref.WeakReference;
 import java.util.EnumSet;
 import java.util.Locale;
 
@@ -115,27 +119,18 @@ public final class PostComposer {
             });
         }
         if (addImageButton != null) {
-            addImageButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(
-                    page.activity,
-                    EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
-                    () -> prepareExternalAction(() -> {
-                        try {
-                            page.activity.startActivityForResult(
-                                    new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT)
-                                            .setType("image/*")
-                                            .addCategory(android.content.Intent.CATEGORY_OPENABLE),
-                                    REQUEST_PICK_IMAGE_POST);
-                        } catch (ActivityNotFoundException ex) {
-                            page.activity.snack(page.getContext().getString(R.string.chat_attachment_pick_failed));
-                        }
-                    }),
-                    () -> page.activity.snack(page.getContext().getString(R.string.snackbar_storage_permission_required))
-            ));
+            addImageButton.setOnClickListener(v -> {
+                captureText();
+                page.pendingDraftAfterActivity = draft.copy();
+                page.pendingDraftItem = item;
+                cancelAudioRecording();
+                page.activity.launchWallImagePicker(page);
+            });
         }
         if (takePhotoButton != null) {
             takePhotoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(
                     page.activity,
-                    EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
+                    java.util.EnumSet.of(PermissionHelper.PermissionRequest.CAMERA),
                     () -> {
                         try {
                             page.pendingPhotoUri = page.createPhotoOutputUri();
@@ -144,36 +139,23 @@ public final class PostComposer {
                             page.activity.snack("Unable to create photo file");
                             return;
                         }
-                        prepareExternalAction(() -> {
-                            android.content.Intent intent = new android.content.Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                            intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, page.pendingPhotoUri);
-                            intent.addFlags(android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            try {
-                                page.activity.startActivityForResult(intent, REQUEST_TAKE_PHOTO_POST);
-                            } catch (ActivityNotFoundException ex) {
-                                page.activity.snack(page.getContext().getString(R.string.chat_attachment_pick_failed));
-                            }
-                        });
+                        captureText();
+                        page.pendingDraftAfterActivity = draft.copy();
+                        page.pendingDraftItem = item;
+                        cancelAudioRecording();
+                        page.activity.launchWallCamera(page, page.pendingPhotoUri);
                     },
                     () -> page.activity.snack("Camera permission required")
             ));
         }
         if (addVideoButton != null) {
-            addVideoButton.setOnClickListener(v -> PermissionHelper.runWithPermissions(
-                    page.activity,
-                    EnumSet.of(PermissionHelper.PermissionRequest.MEDIA),
-                    () -> prepareExternalAction(() -> {
-                        android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
-                        intent.setType("video/*");
-                        intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
-                        try {
-                            page.activity.startActivityForResult(intent, onion.network.helpers.Const.REQUEST_PICK_VIDEO_POST);
-                        } catch (ActivityNotFoundException ex) {
-                            page.activity.snack(page.getContext().getString(R.string.chat_attachment_pick_failed));
-                        }
-                    }),
-                    () -> page.activity.snack(page.getContext().getString(R.string.snackbar_storage_permission_required))
-            ));
+            addVideoButton.setOnClickListener(v -> {
+                captureText();
+                page.pendingDraftAfterActivity = draft.copy();
+                page.pendingDraftItem = item;
+                cancelAudioRecording();
+                page.activity.launchWallVideoPicker(page);
+            });
         }
         if (recordAudioButton != null) {
             recordAudioButton.setOnClickListener(v -> {
@@ -197,6 +179,8 @@ public final class PostComposer {
                 dialog.dismiss();
             });
         }
+
+        Log.d("PostComposer", "Launch picker: image/video/camera");
     }
 
     void captureText() {

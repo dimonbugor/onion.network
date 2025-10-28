@@ -2,6 +2,10 @@
 
 package onion.network.ui;
 
+import static onion.network.helpers.Const.REQUEST_CHOOSE_MEDIA;
+import static onion.network.helpers.Const.REQUEST_TAKE_PHOTO_PROFILE;
+import static onion.network.helpers.Const.REQUEST_TAKE_VIDEO;
+
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
@@ -44,6 +48,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -64,6 +69,7 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
@@ -224,6 +230,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean overlayVisible = false;
+
+    private ActivityResultLauncher<Intent> wallImagePickerLauncher;
+    private ActivityResultLauncher<Intent> wallVideoPickerLauncher;
+    private ActivityResultLauncher<Intent> wallCameraLauncher;
+    private WeakReference<WallPage> wallTargetRef;
+
+    private WeakReference<ProfilePage> profileTargetRef;
+    private ActivityResultLauncher<Intent> profilePickMediaLauncher;
+    private ActivityResultLauncher<Intent> profileTakePhotoLauncher;
+    private ActivityResultLauncher<Intent> profileTakeVideoLauncher;
+
+    private WeakReference<ChatPage> chatTargetRef;
+    private ActivityResultLauncher<Intent> chatMediaPickerLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -601,6 +620,73 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        wallImagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    WallPage page = wallTargetRef != null ? wallTargetRef.get() : null;
+                    if (page == null) return;
+                    if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                        page.handleComposerActivityResult(
+                                onion.network.helpers.Const.REQUEST_PICK_IMAGE_POST,
+                                RESULT_CANCELED,
+                                result.getData()
+                        );
+                        return;
+                    }
+                    page.handleComposerActivityResult(
+                            onion.network.helpers.Const.REQUEST_PICK_IMAGE_POST,
+                            RESULT_OK,
+                            result.getData()
+                    );
+                });
+
+        wallVideoPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    WallPage page = wallTargetRef != null ? wallTargetRef.get() : null;
+                    if (page == null) return;
+                    page.handleComposerActivityResult(
+                            onion.network.helpers.Const.REQUEST_PICK_VIDEO_POST,
+                            result.getResultCode(),
+                            result.getData()
+                    );
+                });
+
+        wallCameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    WallPage page = wallTargetRef != null ? wallTargetRef.get() : null;
+                    if (page == null) return;
+                    // Для камери ми кладемо фото в EXTRA_OUTPUT (page.pendingPhotoUri), тому data може бути null.
+                    page.handleComposerActivityResult(
+                            onion.network.helpers.Const.REQUEST_TAKE_PHOTO_POST,
+                            result.getResultCode(),
+                            result.getData()
+                    );
+                });
+
+        profilePickMediaLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            ProfilePage page = profileTargetRef != null ? profileTargetRef.get() : null;
+            if (page == null) return;
+            page.handleProfileActivityResult(REQUEST_CHOOSE_MEDIA, result.getResultCode(), result.getData());
+        });
+        profileTakePhotoLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            ProfilePage page = profileTargetRef != null ? profileTargetRef.get() : null;
+            if (page == null) return;
+            page.handleProfileActivityResult(REQUEST_TAKE_PHOTO_PROFILE, result.getResultCode(), result.getData());
+        });
+        profileTakeVideoLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            ProfilePage page = profileTargetRef != null ? profileTargetRef.get() : null;
+            if (page == null) return;
+            page.handleProfileActivityResult(REQUEST_TAKE_VIDEO, result.getResultCode(), result.getData());
+        });
+        chatMediaPickerLauncher =
+                registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                    ChatPage page = chatTargetRef != null ? chatTargetRef.get() : null;
+                    if (page == null) return;
+                    page.onChatMediaPickResult(result.getResultCode(), result.getData());
+                });
     }
 
     @Override
@@ -616,6 +702,86 @@ public class MainActivity extends AppCompatActivity {
         if (overlayVisible) {
             overlayVisible = false;
             fadeOverlay(dimOverlay, false);
+        }
+    }
+
+    @Nullable
+    public static Uri extractSingleUri(@Nullable Intent data) {
+        if (data == null) return null;
+        Uri u = data.getData();
+        if (u != null) return u;
+        ClipData cd = data.getClipData();
+        if (cd != null && cd.getItemCount() > 0) {
+            return cd.getItemAt(0).getUri();
+        }
+        return null;
+    }
+
+    public void launchWallImagePicker(WallPage page) {
+        wallTargetRef = new WeakReference<>(page);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("image/*")
+                .addCategory(Intent.CATEGORY_OPENABLE);
+        wallImagePickerLauncher.launch(intent);
+    }
+
+    public void launchWallVideoPicker(WallPage page) {
+        wallTargetRef = new WeakReference<>(page);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("video/*")
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+        wallVideoPickerLauncher.launch(intent);
+    }
+
+    public void launchWallCamera(WallPage page, Uri output) {
+        wallTargetRef = new WeakReference<>(page);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, output);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        wallCameraLauncher.launch(intent);
+    }
+
+    public void launchProfilePickMedia(@NonNull ProfilePage page, boolean photo) {
+        profileTargetRef = new WeakReference<>(page);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType(photo ? "image/*" : "video/*")
+                .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+        profilePickMediaLauncher.launch(intent);
+    }
+
+    public void launchProfileCapturePhoto(@NonNull ProfilePage page) {
+        profileTargetRef = new WeakReference<>(page);
+        Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        profileTakePhotoLauncher.launch(i);
+    }
+
+    public void launchProfileCaptureVideo(@NonNull ProfilePage page, @NonNull Uri outputUri, int maxSeconds, long maxBytes) {
+        profileTargetRef = new WeakReference<>(page);
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+                .putExtra(MediaStore.EXTRA_DURATION_LIMIT, maxSeconds)
+                .putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0)
+                .putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, true)
+                .putExtra(MediaStore.EXTRA_SIZE_LIMIT, maxBytes)
+                .putExtra(MediaStore.EXTRA_OUTPUT, outputUri)
+                .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        profileTakeVideoLauncher.launch(intent);
+    }
+
+    public void openChatMediaPicker(onion.network.ui.pages.ChatPage page) {
+        chatTargetRef = new java.lang.ref.WeakReference<>(page);
+
+        android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.putExtra(android.content.Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+        intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+
+        try {
+            chatMediaPickerLauncher.launch(intent);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            snack(getString(onion.network.R.string.chat_attachment_pick_failed));
         }
     }
 

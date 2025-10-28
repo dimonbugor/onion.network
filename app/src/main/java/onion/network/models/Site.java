@@ -139,8 +139,8 @@ public class Site {
         int quality = 60;
 
         MessageDigest digest = sha1();
-        String key = Base64.encodeToString(digest.digest(data.getBytes()), Base64.DEFAULT | Base64.DEFAULT);
-        key += "-" + width + "-" + height + "-" + quality;
+        String key = Base64.encodeToString(digest.digest(data.getBytes(utf8)), Base64.NO_WRAP)
+                + "-" + width + "-" + height + "-" + quality;
 
         {
             String v = cache.get(key);
@@ -182,7 +182,7 @@ public class Site {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bmp.compress(Bitmap.CompressFormat.JPEG, quality, stream);
-        data = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT);
+        data = Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP);
         data = "data:image/jpeg;base64," + data;
         //data = data.replaceAll("\\s+","");
 
@@ -302,11 +302,19 @@ public class Site {
                 s = treplace(s, "date", html(Utils.formatDate(o.optString("date"))));
                 s = treplace(s, "thumb", htmlthumb(o.optString("thumb"), 56, 56));
 
-                String url = "http://" + uri.getHost().replace(addr, o.optString("addr")) + "/network.onion";
+                String host = uri.getHost();
+                if (host == null) host = "localhost";
+                String url = "http://" + host.replace(addr, o.optString("addr")) + "/network.onion";
                 s = treplace(s, "url", html(url));
 
-                if (o.has("img")) {
-                    s = treplace(s, "img", htmlthumb(o.optString("img"), 320, 160));
+                String imgB64 = o.optString("img", "").trim();
+                String vthumbB64 = o.optString("video_thumb", "").trim();
+
+                if (!TextUtils.isEmpty(imgB64)) {
+                    s = treplace(s, "img", htmlthumb(imgB64, 320, 160));
+                } else if (!TextUtils.isEmpty(vthumbB64)) {
+                    // fallback на мініатюру відео, якщо немає звичайної картинки
+                    s = treplace(s, "img", htmlthumb(vthumbB64, 320, 160));
                 } else {
                     s = tremove(s, "imgtag");
                 }
@@ -332,7 +340,9 @@ public class Site {
                 s = treplace(s, "name", htmlname(o.optString("name")));
                 s = treplace(s, "addr", html(o.optString("addr")));
 
-                String url = "http://" + uri.getHost().replace(addr, o.optString("addr")) + "/network.onion";
+                String host = uri.getHost();
+                if (host == null) host = "localhost";
+                String url = "http://" + host.replace(addr, o.optString("addr")) + "/network.onion";
                 s = treplace(s, "url", html(url));
 
                 //s = treplace(s, "thumb", htmlthumb(o.optString("thumb")));
@@ -438,7 +448,12 @@ public class Site {
         page = treplace(page, "appname", html(Utils.getAppName(context)));
         page = treplace(page, "name", htmlname(name));
         page = treplace(page, "addr", html(addr));
-        page = treplace(page, "img", htmlthumb(db.getstr("thumb"), 75, 75));
+        String profThumb = db.getstr("thumb");
+        if (TextUtils.isEmpty(profThumb)) {
+            // спроба достати прев’ю відео-аватара
+            profThumb = ItemCache.getInstance(context).get(addr, "video_thumb").onestr("video_thumb");
+        }
+        page = treplace(page, "img", htmlthumb(profThumb, 75, 75));
 
         page = page.replaceAll("\\s+", " ");
 
@@ -504,11 +519,10 @@ public class Site {
         }
 
         public String digest() {
-            MessageDigest digest = sha1();
-            digest.update((charset + " " + mimeType + " " + statusCode + " " + statusMessage + " ").getBytes(utf8));
-            if (data != null) digest.update(data);
-            //return Base64.encodeToString(digest.digest(), Base64.DEFAULT | Base64.DEFAULT);
-            return org.spongycastle.util.encoders.Hex.toHexString(data);
+            MessageDigest d = sha1();
+            d.update((charset + " " + mimeType + " " + statusCode + " " + statusMessage + " ").getBytes(utf8));
+            if (data != null) d.update(data);
+            return Base64.encodeToString(d.digest(), Base64.NO_WRAP);
         }
 
     }

@@ -108,10 +108,10 @@ public class HttpClient {
                 int torPort = TorManager.getInstance(context).getPort();
                 Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", torPort));
                 socket = new Socket(proxy);
-                socket.connect(new InetSocketAddress(uri.getHost(), port), 60000);
+                socket.connect(new InetSocketAddress(uri.getHost(), port), 90000);
             } else {
                 socket = new Socket();
-                socket.connect(new InetSocketAddress(uri.getHost(), port), 60000);
+                socket.connect(new InetSocketAddress(uri.getHost(), port), 90000);
             }
 
             if (tls) {

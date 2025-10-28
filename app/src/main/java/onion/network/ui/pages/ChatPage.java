@@ -101,8 +101,6 @@ public class ChatPage extends BasePage
     private long recordingStartTimestamp;
     private boolean isRecordingAudio;
 
-    private static final int REQUEST_CHAT_PICK_MEDIA = Const.REQUEST_CHAT_PICK_MEDIA;
-
     public ChatPage(final MainActivity activity) {
         super(activity);
 
@@ -408,17 +406,6 @@ public class ChatPage extends BasePage
 
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CHAT_PICK_MEDIA) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                handlePickedMedia(data.getData());
-            }
-            return;
-        }
-    }
-
     private void requestMediaAttachment() {
         PermissionHelper.runWithPermissions(
                 activity,
@@ -429,14 +416,13 @@ public class ChatPage extends BasePage
     }
 
     private void openMediaPicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            activity.startActivityForResult(intent, REQUEST_CHAT_PICK_MEDIA);
-        } catch (Exception ex) {
-            Log.e(TAG, "Unable to launch media picker", ex);
+        activity.openChatMediaPicker(this);
+    }
+
+    public void onChatMediaPickResult(int resultCode, @androidx.annotation.Nullable Intent data) {
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            handlePickedMedia(data.getData());
+        } else {
             activity.snack(str(R.string.chat_attachment_pick_failed));
         }
     }
