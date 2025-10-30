@@ -607,7 +607,25 @@ public class WallPage extends BasePage {
                 holder.postText.setVisibility(View.GONE);
             }
         }
-        Bitmap postImage = preview.latestPost.bitmap("img");
+        Bitmap postImage = null;
+        if (postData != null) {
+            String imgBase64 = postData.optString("img", "").trim();
+            if (!TextUtils.isEmpty(imgBase64)) {
+                postImage = WallUtils.decodeBitmapBase64(imgBase64);
+            }
+            if (postImage == null) {
+                String videoThumbBase64 = postData.optString("video_thumb", "").trim();
+                if (!TextUtils.isEmpty(videoThumbBase64)) {
+                    postImage = WallUtils.decodeBitmapBase64(videoThumbBase64);
+                }
+            }
+        }
+        if (postImage == null) {
+            postImage = preview.latestPost.bitmap("img");
+        }
+        if (postImage == null) {
+            postImage = preview.latestPost.bitmap("video_thumb");
+        }
         if (holder.postImage != null) {
             if (postImage != null) {
                 holder.postImage.setImageBitmap(postImage);
