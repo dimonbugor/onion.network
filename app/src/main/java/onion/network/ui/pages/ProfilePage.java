@@ -97,11 +97,15 @@ public class ProfilePage extends BasePage {
     }
 
     public static final Row[] rows = new Row[] {
-            new Row("name",   "Name",    InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_PERSON_NAME),
-            new Row("about",  "About",   InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
-            new Row("email",  "Email",   InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS),
-            new Row("phone",  "Phone",   InputType.TYPE_CLASS_PHONE),
-            new Row("website","Website", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI),
+            new Row("name", "Name", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_PERSON_NAME),
+            //new Row("location", "Location", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("lang", "Languages", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            //new Row("occupation", "Occupation", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("interests", "Interests", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("hobbies", "Hobbies", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("website", "Website", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("about", "About me", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
+            new Row("bio", "Bio", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE),
     };
 
     public ProfilePage(final MainActivity activity) {
@@ -290,6 +294,8 @@ public class ProfilePage extends BasePage {
                 } catch (Throwable t) {
                     o = new JSONObject(); // щоб UI не падав, навіть якщо даних нема
                 }
+
+                findViewById(R.id.is_friend_bot).setVisibility(o.optBoolean("friendbot", false) ? View.VISIBLE : View.GONE);
 
                 if (contentView == null) contentView = findViewById(R.id.contentView);
                 if (contentView == null) return;
