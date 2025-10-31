@@ -12,8 +12,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import onion.network.TorManager;
+import onion.network.helpers.AuthorProfileCache;
 import onion.network.cashes.ItemCache;
 import onion.network.databases.ItemDatabase;
+import onion.network.models.AuthorProfile;
 import onion.network.helpers.Utils;
 import onion.network.settings.Settings;
 
@@ -85,7 +87,7 @@ public class Item {
 
         if ("post".equals(_type)) {
 
-            // set addr if it's my post
+            // ensure the address is filled in for locally authored posts
             if (!json.has("addr") || json.optString("addr").trim().isEmpty()) {
                 if ("".equals(address)) {
                     address = TorManager.getInstance(context).getID();
@@ -97,60 +99,42 @@ public class Item {
                 }
             }
 
-            // update name and thumb if it's my post
-            if (json.optString("addr").equals(TorManager.getInstance(context).getID())) {
+            String authorAddress = json.optString("addr").trim();
+            String myId = TorManager.getInstance(context).getID();
 
-                {
-                    String name = ItemDatabase.getInstance(context).get("name", "", 1).one().json().optString("name");
+            AuthorProfile profileFromPayload = AuthorProfile.fromPostJson(authorAddress, json);
+
+            if (TextUtils.equals(authorAddress, myId)) {
+                AuthorProfile selfProfile = AuthorProfileCache.loadSelfProfile(context);
+                if (selfProfile != null && !selfProfile.isEmpty()) {
+                    selfProfile.applyToJson(json);
+                    AuthorProfileCache.store(context, selfProfile);
+                }
+            } else {
+                AuthorProfile resolved = AuthorProfileCache.ensureProfile(context, authorAddress, profileFromPayload);
+                if (resolved != null) {
+                    resolved.applyToJsonIfMissing(json);
+                }
+            }
+
+            AuthorProfile finalProfile = AuthorProfile.fromPostJson(authorAddress, json);
+            if (finalProfile != null && !finalProfile.isEmpty()) {
+                finalProfile.ensureRevision();
+                try {
+                    json.put("author_rev", finalProfile.getRevision());
+                } catch (JSONException ignore) {
+                }
+                AuthorProfileCache.store(context, finalProfile);
+            } else if (!TextUtils.isEmpty(authorAddress)) {
+                AuthorProfile cached = AuthorProfileCache.get(context, authorAddress);
+                if (cached != null) {
+                    cached.applyToJsonIfMissing(json);
+                    cached.ensureRevision();
                     try {
-                        json.put("name", name);
-                    } catch (JSONException ex) {
-                        throw new RuntimeException(ex);
+                        json.put("author_rev", cached.getRevision());
+                    } catch (JSONException ignore) {
                     }
                 }
-
-                {
-                    String thumb = ItemDatabase.getInstance(context).get("thumb", "", 1).one().json().optString("thumb");
-                    try {
-                        json.put("thumb", thumb);
-                    } catch (JSONException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-
-                {
-                    String video = ItemDatabase.getInstance(context).get("video", "", 1).one().json().optString("video");
-                    if (video != null && !video.trim().isEmpty()) {
-                        try {
-                            json.put("video", video);
-                        } catch (JSONException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                }
-
-                {
-                    String videoUri = ItemDatabase.getInstance(context).get("video", "", 1).one().json().optString("video_uri");
-                    if (!TextUtils.isEmpty(videoUri)) {
-                        try {
-                            json.put("video_uri", videoUri);
-                        } catch (JSONException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                }
-
-                {
-                    String videoThumb = ItemDatabase.getInstance(context).get("video_thumb", "", 1).one().json().optString("video_thumb");
-                    if (videoThumb != null && !videoThumb.trim().isEmpty()) {
-                        try {
-                            json.put("video_thumb", videoThumb);
-                        } catch (JSONException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                }
-
             }
         }
 
@@ -291,8 +275,6 @@ public class Item {
 
 
 }
-
-
 
 
 

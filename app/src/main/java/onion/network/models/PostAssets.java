@@ -16,4 +16,7 @@ public class PostAssets {
     public String audioMime;
     public long audioDurationMs;
     public String displayName;
+    public Bitmap avatarVideoThumb;
+    public String avatarVideoUri;
+    public String avatarVideoData;
 }

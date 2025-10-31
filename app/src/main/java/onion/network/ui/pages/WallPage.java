@@ -3,8 +3,10 @@ package onion.network.ui.pages;
 
 import org.json.JSONObject;
 
+import onion.network.helpers.AuthorProfileCache;
 import onion.network.helpers.ChatMediaStore;
 import onion.network.helpers.Utils;
+import onion.network.models.AuthorProfile;
 import onion.network.models.FriendPreview;
 import onion.network.models.Item;
 
@@ -890,8 +892,8 @@ public class WallPage extends BasePage {
     }
 
     private void bindAvatar(PostViewHolder h, PostAssets a, String ownerKey) {
-        Uri playable = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, a.storedVideoUri, a.videoData);
-        h.thumb.bind(a.photoThumb, a.videoThumb, playable != null ? playable.toString() : null);
+        Uri playable = VideoCacheManager.ensureVideoUri(getContext(), ownerKey, a.avatarVideoUri, a.avatarVideoData);
+        h.thumb.bind(a.photoThumb, a.avatarVideoThumb, playable != null ? playable.toString() : null);
         registerAvatar(h.thumb);
         h.thumblink.setOnClickListener(null);
         h.thumblink.setOnLongClickListener(null);
@@ -1001,35 +1003,105 @@ public class WallPage extends BasePage {
 
     private PostAssets resolvePostAssets(Item item, JSONObject raw, JSONObject data, String wallOwner, String myAddress, String postAddress) {
         PostAssets a = new PostAssets();
-        a.photoThumb = WallUtils.decodeBitmapBase64(raw.optString("thumb", ""));
+        Context ctx = getContext();
+
+        // Author / avatar metadata
+        a.photoThumb = WallUtils.decodeBitmapBase64(data.optString("author_thumb", ""));
         if (a.photoThumb == null) {
+            a.photoThumb = WallUtils.decodeBitmapBase64(raw.optString("author_thumb", ""));
+        }
+        if (a.photoThumb == null && item != null) {
             a.photoThumb = item.bitmap("thumb");
-            if (a.photoThumb == null)
-                a.photoThumb = WallUtils.decodeBitmapBase64(data.optString("thumb", ""));
         }
+        if (a.photoThumb == null) {
+            a.photoThumb = WallUtils.decodeBitmapBase64(data.optString("thumb", ""));
+        }
+
+        a.avatarVideoThumb = WallUtils.decodeBitmapBase64(data.optString("author_video_thumb", ""));
+        if (a.avatarVideoThumb == null) {
+            a.avatarVideoThumb = WallUtils.decodeBitmapBase64(raw.optString("author_video_thumb", ""));
+        }
+        a.avatarVideoUri = WallUtils.firstNonEmpty(
+                data.optString("author_video_uri", "").trim(),
+                raw.optString("author_video_uri", "").trim()
+        );
+        a.avatarVideoData = WallUtils.firstNonEmpty(
+                data.optString("author_video", "").trim(),
+                raw.optString("author_video", "").trim()
+        );
+
+        a.displayName = WallUtils.firstNonEmpty(
+                data.optString("author_name", "").trim(),
+                raw.optString("author_name", "").trim(),
+                raw.optString("name", "").trim(),
+                data.optString("name", "").trim()
+        );
+
+        if (ctx != null && !TextUtils.isEmpty(postAddress)) {
+            AuthorProfile cachedProfile = AuthorProfileCache.get(ctx, postAddress);
+            if (cachedProfile != null) {
+                if (a.photoThumb == null) a.photoThumb = cachedProfile.decodeThumbBitmap();
+                if (a.avatarVideoThumb == null) a.avatarVideoThumb = cachedProfile.decodeVideoThumbBitmap();
+                if (TextUtils.isEmpty(a.avatarVideoData)) a.avatarVideoData = cachedProfile.getVideoBase64();
+                if (TextUtils.isEmpty(a.avatarVideoUri)) a.avatarVideoUri = cachedProfile.getVideoUri();
+                if (TextUtils.isEmpty(a.displayName)) a.displayName = cachedProfile.getName();
+            }
+        }
+
+        // Post attachments – video
         a.videoThumb = WallUtils.decodeBitmapBase64(raw.optString("video_thumb", ""));
-        if (a.videoThumb == null) {
+        if (a.videoThumb == null && item != null) {
             a.videoThumb = item.bitmap("video_thumb");
-            if (a.videoThumb == null)
-                a.videoThumb = WallUtils.decodeBitmapBase64(data.optString("video_thumb", ""));
         }
-        a.videoMediaId = WallUtils.firstNonEmpty(data.optString("video_id", "").trim(), raw.optString("video_id", "").trim());
-        a.storedVideoUri = WallUtils.firstNonEmpty(data.optString("video_uri", "").trim(), raw.optString("video_uri", "").trim());
-        a.videoData = WallUtils.firstNonEmpty(raw.optString("video", "").trim(), data.optString("video", "").trim());
-        a.videoMime = WallUtils.firstNonEmpty(data.optString("video_mime", "").trim(), raw.optString("video_mime", "").trim());
+        if (a.videoThumb == null) {
+            a.videoThumb = WallUtils.decodeBitmapBase64(data.optString("video_thumb", ""));
+        }
+        a.videoMediaId = WallUtils.firstNonEmpty(
+                data.optString("video_id", "").trim(),
+                raw.optString("video_id", "").trim()
+        );
+        a.storedVideoUri = WallUtils.firstNonEmpty(
+                data.optString("video_uri", "").trim(),
+                raw.optString("video_uri", "").trim()
+        );
+        a.videoData = WallUtils.firstNonEmpty(
+                raw.optString("video", "").trim(),
+                data.optString("video", "").trim()
+        );
+        a.videoMime = WallUtils.firstNonEmpty(
+                data.optString("video_mime", "").trim(),
+                raw.optString("video_mime", "").trim()
+        );
         a.videoDurationMs = data.optLong("video_duration", raw.optLong("video_duration", 0L));
-        a.audioMediaId = WallUtils.firstNonEmpty(data.optString("audio_id", "").trim(), raw.optString("audio_id", "").trim());
-        a.audioUri = WallUtils.firstNonEmpty(data.optString("audio_uri", "").trim(), raw.optString("audio_uri", "").trim());
-        a.audioData = WallUtils.firstNonEmpty(raw.optString("audio", "").trim(), data.optString("audio", "").trim());
-        a.audioMime = WallUtils.firstNonEmpty(data.optString("audio_mime", "").trim(), raw.optString("audio_mime", "").trim());
+
+        // Post attachments – audio
+        a.audioMediaId = WallUtils.firstNonEmpty(
+                data.optString("audio_id", "").trim(),
+                raw.optString("audio_id", "").trim()
+        );
+        a.audioUri = WallUtils.firstNonEmpty(
+                data.optString("audio_uri", "").trim(),
+                raw.optString("audio_uri", "").trim()
+        );
+        a.audioData = WallUtils.firstNonEmpty(
+                raw.optString("audio", "").trim(),
+                data.optString("audio", "").trim()
+        );
+        a.audioMime = WallUtils.firstNonEmpty(
+                data.optString("audio_mime", "").trim(),
+                raw.optString("audio_mime", "").trim()
+        );
         a.audioDurationMs = data.optLong("audio_duration", raw.optLong("audio_duration", 0L));
-        a.displayName = WallUtils.firstNonEmpty(raw.optString("name", ""), data.optString("name", ""));
+
         if (!TextUtils.isEmpty(a.videoMediaId)) {
             Uri localUri = StreamMediaStore.createContentUri(context, a.videoMediaId);
-            if (localUri != null) a.storedVideoUri = localUri.toString();
-            else if (TextUtils.isEmpty(a.storedVideoUri))
+            if (localUri != null) {
+                a.storedVideoUri = localUri.toString();
+            } else if (TextUtils.isEmpty(a.storedVideoUri)) {
                 a.storedVideoUri = "/media/" + a.videoMediaId;
+            }
         }
+
         boolean belongsToFriend = !TextUtils.isEmpty(postAddress) && !postAddress.equals(myAddress);
         if (belongsToFriend) {
             ItemCache cache = ItemCache.getInstance(getContext());
@@ -1037,13 +1109,23 @@ public class WallPage extends BasePage {
                 ItemResult r = cache.get(postAddress, "thumb");
                 if (r.size() > 0) a.photoThumb = r.one().bitmap("thumb");
             }
-            if (a.videoThumb == null) {
+            if (a.avatarVideoThumb == null) {
                 ItemResult r = cache.get(postAddress, "video_thumb");
-                if (r.size() > 0) a.videoThumb = r.one().bitmap("video_thumb");
+                if (r.size() > 0) a.avatarVideoThumb = r.one().bitmap("video_thumb");
             }
-            if (TextUtils.isEmpty(a.videoData)) {
+            if (TextUtils.isEmpty(a.avatarVideoData) || TextUtils.isEmpty(a.avatarVideoUri)) {
                 ItemResult r = cache.get(postAddress, "video");
-                if (r.size() > 0) a.videoData = r.one().json().optString("video", "").trim();
+                if (r.size() > 0) {
+                    JSONObject j = r.one().json();
+                    if (TextUtils.isEmpty(a.avatarVideoData)) {
+                        String b64 = j.optString("video", "").trim();
+                        if (!TextUtils.isEmpty(b64)) a.avatarVideoData = b64;
+                    }
+                    if (TextUtils.isEmpty(a.avatarVideoUri)) {
+                        String uri = j.optString("video_uri", "").trim();
+                        if (!TextUtils.isEmpty(uri)) a.avatarVideoUri = uri;
+                    }
+                }
             }
             if (TextUtils.isEmpty(a.audioData)) {
                 ItemResult r = cache.get(postAddress, "audio");
@@ -1055,8 +1137,9 @@ public class WallPage extends BasePage {
                         String m = j.optString("audio_mime", "");
                         if (!TextUtils.isEmpty(m)) a.audioMime = m;
                     }
-                    if (a.audioDurationMs <= 0)
+                    if (a.audioDurationMs <= 0) {
                         a.audioDurationMs = j.optLong("audio_duration", a.audioDurationMs);
+                    }
                 }
             }
             if (TextUtils.isEmpty(a.displayName)) {
@@ -1066,26 +1149,19 @@ public class WallPage extends BasePage {
                     if (!TextUtils.isEmpty(n)) a.displayName = n;
                 }
             }
-            if (a.photoThumb == null || TextUtils.isEmpty(a.displayName) || (TextUtils.isEmpty(a.videoData) && a.videoThumb == null) || TextUtils.isEmpty(a.audioData)) {
+            if (a.photoThumb == null || TextUtils.isEmpty(a.displayName) ||
+                    (TextUtils.isEmpty(a.avatarVideoData) && a.avatarVideoThumb == null)) {
                 Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
                 if (friendItem != null) {
                     if (a.photoThumb == null) a.photoThumb = friendItem.bitmap("thumb");
-                    if (a.videoThumb == null) a.videoThumb = friendItem.bitmap("video_thumb");
-                    if (TextUtils.isEmpty(a.videoData))
-                        a.videoData = friendItem.json().optString("video", "").trim();
-                    if (TextUtils.isEmpty(a.audioData)) {
-                        String s = friendItem.json().optString("audio", "").trim();
-                        if (!TextUtils.isEmpty(s)) a.audioData = s;
+                    if (a.avatarVideoThumb == null) a.avatarVideoThumb = friendItem.bitmap("video_thumb");
+                    if (TextUtils.isEmpty(a.avatarVideoData)) {
+                        String s = friendItem.json().optString("video", "").trim();
+                        if (!TextUtils.isEmpty(s)) a.avatarVideoData = s;
                     }
-                    if (TextUtils.isEmpty(a.audioMime)) {
-                        String s = friendItem.json().optString("audio_mime", "");
-                        if (!TextUtils.isEmpty(s)) a.audioMime = s;
-                    }
-                    if (a.audioDurationMs <= 0)
-                        a.audioDurationMs = friendItem.json().optLong("audio_duration", a.audioDurationMs);
-                    if (TextUtils.isEmpty(a.audioUri)) {
-                        String s = friendItem.json().optString("audio_uri", "");
-                        if (!TextUtils.isEmpty(s)) a.audioUri = s;
+                    if (TextUtils.isEmpty(a.avatarVideoUri)) {
+                        String s = friendItem.json().optString("video_uri", "").trim();
+                        if (!TextUtils.isEmpty(s)) a.avatarVideoUri = s;
                     }
                     if (TextUtils.isEmpty(a.displayName)) {
                         String s = friendItem.json().optString("name", "");
@@ -1094,6 +1170,7 @@ public class WallPage extends BasePage {
                 }
             }
         }
+
         boolean isWallOwner = !TextUtils.isEmpty(postAddress) && postAddress.equals(wallOwner) && !postAddress.equals(myAddress);
         if (isWallOwner) {
             Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
@@ -1101,9 +1178,15 @@ public class WallPage extends BasePage {
                 Bitmap ft = friendItem.bitmap("thumb");
                 if (ft != null) a.photoThumb = ft;
                 Bitmap vt = friendItem.bitmap("video_thumb");
-                if (vt != null) a.videoThumb = vt;
+                if (vt != null) a.avatarVideoThumb = vt;
                 String fv = friendItem.json().optString("video", "").trim();
-                if (!TextUtils.isEmpty(fv)) a.videoData = fv;
+                if (!TextUtils.isEmpty(fv)) a.avatarVideoData = fv;
+                String fu = friendItem.json().optString("video_uri", "").trim();
+                if (!TextUtils.isEmpty(fu)) a.avatarVideoUri = fu;
+                if (TextUtils.isEmpty(a.displayName)) {
+                    String fn = friendItem.json().optString("name", "");
+                    if (!TextUtils.isEmpty(fn)) a.displayName = fn;
+                }
                 if (TextUtils.isEmpty(a.audioData)) {
                     String fa = friendItem.json().optString("audio", "").trim();
                     if (!TextUtils.isEmpty(fa)) a.audioData = fa;
@@ -1112,19 +1195,23 @@ public class WallPage extends BasePage {
                     String m = friendItem.json().optString("audio_mime", "");
                     if (!TextUtils.isEmpty(m)) a.audioMime = m;
                 }
-                if (a.audioDurationMs <= 0)
+                if (a.audioDurationMs <= 0) {
                     a.audioDurationMs = friendItem.json().optLong("audio_duration", a.audioDurationMs);
+                }
                 if (TextUtils.isEmpty(a.audioUri)) {
                     String u = friendItem.json().optString("audio_uri", "");
                     if (!TextUtils.isEmpty(u)) a.audioUri = u;
                 }
-                String fn = friendItem.json().optString("name", "");
-                if (!TextUtils.isEmpty(fn)) a.displayName = fn;
             }
         }
+
         if (!TextUtils.isEmpty(a.storedVideoUri) && a.storedVideoUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) {
             String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";
             a.storedVideoUri = "http://" + host + a.storedVideoUri;
+        }
+        if (!TextUtils.isEmpty(a.avatarVideoUri) && a.avatarVideoUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) {
+            String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";
+            a.avatarVideoUri = "http://" + host + a.avatarVideoUri;
         }
         if (!TextUtils.isEmpty(a.audioUri) && a.audioUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) {
             String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";
