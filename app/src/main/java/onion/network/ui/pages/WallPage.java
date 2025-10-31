@@ -76,8 +76,7 @@ import java.util.Map;
 import java.lang.ref.WeakReference;
 
 import onion.network.TorManager;
-import onion.network.cashes.ItemCache;
-import onion.network.databases.ItemDatabase;
+import onion.network.helpers.AuthorProfileCache;
 import onion.network.helpers.AudioCacheManager;
 import onion.network.helpers.Const;
 import onion.network.helpers.DialogHelper;
@@ -86,12 +85,11 @@ import onion.network.helpers.StreamMediaStore;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.helpers.VideoCacheManager;
+import onion.network.models.AuthorProfile;
 import onion.network.models.ItemResult;
 import onion.network.models.ItemTask;
+import onion.network.databases.ItemDatabase;
 import onion.network.ui.MainActivity;
-
-import android.content.ClipData;
-import android.net.Uri;
 
 public class WallPage extends BasePage {
 
@@ -1102,108 +1100,7 @@ public class WallPage extends BasePage {
             }
         }
 
-        boolean belongsToFriend = !TextUtils.isEmpty(postAddress) && !postAddress.equals(myAddress);
-        if (belongsToFriend) {
-            ItemCache cache = ItemCache.getInstance(getContext());
-            if (a.photoThumb == null) {
-                ItemResult r = cache.get(postAddress, "thumb");
-                if (r.size() > 0) a.photoThumb = r.one().bitmap("thumb");
-            }
-            if (a.avatarVideoThumb == null) {
-                ItemResult r = cache.get(postAddress, "video_thumb");
-                if (r.size() > 0) a.avatarVideoThumb = r.one().bitmap("video_thumb");
-            }
-            if (TextUtils.isEmpty(a.avatarVideoData) || TextUtils.isEmpty(a.avatarVideoUri)) {
-                ItemResult r = cache.get(postAddress, "video");
-                if (r.size() > 0) {
-                    JSONObject j = r.one().json();
-                    if (TextUtils.isEmpty(a.avatarVideoData)) {
-                        String b64 = j.optString("video", "").trim();
-                        if (!TextUtils.isEmpty(b64)) a.avatarVideoData = b64;
-                    }
-                    if (TextUtils.isEmpty(a.avatarVideoUri)) {
-                        String uri = j.optString("video_uri", "").trim();
-                        if (!TextUtils.isEmpty(uri)) a.avatarVideoUri = uri;
-                    }
-                }
-            }
-            if (TextUtils.isEmpty(a.audioData)) {
-                ItemResult r = cache.get(postAddress, "audio");
-                if (r.size() > 0) {
-                    JSONObject j = r.one().json();
-                    String b64 = j.optString("audio", "").trim();
-                    if (!TextUtils.isEmpty(b64)) a.audioData = b64;
-                    if (TextUtils.isEmpty(a.audioMime)) {
-                        String m = j.optString("audio_mime", "");
-                        if (!TextUtils.isEmpty(m)) a.audioMime = m;
-                    }
-                    if (a.audioDurationMs <= 0) {
-                        a.audioDurationMs = j.optLong("audio_duration", a.audioDurationMs);
-                    }
-                }
-            }
-            if (TextUtils.isEmpty(a.displayName)) {
-                ItemResult r = cache.get(postAddress, "name");
-                if (r.size() > 0) {
-                    String n = r.one().json().optString("name", "");
-                    if (!TextUtils.isEmpty(n)) a.displayName = n;
-                }
-            }
-            if (a.photoThumb == null || TextUtils.isEmpty(a.displayName) ||
-                    (TextUtils.isEmpty(a.avatarVideoData) && a.avatarVideoThumb == null)) {
-                Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
-                if (friendItem != null) {
-                    if (a.photoThumb == null) a.photoThumb = friendItem.bitmap("thumb");
-                    if (a.avatarVideoThumb == null) a.avatarVideoThumb = friendItem.bitmap("video_thumb");
-                    if (TextUtils.isEmpty(a.avatarVideoData)) {
-                        String s = friendItem.json().optString("video", "").trim();
-                        if (!TextUtils.isEmpty(s)) a.avatarVideoData = s;
-                    }
-                    if (TextUtils.isEmpty(a.avatarVideoUri)) {
-                        String s = friendItem.json().optString("video_uri", "").trim();
-                        if (!TextUtils.isEmpty(s)) a.avatarVideoUri = s;
-                    }
-                    if (TextUtils.isEmpty(a.displayName)) {
-                        String s = friendItem.json().optString("name", "");
-                        if (!TextUtils.isEmpty(s)) a.displayName = s;
-                    }
-                }
-            }
-        }
-
-        boolean isWallOwner = !TextUtils.isEmpty(postAddress) && postAddress.equals(wallOwner) && !postAddress.equals(myAddress);
-        if (isWallOwner) {
-            Item friendItem = ItemDatabase.getInstance(getContext()).getByKey("friend", postAddress);
-            if (friendItem != null) {
-                Bitmap ft = friendItem.bitmap("thumb");
-                if (ft != null) a.photoThumb = ft;
-                Bitmap vt = friendItem.bitmap("video_thumb");
-                if (vt != null) a.avatarVideoThumb = vt;
-                String fv = friendItem.json().optString("video", "").trim();
-                if (!TextUtils.isEmpty(fv)) a.avatarVideoData = fv;
-                String fu = friendItem.json().optString("video_uri", "").trim();
-                if (!TextUtils.isEmpty(fu)) a.avatarVideoUri = fu;
-                if (TextUtils.isEmpty(a.displayName)) {
-                    String fn = friendItem.json().optString("name", "");
-                    if (!TextUtils.isEmpty(fn)) a.displayName = fn;
-                }
-                if (TextUtils.isEmpty(a.audioData)) {
-                    String fa = friendItem.json().optString("audio", "").trim();
-                    if (!TextUtils.isEmpty(fa)) a.audioData = fa;
-                }
-                if (TextUtils.isEmpty(a.audioMime)) {
-                    String m = friendItem.json().optString("audio_mime", "");
-                    if (!TextUtils.isEmpty(m)) a.audioMime = m;
-                }
-                if (a.audioDurationMs <= 0) {
-                    a.audioDurationMs = friendItem.json().optLong("audio_duration", a.audioDurationMs);
-                }
-                if (TextUtils.isEmpty(a.audioUri)) {
-                    String u = friendItem.json().optString("audio_uri", "");
-                    if (!TextUtils.isEmpty(u)) a.audioUri = u;
-                }
-            }
-        }
+        // No longer pull post-media fallbacks from friend profile cache; attachments must come from the post itself.
 
         if (!TextUtils.isEmpty(a.storedVideoUri) && a.storedVideoUri.startsWith("/media/") && !TextUtils.isEmpty(postAddress)) {
             String host = postAddress.contains(".") ? postAddress : postAddress + ".onion";

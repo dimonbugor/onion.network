@@ -32,6 +32,8 @@ import onion.network.ui.views.AvatarView;
 import onion.network.helpers.VideoCacheManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.helpers.ThemeManager;
+import onion.network.call.CallSignalMessage;
+import onion.network.models.ChatMessagePayload;
 
 import org.json.JSONObject;
 
@@ -172,7 +174,13 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
             String myid = torManager.getID();
             final String remoteAddress = myid.equals(sender) ? receiver : sender;
 
-            holder.message.setText(content);
+            ChatMessagePayload payload = ChatMessagePayload.fromStorageString(content);
+            CallSignalMessage signal = CallSignalMessage.fromPayload(payload);
+            if (signal != null) {
+                holder.message.setText(signal.toDisplayString(!incoming));
+            } else {
+                holder.message.setText(payload.getText());
+            }
             holder.address.setText(remoteAddress);
 
             ItemCache cache = ItemCache.getInstance(activity);

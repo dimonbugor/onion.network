@@ -260,6 +260,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.CallActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.DayNight" />
+        <activity
             android:name=".ui.PostActivity"
             android:configChanges="screenSize|screenLayout|orientation|uiMode"
             android:screenOrientation="portrait"

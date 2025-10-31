@@ -128,45 +128,26 @@ public class AuthorProfile {
 
     private void applyToJsonInternal(JSONObject target, boolean onlyWhenMissing) {
         try {
-            if (!TextUtils.isEmpty(name)) {
-                if (!onlyWhenMissing || isMissing(target, "author_name")) {
-                    target.put("author_name", name);
-                }
-                if (!onlyWhenMissing || isMissing(target, "name")) {
-                    target.put("name", name);
-                }
+            if (!TextUtils.isEmpty(name) && (!onlyWhenMissing || isMissing(target, "author_name"))) {
+                target.put("author_name", name);
             }
-            if (!TextUtils.isEmpty(thumbBase64)) {
-                if (!onlyWhenMissing || isMissing(target, "author_thumb")) {
-                    target.put("author_thumb", thumbBase64);
-                }
-                if (!onlyWhenMissing || isMissing(target, "thumb")) {
-                    target.put("thumb", thumbBase64);
-                }
+            if (!TextUtils.isEmpty(name) && (!onlyWhenMissing || isMissing(target, "name"))) {
+                target.put("name", name);
             }
-            if (!TextUtils.isEmpty(videoThumbBase64)) {
-                if (!onlyWhenMissing || isMissing(target, "author_video_thumb")) {
-                    target.put("author_video_thumb", videoThumbBase64);
-                }
-                if (!onlyWhenMissing || isMissing(target, "video_thumb")) {
-                    target.put("video_thumb", videoThumbBase64);
-                }
+            if (!TextUtils.isEmpty(thumbBase64) && (!onlyWhenMissing || isMissing(target, "author_thumb"))) {
+                target.put("author_thumb", thumbBase64);
             }
-            if (!TextUtils.isEmpty(videoBase64)) {
-                if (!onlyWhenMissing || isMissing(target, "author_video")) {
-                    target.put("author_video", videoBase64);
-                }
-                if (!onlyWhenMissing || isMissing(target, "video")) {
-                    target.put("video", videoBase64);
-                }
+            if (!TextUtils.isEmpty(thumbBase64) && (!onlyWhenMissing || isMissing(target, "thumb"))) {
+                target.put("thumb", thumbBase64);
             }
-            if (!TextUtils.isEmpty(videoUri)) {
-                if (!onlyWhenMissing || isMissing(target, "author_video_uri")) {
-                    target.put("author_video_uri", videoUri);
-                }
-                if (!onlyWhenMissing || isMissing(target, "video_uri")) {
-                    target.put("video_uri", videoUri);
-                }
+            if (!TextUtils.isEmpty(videoThumbBase64) && (!onlyWhenMissing || isMissing(target, "author_video_thumb"))) {
+                target.put("author_video_thumb", videoThumbBase64);
+            }
+            if (!TextUtils.isEmpty(videoBase64) && (!onlyWhenMissing || isMissing(target, "author_video"))) {
+                target.put("author_video", videoBase64);
+            }
+            if (!TextUtils.isEmpty(videoUri) && (!onlyWhenMissing || isMissing(target, "author_video_uri"))) {
+                target.put("author_video_uri", videoUri);
             }
             String rev = ensureRevision();
             if (!onlyWhenMissing || isMissing(target, "author_rev")) {

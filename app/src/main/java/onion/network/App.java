@@ -17,5 +17,6 @@ public class App extends Application {
         context = this;
         ThemeManager.init(this);
         NativeLoader.loadAll();
+        onion.network.call.CallManager.getInstance(this).initialize();
     }
 }

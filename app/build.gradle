@@ -22,6 +22,10 @@ android {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
         }
         signingConfig signingConfigs.debug
+
+        buildConfigField "String", "CALL_TURN_URLS", "\"turn:your-turn-service.onion:3478?transport=tcp,turns:your-turn-service.onion:5349?transport=tcp\""
+        buildConfigField "String", "CALL_TURN_USERNAME", "\"webrtc\""
+        buildConfigField "String", "CALL_TURN_PASSWORD", "\"supersecret\""
     }
 
     externalNativeBuild {
@@ -72,6 +76,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
     afterEvaluate {
@@ -100,6 +105,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:5.2.1'
 
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'io.github.webrtc-sdk:android:137.7151.04'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.13.2'

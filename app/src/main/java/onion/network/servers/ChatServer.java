@@ -24,6 +24,8 @@ import onion.network.helpers.ChatMediaStore;
 import onion.network.helpers.Ed25519Signature;
 import onion.network.settings.Settings;
 import onion.network.TorManager;
+import onion.network.call.CallManager;
+import onion.network.call.CallSignalMessage;
 import onion.network.models.ChatMessagePayload;
 
 public class ChatServer {
@@ -167,6 +169,12 @@ public class ChatServer {
         }
         final String storageContent = payload.toStorageString();
 
+        CallSignalMessage callSignal = CallSignalMessage.fromPayload(payload);
+        boolean skipStore = callSignal != null && callSignal.getType() == CallSignalMessage.SignalType.CANDIDATE;
+        if (callSignal != null) {
+            CallManager.getInstance(context).onIncomingSignal(sender, callSignal);
+        }
+
         final long ltime;
         try {
             ltime = Long.parseLong(time);
@@ -201,7 +209,7 @@ public class ChatServer {
 
         // handle message
 
-        if (acceptMessage) {
+        if (acceptMessage && !skipStore) {
             chatDatabase.addMessage(sender, receiver, storageContent, ltime, true, false);
             callOnMessageReceivedListeners();
             Notifier.getInstance(context).msg(sender);

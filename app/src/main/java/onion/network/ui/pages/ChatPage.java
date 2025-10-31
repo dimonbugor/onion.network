@@ -53,6 +53,7 @@ import java.util.TimerTask;
 
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.call.CallSignalMessage;
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.helpers.ChatMediaStore;
@@ -866,6 +867,8 @@ public class ChatPage extends BasePage
             boolean pending = cursor.getInt(cursor.getColumnIndex("outgoing")) > 0;
             boolean tx = sender.equals(torManager.getID());
 
+            onion.network.call.CallSignalMessage callSignal = onion.network.call.CallSignalMessage.fromPayload(payload);
+
             if (sender.equals(torManager.getID())) sender = "You";
 
             if (tx) {
@@ -922,8 +925,13 @@ public class ChatPage extends BasePage
             holder.time.setTextColor(color);
             holder.status.setTextColor(color);
 
-            boolean attachmentVisible = bindAttachment(holder, payload, id);
-            String displayMessage = buildDisplayMessage(payload);
+            boolean attachmentVisible = callSignal == null && bindAttachment(holder, payload, id);
+            String displayMessage;
+            if (callSignal != null) {
+                displayMessage = callSignal.toDisplayString(tx);
+            } else {
+                displayMessage = buildDisplayMessage(payload);
+            }
             if (TextUtils.isEmpty(displayMessage)) {
                 if (attachmentVisible) {
                     holder.message.setVisibility(View.GONE);

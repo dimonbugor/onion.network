@@ -159,6 +159,17 @@
     <string name="pref_title_color_preset">Color preset</string>
     <string name="pref_title_page_action_fab_position">Page action button position</string>
 
+    <string name="call_action_accept">Accept</string>
+    <string name="call_action_hangup">Hang Up</string>
+    <string name="call_status_idle">Ready</string>
+    <string name="call_status_calling">Calling…</string>
+    <string name="call_status_ringing">Incoming call…</string>
+    <string name="call_status_connecting">Connecting…</string>
+    <string name="call_status_connected">Connected</string>
+    <string name="call_status_ended">Call ended</string>
+    <string name="call_status_failed">Call failed</string>
+    <string name="call_unknown_user">Unknown</string>
+
     <string name="bridge_captcha_title">Tor bridge verification</string>
     <string name="bridge_captcha_message">We need to solve a short captcha to download new bridges. Enter the text from the image below.</string>
     <string name="bridge_captcha_input_hint">Captcha answer</string>

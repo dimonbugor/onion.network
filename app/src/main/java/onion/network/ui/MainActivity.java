@@ -101,6 +101,7 @@ import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.databases.RequestDatabase;
 import onion.network.helpers.DialogHelper;
+import onion.network.ui.CallActivity;
 import onion.network.helpers.Utils;
 import onion.network.models.ItemResult;
 import onion.network.ui.pages.BasePage;
@@ -1347,7 +1348,16 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_call) {
-            snack("Available soon");
+            if (TextUtils.isEmpty(address)) {
+                snack("Select a friend first");
+                return true;
+            }
+            PermissionHelper.runWithPermissions(
+                    this,
+                    EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
+                    () -> CallActivity.startOutgoing(this, address),
+                    () -> snack("Microphone permission required"));
+            return true;
         }
         if (id == R.id.action_blog_title) {
             BasePage page = currentPage();
