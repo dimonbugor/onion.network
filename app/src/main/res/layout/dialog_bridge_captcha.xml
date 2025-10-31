@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/bridgeCaptchaMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bridge_captcha_message"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:paddingBottom="12dp" />
+
+    <ImageView
+        android:id="@+id/bridgeCaptchaImage"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/bridge_captcha_content_description"
+        android:scaleType="fitCenter"
+        android:background="@android:color/darker_gray"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/bridgeCaptchaError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?android:attr/textColorSecondary"
+        android:visibility="gone"
+        android:paddingTop="8dp" />
+
+    <EditText
+        android:id="@+id/bridgeCaptchaInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/bridge_captcha_input_hint"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp" />
+
+    <ProgressBar
+        android:id="@+id/bridgeCaptchaProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
+
+</LinearLayout>

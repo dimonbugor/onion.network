@@ -10,12 +10,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import onion.network.helpers.Ed25519Signature;
 import onion.network.helpers.Utils;
 import onion.network.servers.Server;
-import onion.network.tor.BridgeChecker;
 import onion.network.tor.TorBridgeParser;
 
 public class TorManager {
@@ -26,6 +26,7 @@ public class TorManager {
     private volatile String domain = "";
     private String status = "";
     private volatile boolean ready = false;
+    private volatile List<String> bridgeOverride = null;
 
     private native boolean nativeStartTor(String torrcPath, String dataDir);
     private final Object portLock = new Object();
@@ -92,7 +93,19 @@ public class TorManager {
         File appTorServiceDir = new File(context.getFilesDir().getParentFile(), "app_TorService");
         File torrc = new File(appTorServiceDir, "torrc-defaults");
 
-        List<String> bridgeConfigs = TorBridgeParser.getBridgeConfigs();
+        List<String> bridgeConfigs;
+        List<String> overrideSnapshot = null;
+        synchronized (this) {
+            if (bridgeOverride != null && !bridgeOverride.isEmpty()) {
+                overrideSnapshot = new ArrayList<>(bridgeOverride);
+                bridgeOverride = null;
+            }
+        }
+        if (overrideSnapshot != null) {
+            bridgeConfigs = overrideSnapshot;
+        } else {
+            bridgeConfigs = TorBridgeParser.getBridgeConfigs(context);
+        }
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
             writer.println("Log notice stdout");
@@ -123,42 +136,29 @@ public class TorManager {
 
                 Set<String> clients = new HashSet<>();
                 for (String bridge : bridgeConfigs) {
-                    if (bridge.contains("obfs4")) {
-                        writer.println(bridge);
+                    if (bridge == null || bridge.isEmpty()) {
+                        continue;
+                    }
+
+                    String normalized = bridge.toLowerCase(Locale.US);
+                    if (normalized.contains("bridge conjure") || normalized.contains(" conjure ")) {
+                        Log.i("TorManager", "Skipping conjure bridge: " + bridge);
+                        continue;
+                    }
+
+                    writer.println(bridge);
+
+                    if (normalized.contains("bridge obfs4") || normalized.contains(" obfs4 ")) {
                         clients.add("obfs4");
                     }
-                    if (bridge.contains("webtunnel")) {
-                        writer.println(bridge);
+                    if (normalized.contains("bridge webtunnel") || normalized.contains(" webtunnel ")) {
                         clients.add("webtunnel");
                     }
-                    if (bridge.contains("snowflake")) {
-                        boolean tcpOk = BridgeChecker.isReachableTCP(bridge, 2000);
-                        boolean udpOk = BridgeChecker.isLikelyUdpOpen(bridge, 1500);
-                        if (tcpOk && udpOk) {
-                            writer.println(bridge);
-                            clients.add("snowflake");
-                        } else {
-                            Log.w("BridgeCheck", "❌ Пропущено " + bridge);
-                        }
+                    if (normalized.contains("bridge snowflake") || normalized.contains(" snowflake ")) {
+                        clients.add("snowflake");
                     }
-                    if (bridge.contains("conjure")) {
-                        // conjure перевіримо лише TCP-доступність
-                        if (BridgeChecker.isReachableTCP(bridge, 2000)) {
-                            writer.println(bridge);
-                            clients.add("conjure");
-                        } else {
-                            Log.w("BridgeCheck", "❌ Пропущено conjure: " + bridge);
-                        }
-                    }
-                    if (bridge.contains("meek")) {
-                        boolean tcpOk = BridgeChecker.isReachableTCP(bridge, 2000);
-                        boolean udpOk = BridgeChecker.isLikelyUdpOpen(bridge, 1500);
-                        if (tcpOk && udpOk) {
-                            writer.println(bridge);
-                            clients.add("meek");
-                        } else {
-                            Log.w("BridgeCheck", "❌ Пропущено " + bridge);
-                        }
+                    if (normalized.contains("bridge meek") || normalized.contains(" meek_lite ") || normalized.contains(" meek ")) {
+                        clients.add("meek");
                     }
                 }
                 writer.println();
@@ -175,9 +175,6 @@ public class TorManager {
                 if (clients.contains("meek")) {
                     writer.println("ClientTransportPlugin meek exec " + libMeekPath);
                 }
-                if (clients.contains("conjure")) {
-                    writer.println("ClientTransportPlugin conjure exec " + libConjurePath);
-                }
                 writer.println();
             }
         }
@@ -188,6 +185,32 @@ public class TorManager {
     public void stopTor() {
         new Thread(() -> {
             nativeStopTor();
+        }).start();
+    }
+
+    public void applyBridgeOverrideAndRestart(List<String> bridges) {
+        if (bridges == null || bridges.isEmpty()) {
+            return;
+        }
+        synchronized (this) {
+            bridgeOverride = new ArrayList<>(bridges);
+        }
+        new Thread(() -> {
+            try {
+                nativeStopTor();
+            } catch (Exception e) {
+                log("Error stopping Tor: " + e.getMessage());
+            }
+            ready = false;
+            socksPort = -1;
+
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            startTorServer();
         }).start();
     }
 

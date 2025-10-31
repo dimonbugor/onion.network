@@ -158,6 +158,16 @@
     <string name="theme_customization_category">Interface</string>
     <string name="pref_title_color_preset">Color preset</string>
     <string name="pref_title_page_action_fab_position">Page action button position</string>
+
+    <string name="bridge_captcha_title">Tor bridge verification</string>
+    <string name="bridge_captcha_message">We need to solve a short captcha to download new bridges. Enter the text from the image below.</string>
+    <string name="bridge_captcha_input_hint">Captcha answer</string>
+    <string name="bridge_captcha_submit">Submit</string>
+    <string name="bridge_captcha_cancel">Cancel</string>
+    <string name="bridge_captcha_error_generic">Failed to verify captcha. Please try again.</string>
+    <string name="bridge_captcha_error_network">Could not contact BridgeDB. Check your connection and retry.</string>
+    <string name="bridge_captcha_success">New bridges downloaded. Restarting Tor…</string>
+    <string name="bridge_captcha_content_description">Captcha challenge image</string>
     <string name="pref_title_menu_button_position">Menu button position</string>
     <string name="pref_title_friend_card_style">Friend list layout</string>
     <string name="pref_title_chat_composer_style">Message composer layout</string>

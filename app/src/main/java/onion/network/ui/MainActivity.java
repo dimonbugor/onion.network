@@ -9,6 +9,7 @@ import static onion.network.helpers.Const.REQUEST_TAKE_VIDEO;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,6 +25,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
@@ -37,9 +39,11 @@ import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,6 +73,7 @@ import com.google.zxing.common.HybridBinarizer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -114,8 +119,7 @@ import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.settings.Settings;
-import android.content.ClipData;
-import android.content.ClipboardManager;
+import onion.network.tor.TorBridgeParser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -148,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> qrLauncher;
     private ActivityResultLauncher<Intent> mediaPickerLauncher;
     private ActivityResultLauncher<Intent> cameraForBlogLauncher;
+    private AlertDialog bridgeCaptchaDialog;
+    private TorBridgeParser.CaptchaChallenge activeCaptchaChallenge;
+    private final TorBridgeParser.CaptchaListener bridgeCaptchaListener = challenge -> {
+        if (challenge == null || challenge.image == null || isFinishing()) {
+            return;
+        }
+        runOnUiThread(() -> showBridgeCaptchaDialog(challenge, null));
+    };
 
     public static void addFriendItem(final Context context, String a, String name) {
 
@@ -255,6 +267,12 @@ public class MainActivity extends AppCompatActivity {
         appliedTheme = ThemeManager.init(this).getTheme();
 
         setContentView(R.layout.activity_main);
+
+        TorBridgeParser.addCaptchaListener(bridgeCaptchaListener);
+        TorBridgeParser.CaptchaChallenge pending = TorBridgeParser.getPendingCaptcha();
+        if (pending != null && pending.image != null && pending.image.length > 0) {
+            showBridgeCaptchaDialog(pending, null);
+        }
 
         DeepLinkParser.Result dl = DeepLinkParser.parse(getIntent());
         address = dl.address == null ? "" : dl.address;
@@ -1623,7 +1641,153 @@ public class MainActivity extends AppCompatActivity {
         if (preferences != null && preferenceListener != null) {
             preferences.unregisterOnSharedPreferenceChangeListener(preferenceListener);
         }
+        TorBridgeParser.removeCaptchaListener(bridgeCaptchaListener);
+        if (bridgeCaptchaDialog != null) {
+            bridgeCaptchaDialog.dismiss();
+            bridgeCaptchaDialog = null;
+        }
         TorManager.getInstance(this).stopTor();
+    }
+
+    private void showBridgeCaptchaDialog(TorBridgeParser.CaptchaChallenge challenge, @Nullable String errorMessage) {
+        if (isFinishing() || challenge == null || challenge.image == null || challenge.image.length == 0) {
+            return;
+        }
+        activeCaptchaChallenge = challenge;
+
+        if (bridgeCaptchaDialog != null && bridgeCaptchaDialog.isShowing()) {
+            ImageView imageView = bridgeCaptchaDialog.findViewById(R.id.bridgeCaptchaImage);
+            ProgressBar progressBar = bridgeCaptchaDialog.findViewById(R.id.bridgeCaptchaProgress);
+            TextView errorView = bridgeCaptchaDialog.findViewById(R.id.bridgeCaptchaError);
+            EditText inputField = bridgeCaptchaDialog.findViewById(R.id.bridgeCaptchaInput);
+
+            updateCaptchaImage(imageView, challenge.image);
+            if (progressBar != null) {
+                progressBar.setVisibility(View.GONE);
+            }
+            if (inputField != null) {
+                inputField.setText("");
+            }
+            if (errorView != null) {
+                if (!TextUtils.isEmpty(errorMessage)) {
+                    errorView.setText(errorMessage);
+                    errorView.setVisibility(View.VISIBLE);
+                } else {
+                    errorView.setVisibility(View.GONE);
+                }
+            }
+            Button submitButton = bridgeCaptchaDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            if (submitButton != null) {
+                submitButton.setEnabled(true);
+            }
+            return;
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_bridge_captcha, null);
+        final ImageView captchaImage = dialogView.findViewById(R.id.bridgeCaptchaImage);
+        final EditText inputField = dialogView.findViewById(R.id.bridgeCaptchaInput);
+        final ProgressBar progressBar = dialogView.findViewById(R.id.bridgeCaptchaProgress);
+        final TextView errorView = dialogView.findViewById(R.id.bridgeCaptchaError);
+
+        updateCaptchaImage(captchaImage, challenge.image);
+        if (!TextUtils.isEmpty(errorMessage)) {
+            errorView.setText(errorMessage);
+            errorView.setVisibility(View.VISIBLE);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.bridge_captcha_title)
+                .setView(dialogView)
+                .setNegativeButton(R.string.bridge_captcha_cancel, (d, which) -> d.dismiss())
+                .setPositiveButton(R.string.bridge_captcha_submit, null)
+                .create();
+
+        dialog.setOnShowListener(dlg -> {
+            Button submitButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            submitButton.setOnClickListener(v ->
+                    handleCaptchaSubmit(inputField, progressBar, errorView, submitButton));
+        });
+        dialog.setOnDismissListener(d -> bridgeCaptchaDialog = null);
+        bridgeCaptchaDialog = dialog;
+        dialog.show();
+    }
+
+    private void handleCaptchaSubmit(EditText inputField,
+                                     ProgressBar progressBar,
+                                     TextView errorView,
+                                     Button submitButton) {
+        String answer = inputField == null ? "" : inputField.getText().toString().trim();
+        if (TextUtils.isEmpty(answer)) {
+            if (errorView != null) {
+                errorView.setText(R.string.bridge_captcha_error_generic);
+                errorView.setVisibility(View.VISIBLE);
+            }
+            return;
+        }
+
+        if (progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+        if (submitButton != null) {
+            submitButton.setEnabled(false);
+        }
+        if (errorView != null) {
+            errorView.setVisibility(View.GONE);
+        }
+
+        TorBridgeParser.solveCaptcha(
+                getApplicationContext(),
+                answer,
+                new TorBridgeParser.CaptchaSolveCallback() {
+                    @Override
+                    public void onSuccess(List<String> bridges) {
+                        runOnUiThread(() -> {
+                            if (bridgeCaptchaDialog != null) {
+                                bridgeCaptchaDialog.dismiss();
+                            }
+                            Toast.makeText(MainActivity.this, R.string.bridge_captcha_success, Toast.LENGTH_LONG).show();
+                            TorManager.getInstance(MainActivity.this).applyBridgeOverrideAndRestart(bridges);
+                        });
+                    }
+
+                    @Override
+                    public void onNewChallenge(TorBridgeParser.CaptchaChallenge challenge, String message) {
+                        runOnUiThread(() -> showBridgeCaptchaDialog(challenge, message));
+                    }
+
+                    @Override
+                    public void onFailure(Exception exception) {
+                        runOnUiThread(() -> {
+                            if (progressBar != null) {
+                                progressBar.setVisibility(View.GONE);
+                            }
+                            if (submitButton != null) {
+                                submitButton.setEnabled(true);
+                            }
+                            if (errorView != null) {
+                                if (exception instanceof IOException) {
+                                    errorView.setText(R.string.bridge_captcha_error_network);
+                                } else {
+                                    errorView.setText(R.string.bridge_captcha_error_generic);
+                                }
+                                errorView.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+                }
+        );
+    }
+
+    private void updateCaptchaImage(ImageView imageView, byte[] data) {
+        if (imageView == null) {
+            return;
+        }
+        if (data == null || data.length == 0) {
+            imageView.setImageDrawable(null);
+            return;
+        }
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        imageView.setImageBitmap(bitmap);
     }
 
     public void lightbox(Bitmap bitmap) {
