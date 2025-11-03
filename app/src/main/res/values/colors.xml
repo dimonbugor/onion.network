@@ -1,42 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="overlay">#CC000000</color>
-    <color name="colorAccentAlpha">#6603A9F4</color>
-    <color name="colorPrimaryContainerAlpha">#3328304B</color>
-    <color name="colorBackgroundAlpha_80">#CC23262A</color>
-    <color name="colorBackgroundAlpha">#4D6A6C6D</color>
+    <!-- Dark Theme Alpha Colors -->
+    <color name="dark_overlay">#B3071025</color>
+    <color name="dark_colorAccentAlpha">#665AF2FF</color>
+    <color name="dark_colorPrimaryContainerAlpha">#333B4C7F</color>
+    <color name="dark_colorBackgroundAlpha_80">#CC10192C</color>
+    <color name="dark_colorBackgroundAlpha">#4010192C</color>
+
+    <!-- Light Theme Alpha Colors -->
+    <color name="light_overlay">#33A0C6FF</color>
+    <color name="light_colorAccentAlpha">#664F6CFF</color>
+    <color name="light_colorPrimaryContainerAlpha">#33F2F7FF</color>
+    <color name="light_colorBackgroundAlpha_80">#CCF5FAFF</color>
+    <color name="light_colorBackgroundAlpha">#33FFFFFF</color>
+
+    <!-- Legacy colors for backward compatibility - DO NOT USE IN NEW CODE -->
+    <color name="overlay">@color/dark_overlay</color>
+    <color name="colorAccentAlpha">@color/dark_colorAccentAlpha</color>
+    <color name="colorPrimaryContainerAlpha">@color/dark_colorPrimaryContainerAlpha</color>
+    <color name="colorBackgroundAlpha_80">@color/dark_colorBackgroundAlpha_80</color>
+    <color name="colorBackgroundAlpha">@color/dark_colorBackgroundAlpha</color>
 
     <!-- Dark -->
-    <color name="dark_colorPrimary">#23262A</color>
-    <color name="dark_colorOnPrimary">#BFC7E6</color>
-    <color name="dark_colorPrimaryContainer">#28304B</color>
-    <color name="dark_colorOnPrimaryContainer">#FFFFFF</color>
-    <color name="dark_colorSecondary">#3A47A0</color>
-    <color name="dark_colorOnSecondary">#B0C5F0</color>
-    <color name="dark_colorSurface">#23262A</color>
-    <color name="dark_colorOnSurface">#BFC7E6</color>
-    <color name="dark_colorBackground">#23262A</color>
-    <color name="dark_colorOnBackground">#FFFFFF</color>
-    <color name="dark_colorAccent">#0277BD</color>
-    <color name="dark_colorDialogBackgroundAlpha">#CC212424</color>
-    <color name="dark_white_50">#80FFFFFF</color>
-    <color name="dark_white_80">#CCFFFFFF</color>
+    <color name="dark_colorPrimary">#12182E</color>
+    <color name="dark_colorOnPrimary">#E0E7FF</color>
+    <color name="dark_colorPrimaryContainer">#1E2746</color>
+    <color name="dark_colorOnPrimaryContainer">#F6F8FF</color>
+    <color name="dark_colorSecondary">#8B7CFF</color>
+    <color name="dark_colorOnSecondary">#F3F4FF</color>
+    <color name="dark_colorSurface">#141B32</color>
+    <color name="dark_colorOnSurface">#D5DBFF</color>
+    <color name="dark_colorBackground">#090F21</color>
+    <color name="dark_colorOnBackground">#EEF2FF</color>
+    <color name="dark_colorAccent">#5AF2FF</color>
+    <color name="dark_colorDialogBackgroundAlpha">#CC0E162A</color>
+    <color name="dark_white_50">#80E6F5FF</color>
+    <color name="dark_white_80">#CCF0F6FF</color>
 
     <!-- Light -->
-    <color name="light_colorPrimary">#FFFFFF</color>
-    <color name="light_colorOnPrimary">#23262A</color>
-    <color name="light_colorPrimaryContainer">#F2F2F7</color>
-    <color name="light_colorOnPrimaryContainer">#000000</color>
-    <color name="light_colorSecondary">#3A47A0</color>
+    <color name="light_colorPrimary">#F6FAFF</color>
+    <color name="light_colorOnPrimary">#1F2942</color>
+    <color name="light_colorPrimaryContainer">#FFFFFF</color>
+    <color name="light_colorOnPrimaryContainer">#32446A</color>
+    <color name="light_colorSecondary">#6F7BFF</color>
     <color name="light_colorOnSecondary">#FFFFFF</color>
     <color name="light_colorSurface">#FFFFFF</color>
-    <color name="light_colorOnSurface">#23262A</color>
-    <color name="light_colorBackground">#F2F2F7</color>
-    <color name="light_colorOnBackground">#000000</color>
-    <color name="light_colorAccent">#0277BD</color>
-    <color name="light_colorDialogBackgroundAlpha">#CCC5D7D7</color>
-    <color name="light_white_50">#80000000</color>
-    <color name="light_white_80">#CC000000</color>
+    <color name="light_colorOnSurface">#2D3E5F</color>
+    <color name="light_colorBackground">#EEF2F6</color>
+    <color name="light_colorOnBackground">#1F2942</color>
+    <color name="light_colorAccent">#5BC4FF</color>
+    <color name="light_colorDialogBackgroundAlpha">#F0F6FF</color>
+    <color name="light_white_50">#80FFFFFF</color>
+    <color name="light_white_80">#CCFFFFFF</color>
 
     <!-- UI custom presets -->
     <color name="ui_preset_midnight_accent">#6C63FF</color>
@@ -50,4 +65,6 @@
     <color name="ui_preset_sunset_accent">#FF7043</color>
     <color name="ui_preset_sunset_surface">#3B1E24</color>
     <color name="ui_preset_sunset_on_surface">#FFBE88</color>
+
+    <color name="call_hangup">#FF4A4A</color>
 </resources>

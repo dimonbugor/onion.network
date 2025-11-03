@@ -145,33 +145,41 @@ public class ChatServer {
             return false;
         }
 
-        ChatMessagePayload payload = ChatMessagePayload.fromStorageString(decodedPayload);
-        if (payload.getType() != ChatMessagePayload.Type.TEXT && payload.isInline()) {
-            String dataStr = payload.getData();
-            if (!TextUtils.isEmpty(dataStr)) {
-                byte[] rawData = Ed25519Signature.base64Decode(dataStr);
-                if (rawData == null) {
-                    log("unable to decode media payload");
-                    return false;
-                }
-                if (ChatMediaStore.exceedsLimit(rawData.length)) {
-                    log("media payload exceeds allowed size");
-                    return false;
-                }
-                try {
-                    String path = ChatMediaStore.saveIncoming(context, payload.getType(), rawData, payload.getMime());
-                    payload.setStorage(ChatMessagePayload.Storage.FILE).setData(path);
-                } catch (IOException ex) {
-                    log("failed to store media: " + ex.getMessage());
-                    return false;
+        CallSignalMessage callSignal = CallSignalMessage.fromTransportString(decodedPayload);
+        ChatMessagePayload payload;
+        if (callSignal != null) {
+            payload = ChatMessagePayload.forText(callSignal.toDisplayString(false))
+                    .setMime("application/json")
+                    .setData(decodedPayload);
+        } else {
+            payload = ChatMessagePayload.fromStorageString(decodedPayload);
+            if (payload.getType() != ChatMessagePayload.Type.TEXT && payload.isInline()) {
+                String dataStr = payload.getData();
+                if (!TextUtils.isEmpty(dataStr)) {
+                    byte[] rawData = Ed25519Signature.base64Decode(dataStr);
+                    if (rawData == null) {
+                        log("unable to decode media payload");
+                        return false;
+                    }
+                    if (ChatMediaStore.exceedsLimit(rawData.length)) {
+                        log("media payload exceeds allowed size");
+                        return false;
+                    }
+                    try {
+                        String path = ChatMediaStore.saveIncoming(context, payload.getType(), rawData, payload.getMime());
+                        payload.setStorage(ChatMessagePayload.Storage.FILE).setData(path);
+                    } catch (IOException ex) {
+                        log("failed to store media: " + ex.getMessage());
+                        return false;
+                    }
                 }
             }
         }
         final String storageContent = payload.toStorageString();
 
-        CallSignalMessage callSignal = CallSignalMessage.fromPayload(payload);
         boolean skipStore = callSignal != null && callSignal.getType() == CallSignalMessage.SignalType.CANDIDATE;
         if (callSignal != null) {
+            log("call signal " + callSignal.getType() + " from " + sender);
             CallManager.getInstance(context).onIncomingSignal(sender, callSignal);
         }
 

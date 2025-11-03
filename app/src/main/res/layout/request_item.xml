@@ -19,6 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
+            android:textColor="?attr/colorOnBackground"
             android:text="aifjnelsdfjpeuvb"
             android:fontFamily="@font/geologica_600"
             android:textFontWeight="600"
@@ -29,6 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
+            android:textColor="?attr/colorOnBackground"
             android:text="aifjnelsdfjpeuvb"
             android:fontFamily="@font/geologica_400"
             android:textAppearance="?android:attr/textAppearanceSmall" />

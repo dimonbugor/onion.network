@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/bridge_captcha_message"
+        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:paddingBottom="12dp" />
 
@@ -27,7 +28,7 @@
         android:id="@+id/bridgeCaptchaError"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="?attr/colorOnBackground"
         android:visibility="gone"
         android:paddingTop="8dp" />
 

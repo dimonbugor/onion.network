@@ -23,7 +23,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="@dimen/dp8"
-            android:text="Messaging disabled on remote device." />
+            android:textColor="?attr/colorOnBackground"
+            android:text="@string/messaging_disabled_on_remote_device" />
 
         <View
             android:layout_width="match_parent"
@@ -41,7 +42,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="@dimen/dp8"
-            android:text="Add as friend or change settings to receive messages." />
+            android:textColor="?attr/colorOnBackground"
+            android:text="@string/add_as_friend_or_change_settings_to_receive_messages" />
 
         <View
             android:layout_width="match_parent"
@@ -59,7 +61,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="@dimen/dp8"
-            android:text="Instant messenger disabled. Change settings to receive messages." />
+            android:textColor="?attr/colorOnBackground"
+            android:text="@string/instant_messenger_disabled_change_settings_to_receive_messages" />
 
         <View
             android:layout_width="match_parent"
@@ -89,6 +92,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingVertical="@dimen/dp8"
+        android:paddingHorizontal="@dimen/dp12"
+        android:background="@drawable/glass_pill"
         android:visibility="gone">
 
         <ImageView
@@ -96,7 +101,7 @@
             android:layout_width="@dimen/dp24"
             android:layout_height="@dimen/dp24"
             android:src="@drawable/ic_insert_photo_white_24dp"
-            app:tint="?attr/white_80" />
+            app:tint="?attr/colorAccent" />
 
         <TextView
             android:id="@+id/attachmentPreviewText"
@@ -112,10 +117,10 @@
             android:id="@+id/attachmentRemove"
             android:layout_width="@dimen/dp32"
             android:layout_height="@dimen/dp32"
-            android:background="?selectableItemBackground"
+            android:background="@drawable/glass_chip_circle"
             android:contentDescription="@string/dialog_button_delete"
             android:src="@drawable/ic_close"
-            app:tint="?attr/white_80" />
+            app:tint="?attr/colorAccent" />
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -139,7 +144,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:background="@drawable/edit_rounded_background"
+                android:background="@drawable/glass_input_background"
                 android:imeOptions="flagNoExtractUi|actionSend|flagNoEnterAction"
                 android:inputType="textShortMessage|textAutoCorrect|textCapSentences|textMultiLine"
                 android:maxLength="1000"
@@ -156,10 +161,10 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginEnd="@dimen/dp8"
                 android:layout_toStartOf="@id/micro"
-                android:background="?selectableItemBackground"
+                android:background="@android:color/transparent"
                 android:contentDescription="Attach"
                 android:src="@drawable/ic_insert_photo_white_24dp"
-                app:tint="?attr/white_80" />
+                app:tint="?attr/colorAccent" />
 
             <ImageButton
                 android:id="@+id/micro"
@@ -169,10 +174,10 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginEnd="@dimen/dp8"
                 android:layout_toStartOf="@+id/send"
-                android:background="?selectableItemBackground"
+                android:background="@android:color/transparent"
                 android:contentDescription="Micro"
                 android:src="@drawable/ic_mic"
-                app:tint="?attr/white_80" />
+                app:tint="?attr/colorAccent" />
 
             <ImageButton
                 android:id="@+id/send"
@@ -181,10 +186,10 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
-                android:background="?selectableItemBackground"
+                android:background="@android:color/transparent"
                 android:contentDescription="Send"
                 android:src="@drawable/ic_send_black_24dp"
-                app:tint="?attr/white_80" />
+                app:tint="?attr/colorAccent" />
 
         </RelativeLayout>
     </com.google.android.material.textfield.TextInputLayout>

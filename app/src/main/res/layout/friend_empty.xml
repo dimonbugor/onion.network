@@ -6,9 +6,10 @@
         android:gravity="center_horizontal|top"
         android:padding="@dimen/dp32"
         android:layout_width="match_parent"
+        android:textColor="?attr/colorOnBackground"
         android:layout_height="match_parent"
 
-        android:text="No friends yet"
+    android:text="@string/no_friends_yet"
         android:layout_gravity="center_horizontal|top" />
 
 </FrameLayout>

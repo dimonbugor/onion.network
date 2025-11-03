@@ -68,7 +68,7 @@ public class SettingsActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(0, 0);
 
-        Snackbar.make(findViewById(R.id.content), "All settings reset", Snackbar.LENGTH_SHORT).show();
+    Snackbar.make(findViewById(R.id.content), getString(R.string.all_settings_reset), Snackbar.LENGTH_SHORT).show();
 
     }
 

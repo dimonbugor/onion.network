@@ -267,7 +267,10 @@ public class ChatMessagePayload {
             case AUDIO:
                 return "[Audio]";
             default:
-                return "";
+                if (text != null && text.contains("\"call\"")) {
+                    return "[Call]";
+                }
+                return "[Attachment]";
         }
     }
 

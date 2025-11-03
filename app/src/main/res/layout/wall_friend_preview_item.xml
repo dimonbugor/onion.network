@@ -13,7 +13,8 @@
         android:layout_height="@dimen/dp200"
         android:layout_gravity="center_vertical"
         android:layout_marginBottom="@dimen/dp4"
-        android:backgroundTint="@color/colorBackgroundAlpha"
+        android:background="?attr/liquidCardBackground"
+        app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="@dimen/dp16"
         app:cardElevation="0dp"
         app:cardUseCompatPadding="false"
@@ -56,16 +57,17 @@
                     android:layout_width="@dimen/dp32"
                     android:layout_height="@dimen/dp32"
                     android:layout_marginEnd="@dimen/dp8"
+                    android:background="@drawable/glass_chip_circle"
+                    app:cardBackgroundColor="@android:color/transparent"
                     app:cardCornerRadius="@dimen/dp48"
                     app:cardUseCompatPadding="false"
-                    app:strokeColor="@color/colorAccentAlpha"
-                    app:strokeWidth="1dp">
+                    app:strokeColor="@android:color/transparent">
 
                     <onion.network.ui.views.AvatarView
                         android:id="@+id/avatar"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@color/colorBackgroundAlpha"
+                        android:background="?attr/colorPrimaryContainer"
                         tools:src="@mipmap/ic_launcher" />
                 </com.google.android.material.card.MaterialCardView>
 
@@ -83,6 +85,7 @@
                         android:maxLines="1"
                         android:textAppearance="@style/TextAppearance.AppCompat.Small"
                         android:textStyle="bold"
+                        android:textColor="?attr/colorOnBackground"
                         tools:text="Alice" />
 
                     <TextView
@@ -92,6 +95,7 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                        android:textColor="?attr/colorAccent"
                         tools:text="12:45 2024-04-08" />
                 </LinearLayout>
             </LinearLayout>
@@ -106,6 +110,7 @@
                 android:padding="@dimen/dp8"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textColor="?attr/colorOnBackground"
                 tools:text="Preview of the latest friend post goes here with a couple of lines." />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/dp8"
-    android:backgroundTint="@color/colorBackgroundAlpha"
+    android:background="?attr/liquidCardBackground"
+    app:cardBackgroundColor="@android:color/transparent"
     app:cardCornerRadius="@dimen/dp16"
     app:cardElevation="0dp"
     app:cardUseCompatPadding="false"
@@ -26,14 +27,15 @@
                 android:layout_marginStart="@dimen/dp16"
                 android:layout_marginVertical="@dimen/dp8"
                 app:cardCornerRadius="@dimen/dp48"
-                app:strokeColor="@color/colorAccentAlpha"
-                app:strokeWidth="1dp">
+                android:background="@drawable/glass_chip_circle"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:strokeColor="@android:color/transparent">
 
                 <onion.network.ui.views.AvatarView
                     android:id="@+id/thumb"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@color/colorBackgroundAlpha" />
+                    android:background="?attr/colorPrimaryContainer" />
             </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
@@ -62,7 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:textColor="?attr/white_80"
+                android:textColor="?attr/colorAccent"
                 android:singleLine="true"
                 android:text="aifjnelsdfjpeuvb" />
         </LinearLayout>

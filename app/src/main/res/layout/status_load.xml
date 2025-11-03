@@ -20,10 +20,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:textColor="?attr/colorOnBackground"
             android:layout_marginLeft="@dimen/dp24"
             android:layout_marginRight="@dimen/dp24"
             android:fontFamily="@font/geologica_400"
-            android:text="Loading..."
+            android:text="@string/loading"
              />
 
     </LinearLayout>

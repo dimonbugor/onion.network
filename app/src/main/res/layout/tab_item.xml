@@ -9,15 +9,16 @@
         android:id="@+id/itemFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_menu"
+        android:src="@drawable/ic_menu_neon"
         android:visibility="visible"
-        app:tint="?attr/colorOnBackground"
+        app:tint="?attr/colorAccent"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-        app:backgroundTint="?attr/colorPrimaryContainer"
+        app:backgroundTint="?attr/colorAccent"
         app:fabCustomSize="@dimen/dp36" />
 
     <TextView
         android:id="@+id/badge"
+        android:textColor="?attr/colorOnBackground"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

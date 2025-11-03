@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base milky glass body -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#66FFFFFF"
+                android:centerColor="#59EEF7FF"
+                android:endColor="#33FFFFFF" />
+            <corners android:radius="18dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#40A4D6FF" />
+        </shape>
+    </item>
+
+    <!-- Top highlight -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="180"
+                android:startColor="#B3FFFFFF"
+                android:endColor="#00FFFFFF" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+
+    <!-- Bottom tint to anchor the card -->
+    <item android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#005BC4FF"
+                android:endColor="#1A5BC4FF" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+
+    <!-- Inner sheen -->
+    <item android:top="6dp" android:bottom="6dp" android:left="6dp" android:right="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#14FFFFFF" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</layer-list>

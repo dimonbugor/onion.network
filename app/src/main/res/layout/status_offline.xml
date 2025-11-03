@@ -11,7 +11,8 @@
         android:layout_gravity="center_horizontal|top"
         android:gravity="center_horizontal|top"
         android:padding="@dimen/dp4"
-        android:text="Offline"
+        android:textColor="?attr/colorOnBackground"
+        android:text="@string/offline"
         android:fontFamily="@font/geologica_400"
          />
 
@@ -23,7 +24,8 @@
         android:gravity="center"
         android:padding="@dimen/dp4"
         android:fontFamily="@font/geologica_400"
-        android:text="Failed to reach this user's device.\nPlease try again later."
+        android:textColor="?attr/colorOnBackground"
+        android:text="@string/failed_to_reach_this_user_s_device_nplease_try_again_later"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </LinearLayout>

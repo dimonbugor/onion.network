@@ -308,9 +308,8 @@ public class ProfilePage extends BasePage {
                     v.findViewById(R.id.edit).setVisibility(View.GONE);
                     TextView keyview = v.findViewById(R.id.key);
                     TextView valview = v.findViewById(R.id.val);
-                    keyview.setText("ID");
+                    keyview.setText(context.getString(R.string.id));
                     valview.setText(activity.getID());
-                    valview.setTextColor(getResources().getColor(android.R.color.white));
                     v.setClickable(false);
                     contentView.addView(v);
                 }

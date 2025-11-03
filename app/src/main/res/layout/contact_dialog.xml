@@ -10,6 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Anonymous"
+        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
@@ -18,6 +19,7 @@
         android:layout_height="wrap_content"
         android:paddingVertical="@dimen/dp8"
         android:fontFamily="@font/geologica_400"
+        android:textColor="?attr/colorOnBackground"
         android:text="sofubzehndjfqpyl" />
 
     <TextView
@@ -26,6 +28,7 @@
         android:layout_height="wrap_content"
         android:drawableLeft="@drawable/ic_check"
         android:drawableTint="?attr/colorOnBackground"
+        android:textColor="?attr/colorOnBackground"
         android:gravity="center_vertical"
         android:padding="@dimen/dp8"
         android:text="   Friends" />

@@ -136,6 +136,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
                 return;
             }
             String callId = UUID.randomUUID().toString();
+            Log.d(TAG, "startOutgoingCall remote=" + remoteAddress + " callId=" + callId);
             session = new CallSession(remoteAddress, true, callId);
             changeState(CallState.CALLING);
         }
@@ -189,6 +190,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             tearDown(CallState.FAILED);
             return;
         }
+        Log.d(TAG, "createPeerConnection outgoing=" + outgoing + " iceServers=" + iceServers.size());
         PeerConnection.RTCConfiguration rtc = new PeerConnection.RTCConfiguration(iceServers);
         rtc.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
         rtc.iceTransportsType = PeerConnection.IceTransportsType.RELAY;
@@ -244,6 +246,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
                 servers.add(builder.createIceServer());
             }
         }
+        Log.d(TAG, "buildIceServers count=" + servers.size());
         return servers;
     }
 
@@ -256,10 +259,12 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 if (peerConnection == null) return;
+                Log.d(TAG, "createOffer success, setting local description");
                 peerConnection.setLocalDescription(new SimpleSdpObserver() {
                     @Override
                     public void onSetSuccess() {
                         if (session != null) {
+                            Log.d(TAG, "local offer set, sending signal");
                             sendSignal(CallSignalMessage.offer(session.callId, sessionDescription.description));
                         }
                     }
@@ -284,10 +289,12 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
                 if (peerConnection == null) return;
+                Log.d(TAG, "createAnswer success, setting local description");
                 peerConnection.setLocalDescription(new SimpleSdpObserver() {
                     @Override
                     public void onSetSuccess() {
                         if (session != null) {
+                            Log.d(TAG, "local answer set, sending signal");
                             sendSignal(CallSignalMessage.answer(session.callId, sessionDescription.description));
                             pendingAnswer = false;
                         }
@@ -308,16 +315,26 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         if (session == null) return;
         String remote = session.remoteAddress;
         String text = message.toTransportString();
+        Log.d(TAG, "sendSignal payloadLen=" + (text == null ? "null" : text.length()));
         networkExecutor.execute(() -> {
             ChatClient client = ChatClient.getInstance(appContext);
             String sender = TorManager.getInstance(appContext).getID();
             long timestamp = System.currentTimeMillis();
             try {
+                Log.d(TAG, "sendSignal type=" + message.getType() + " to=" + remote);
                 client.sendOne(sender, remote, text, timestamp);
                 if (message.getType() != SignalType.CANDIDATE) {
+                    ChatMessagePayload payload;
+                    CallSignalMessage parsed = CallSignalMessage.fromTransportString(text);
+                    if (parsed != null) {
+                        payload = ChatMessagePayload.forText(parsed.toDisplayString(true));
+                        payload.setMime("application/json");
+                        payload.setData(text);
+                    } else {
+                        payload = ChatMessagePayload.forText(text);
+                    }
                     ChatDatabase.getInstance(appContext).addMessage(sender, remote,
-                            ChatMessagePayload.forText(text).toStorageString(),
-                            timestamp, false, false);
+                            payload.toStorageString(), timestamp, false, false);
                 }
             } catch (IOException ex) {
                 Log.e(TAG, "Failed to send call signal: " + ex.getMessage());
@@ -334,6 +351,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         synchronized (this) {
             state = newState;
         }
+        Log.d(TAG, "changeState -> " + newState);
         notifyListeners();
     }
 
@@ -404,6 +422,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         if (pc != null) {
             pc.close();
         }
+        Log.d(TAG, "tearDown -> " + endState);
     }
 
     @Override
@@ -420,6 +439,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         if (signal == null || TextUtils.isEmpty(fromAddress)) {
             return;
         }
+        Log.d(TAG, "onIncomingSignal type=" + signal.getType() + " from=" + fromAddress);
         switch (signal.getType()) {
             case OFFER -> handleIncomingOffer(fromAddress, signal);
             case ANSWER -> handleIncomingAnswer(signal);
@@ -461,6 +481,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             return;
         }
         SessionDescription remoteSdp = new SessionDescription(SessionDescription.Type.OFFER, signal.getSdp());
+        Log.d(TAG, "Applying remote offer callId=" + signal.getCallId());
         peerConnection.setRemoteDescription(new SimpleSdpObserver() {
             @Override
             public void onSetSuccess() {
@@ -482,6 +503,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         if (peerConnection == null || session == null) return;
         if (!session.callId.equals(signal.getCallId())) return;
         SessionDescription answer = new SessionDescription(SessionDescription.Type.ANSWER, signal.getSdp());
+        Log.d(TAG, "Applying remote answer callId=" + signal.getCallId());
         peerConnection.setRemoteDescription(new SimpleSdpObserver() {
             @Override
             public void onSetSuccess() {
@@ -499,6 +521,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     private void handleIncomingCandidate(CallSignalMessage signal) {
         if (peerConnection == null || session == null) return;
         if (!session.callId.equals(signal.getCallId())) return;
+        Log.d(TAG, "Applying remote candidate callId=" + signal.getCallId());
         IceCandidate candidate = new IceCandidate(
                 signal.getSdpMid(),
                 signal.getSdpMLineIndex() != null ? signal.getSdpMLineIndex() : 0,
@@ -510,12 +533,14 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         @Override
         public void onIceCandidate(IceCandidate iceCandidate) {
             if (session != null) {
+                Log.d(TAG, "onIceCandidate local -> sending");
                 sendSignal(CallSignalMessage.candidate(session.callId, iceCandidate.sdp, iceCandidate.sdpMid, iceCandidate.sdpMLineIndex));
             }
         }
 
         @Override public void onSignalingChange(PeerConnection.SignalingState signalingState) {}
         @Override public void onIceConnectionChange(PeerConnection.IceConnectionState newState) {
+            Log.d(TAG, "onIceConnectionChange -> " + newState);
             switch (newState) {
                 case CONNECTED, COMPLETED -> changeState(CallState.CONNECTED);
                 case FAILED, DISCONNECTED, CLOSED -> tearDown(CallState.ENDED);

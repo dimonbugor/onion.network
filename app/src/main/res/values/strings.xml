@@ -16,6 +16,27 @@
         (copy manually if the links are not displayed correctly)\n
     </string>
 
+        <!-- Extracted hardcoded strings for translation -->
+        <string name="friend_bot">FRIEND BOT</string>
+        <string name="message">Message</string>
+        <string name="ahliuh">ahliuh</string>
+        <string name="date_sample">1234-12-12 12:12</string>
+        <string name="anonymous">Anonymous</string>
+        <string name="medium_text">Medium Text</string>
+        <string name="no_friends_yet">No friends yet</string>
+        <string name="darknet_address">Darknet Address</string>
+        <string name="copy">Copy</string>
+        <string name="send">Send</string>
+        <string name="open">Open</string>
+        <string name="clearnet_address">Clearnet Address</string>
+        <string name="onion_address_sample">aaaaztah77ekpkip.onion</string>
+        <string name="clearnet_onion_address_sample">aaaaztah77ekpkip.onion.to</string>
+        <string name="anon_and_secure">Anonymous and most secure way to access your blog. Needs a Tor-enabled web browser.</string>
+        <string name="id">ID</string>
+        <string name="zero_time">0:00</string>
+        <string name="error_permissions_required">Error: Permissions required</string>
+        <string name="all_settings_reset">All settings reset</string>
+
     <string-array name="acceptmessagesvalues">
         <item></item>
         <item>friends</item>
@@ -312,5 +333,21 @@
     <!-- Composer titles -->
     <string name="dialog_write_post_title">Write Post</string>
     <string name="dialog_edit_post_title">Edit Post</string>
+    <string name="messaging_disabled_on_remote_device">Messaging disabled on remote device.</string>
+    <string name="add_as_friend_or_change_settings_to_receive_messages">Add as friend or change settings to receive messages.</string>
+    <string name="instant_messenger_disabled_change_settings_to_receive_messages">Instant messenger disabled. Change settings to receive messages.</string>
+    <string name="no_conversations_yet">No conversations yet</string>
+    <string name="to_send_a_message_visit_the_receiver_s_profile_and_open_their_message_tab">To send a message, visit the receiver\'s profile and open their message tab.</string>
+    <string name="can_be_accessed_using_any_web_browser_but_might_like_any_normal_website_reveal_the_viewer_s_identity_to_isp_s_network_operators_or_governments">Can be accessed using any web browser, but might (like any \'normal\' website) reveal the viewer\'s identity to ISP\'s, network operators, or governments.</string>
+    <string name="if_the_links_don_t_work_yet_please_check_your_network_connection_and_or_wait_a_few_minutes_for_your_hidden_service_to_be_registered">If the links don\'t work yet, please check your network connection and/or wait a few minutes for your hidden service to be registered.</string>
+    <string name="offline">Offline</string>
+    <string name="loading">Loading...</string>
+    <string name="no_contact_requests">No Contact Requests</string>
+    <string name="failed_to_reach_this_user_s_device_nplease_try_again_later">Failed to reach this user\'s device.\nPlease try again later.</string>
+    <string name="hidden_service_link">Hidden Service Link</string>
+    <string name="clearnet_link">Clearnet Link</string>
+    <string name="if_the_links_are_not_available_yet_check_your_network_connection_and_or_wait_a_few_minutes_for_the_hidden_service_to_be_registered">If the links are not available yet, check your network connection and/or wait a few minutes for the hidden service to be registered.</string>
+    <string name="no_posts_yet">No posts yet</string>
+    <string name="load_more">Load More</string>
 
 </resources>

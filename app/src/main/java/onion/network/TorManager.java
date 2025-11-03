@@ -1,6 +1,7 @@
 package onion.network;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
@@ -8,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +21,7 @@ import onion.network.servers.Server;
 import onion.network.tor.TorBridgeParser;
 
 public class TorManager {
+    private static final String TAG = "TorManager";
     private static TorManager instance = null;
     private Context context;
 
@@ -106,7 +109,6 @@ public class TorManager {
         } else {
             bridgeConfigs = TorBridgeParser.getBridgeConfigs(context);
         }
-
         try (PrintWriter writer = new PrintWriter(new FileWriter(torrc))) {
             writer.println("Log notice stdout");
             writer.println("DataDirectory " + appTorServiceDir.getAbsolutePath() + "/data");
@@ -124,15 +126,14 @@ public class TorManager {
                 String libObfs4Path = context.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so";
                 new File(libObfs4Path).setExecutable(true);
                 String libWebtunnelPath = context.getApplicationInfo().nativeLibraryDir + "/libwebtunnel.so";
-                new File(libWebtunnelPath).setExecutable(true);
+                File webtunnelFile = new File(libWebtunnelPath);
+                if (webtunnelFile.exists()) webtunnelFile.setExecutable(true);
                 String libSnowflakePath = context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so";
-                new File(libSnowflakePath).setExecutable(true);
-                String libMeekPath = Utils.copyAssetFile(context, "meek-client");
+                File snowflakeFile = new File(libSnowflakePath);
+                if (snowflakeFile.exists()) snowflakeFile.setExecutable(true);
                 String libConjurePath = context.getApplicationInfo().nativeLibraryDir + "/libconjure.so";
-                new File(libConjurePath).setExecutable(true);
-
-                writer.println("UseBridges 1");
-                writer.println();
+                File conjureFile = new File(libConjurePath);
+                if (conjureFile.exists()) conjureFile.setExecutable(true);
 
                 Set<String> clients = new HashSet<>();
                 for (String bridge : bridgeConfigs) {
@@ -171,9 +172,6 @@ public class TorManager {
                 }
                 if (clients.contains("snowflake")) {
                     writer.println("ClientTransportPlugin snowflake exec " + libSnowflakePath);
-                }
-                if (clients.contains("meek")) {
-                    writer.println("ClientTransportPlugin meek exec " + libMeekPath);
                 }
                 writer.println();
             }
@@ -244,6 +242,10 @@ public class TorManager {
                 socksPort = p;
                 synchronized (portLock) { portLock.notifyAll(); }
             } catch (Exception ignored) {}
+        }
+
+        if (line.contains("We need more descriptors")) {
+            Log.w(TAG, "Tor still missing directory info; keep waiting or retry");
         }
     }
 

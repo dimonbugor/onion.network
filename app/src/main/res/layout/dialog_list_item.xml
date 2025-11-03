@@ -5,4 +5,5 @@
     android:layout_height="wrap_content"
     android:padding="16dp"
     android:text="@string/app_name"
+    android:textColor="?attr/colorOnBackground"
     android:textSize="12sp" />

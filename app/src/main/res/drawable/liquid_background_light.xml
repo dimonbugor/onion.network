@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Soft sky gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#FAFBFD"
+                android:centerColor="#EBF3FB"
+                android:endColor="#DEEBFD" />
+        </shape>
+    </item>
+
+    <!-- Aqua glow top -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="0.7"
+                android:centerY="0.0"
+                android:startColor="#0D5BC4FF"
+                android:endColor="#00D1E4FF" />
+        </shape>
+    </item>
+
+    <!-- Blush glow bottom -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="360dp"
+                android:centerX="0.3"
+                android:centerY="1.0"
+                android:startColor="#0DFF9BC4"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Light column accent -->
+    <item android:left="96dp" android:right="96dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#00FFFFFF"
+                android:centerColor="#33FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

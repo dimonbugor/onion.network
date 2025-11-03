@@ -14,6 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/dp4"
         android:layout_weight="1"
+        android:background="?attr/liquidCardBackground"
+        app:cardBackgroundColor="@android:color/transparent"
         app:strokeWidth="0dp"
         app:cardCornerRadius="@dimen/dp48"
         app:cardElevation="@dimen/dp4"
@@ -29,7 +31,8 @@
             android:gravity="center"
             android:fontFamily="@font/geologica_400"
             android:padding="@dimen/dp16"
-            android:text="Load More"
+            android:text="@string/load_more"
+            android:textColor="?attr/colorAccent"
              />
 
     </com.google.android.material.card.MaterialCardView>

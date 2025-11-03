@@ -34,83 +34,86 @@
                         android:layout_marginHorizontal="@dimen/dp16"
                         android:paddingTop="@dimen/dp16"
                         android:paddingBottom="@dimen/dp8"
-                        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                        android:background="?attr/liquidCardBackground"
+                        app:cardBackgroundColor="@android:color/transparent"
                         app:cardCornerRadius="@dimen/dp64"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:strokeColor="?attr/colorOnBackground"
-                        app:strokeWidth="1dp">
+                        app:strokeColor="@android:color/transparent">
 
                         <onion.network.ui.views.AvatarView
                             android:id="@+id/profilephoto"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/dp132"
-                            android:background="@color/colorBackgroundAlpha" />
+                            android:background="?attr/colorPrimaryContainer" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/delete_photo"
                         android:layout_width="@dimen/dp36"
                         android:layout_height="@dimen/dp36"
-                        android:background="?selectableItemBackground"
-                        android:backgroundTint="@color/colorBackgroundAlpha"
+                        android:background="@drawable/glass_chip_circle"
                         android:clickable="true"
+                        app:cardBackgroundColor="@android:color/transparent"
                         app:cardCornerRadius="@dimen/dp24"
                         app:layout_constraintBottom_toTopOf="@+id/photo_container"
                         app:layout_constraintEnd_toEndOf="@+id/photo_container"
                         app:layout_constraintStart_toEndOf="@+id/photo_container"
                         app:layout_constraintTop_toTopOf="@+id/photo_container"
-                        app:strokeColor="?attr/colorOnBackground">
+                        app:strokeColor="@android:color/transparent">
 
                         <ImageView
                             android:layout_width="@dimen/dp24"
                             android:layout_height="@dimen/dp24"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_delete" />
+                            android:src="@drawable/ic_delete"
+                            app:tint="?attr/colorAccent" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/take_photo"
                         android:layout_width="@dimen/dp36"
                         android:layout_height="@dimen/dp36"
-                        android:background="?selectableItemBackground"
-                        android:backgroundTint="@color/colorBackgroundAlpha"
+                        android:background="@drawable/glass_chip_circle"
                         android:clickable="true"
+                        app:cardBackgroundColor="@android:color/transparent"
                         app:cardCornerRadius="@dimen/dp24"
                         app:layout_constraintBottom_toBottomOf="@+id/photo_container"
                         app:layout_constraintEnd_toStartOf="@+id/photo_container"
                         app:layout_constraintStart_toStartOf="@+id/photo_container"
                         app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                        app:strokeColor="?attr/colorOnBackground">
+                        app:strokeColor="@android:color/transparent">
 
                         <ImageView
                             android:layout_width="@dimen/dp24"
                             android:layout_height="@dimen/dp24"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_photo_camera" />
+                            android:src="@drawable/ic_photo_camera"
+                            app:tint="?attr/colorAccent" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/choose_photo"
                         android:layout_width="@dimen/dp36"
                         android:layout_height="@dimen/dp36"
-                        android:background="?selectableItemBackground"
-                        android:backgroundTint="@color/colorBackgroundAlpha"
+                        android:background="@drawable/glass_chip_circle"
                         android:clickable="true"
+                        app:cardBackgroundColor="@android:color/transparent"
                         app:cardCornerRadius="@dimen/dp24"
                         app:layout_constraintBottom_toBottomOf="@+id/photo_container"
                         app:layout_constraintEnd_toEndOf="@+id/photo_container"
                         app:layout_constraintStart_toEndOf="@+id/photo_container"
                         app:layout_constraintTop_toBottomOf="@+id/photo_container"
-                        app:strokeColor="?attr/colorOnBackground">
+                        app:strokeColor="@android:color/transparent">
 
                         <ImageView
                             android:layout_width="@dimen/dp24"
                             android:layout_height="@dimen/dp24"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_folder" />
+                            android:src="@drawable/ic_folder"
+                            app:tint="?attr/colorAccent" />
                     </com.google.android.material.card.MaterialCardView>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -126,7 +129,8 @@
                     android:fontFamily="@font/geologica_600"
                     android:gravity="center"
                     android:padding="@dimen/dp8"
-                    android:text="FRIEND BOT"
+                    android:text="@string/friend_bot"
+                    android:textColor="?attr/colorOnBackground"
                     android:textFontWeight="600"
                     android:textSize="@dimen/sp18" />
 
@@ -140,7 +144,7 @@
                     android:layout_height="0dp"
                     android:layout_marginHorizontal="@dimen/dp16"
                     android:layout_weight="1"
-                    android:background="@drawable/rounded_card_with_grd"
+                    android:background="?attr/liquidCardBackground"
                     android:orientation="vertical"
                     android:padding="@dimen/dp8">
 

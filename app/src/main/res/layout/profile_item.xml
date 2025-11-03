@@ -22,6 +22,7 @@
             android:paddingVertical="@dimen/dp8"
             android:textSize="@dimen/sp12"
             android:singleLine="true"
+            android:textColor="?attr/colorOnBackground"
             android:text="Key" />
 
         <TextView
@@ -37,6 +38,7 @@
             android:gravity="center_vertical"
             android:paddingVertical="@dimen/dp8"
             android:paddingRight="@dimen/dp16"
+            android:textColor="?attr/colorOnBackground"
             android:singleLine="true"
             android:text="Value" />
 
@@ -46,7 +48,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:src="@drawable/ic_edit"
-            app:tint="?attr/white_50" />
+            app:tint="?attr/colorAccent" />
 
     </LinearLayout>
 
@@ -54,5 +56,5 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginHorizontal="@dimen/dp8"
-        android:background="@color/colorBackgroundAlpha"/>
+        android:background="?attr/theme_colorBackgroundAlpha"/>
 </LinearLayout>

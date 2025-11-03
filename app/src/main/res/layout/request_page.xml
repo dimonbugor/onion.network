@@ -16,8 +16,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal|top"
         android:gravity="center_horizontal|top"
+        android:textColor="?attr/colorOnBackground"
         android:padding="@dimen/dp48"
-        android:text="No Contact Requests"
+        android:text="@string/no_contact_requests"
          />
 
 </FrameLayout>

@@ -1,8 +1,11 @@
 
 
+
+
 package onion.network.ui.pages;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
@@ -37,6 +40,7 @@ import android.webkit.MimeTypeMap;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.ColorUtils;
 
 import com.google.android.material.card.MaterialCardView;
@@ -873,12 +877,12 @@ public class ChatPage extends BasePage
 
             if (tx) {
                 holder.card.setBackground(
-                        holder.card.getContext().getResources().getDrawable(R.drawable.chat_item_background));
+                        AppCompatResources.getDrawable(holder.card.getContext(), R.drawable.chat_item_background));
                 holder.left.setVisibility(View.VISIBLE);
                 holder.right.setVisibility(View.GONE);
             } else {
                 holder.card.setBackground(
-                        holder.card.getContext().getResources().getDrawable(R.drawable.chat_my_item_background));
+                        AppCompatResources.getDrawable(holder.card.getContext(), R.drawable.chat_my_item_background));
                 holder.left.setVisibility(View.GONE);
                 holder.right.setVisibility(View.VISIBLE);
             }
@@ -938,7 +942,7 @@ public class ChatPage extends BasePage
                 } else {
                     holder.message.setVisibility(View.VISIBLE);
                     holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-                    holder.message.setText(payloadPlaceholder(payload));
+                    holder.message.setText(payloadPlaceholder(holder.itemView.getContext(), payload));
                 }
             } else {
                 holder.message.setVisibility(View.VISIBLE);
@@ -1050,16 +1054,16 @@ public class ChatPage extends BasePage
             return payload.getText();
         }
 
-        private String payloadPlaceholder(ChatMessagePayload payload) {
+        private String payloadPlaceholder(Context context, ChatMessagePayload payload) {
             switch (payload.getType()) {
                 case IMAGE:
-                    return "[" + activity.getString(R.string.chat_attachment_image) + "]";
+                    return "[" + context.getString(R.string.chat_attachment_image) + "]";
                 case VIDEO:
-                    return "[" + activity.getString(R.string.chat_attachment_video) + "]";
+                    return "[" + context.getString(R.string.chat_attachment_video) + "]";
                 case AUDIO:
-                    return "[" + activity.getString(R.string.chat_attachment_audio) + "]";
+                    return "[" + context.getString(R.string.chat_attachment_audio) + "]";
                 default:
-                    return "[" + activity.getString(R.string.chat_attachment_generic) + "]";
+                    return "[" + context.getString(R.string.chat_attachment_generic) + "]";
             }
         }
 
@@ -1084,7 +1088,7 @@ public class ChatPage extends BasePage
                     holder.audioStatusView.setText("");
                 }
                 if (holder.audioDurationView != null) {
-                    holder.audioDurationView.setText("0:00");
+                    holder.audioDurationView.setText(holder.itemView.getContext().getString(R.string.zero_time));
                 }
             }
 
@@ -1153,7 +1157,7 @@ public class ChatPage extends BasePage
                 return false;
             }
             holder.audioRow.setVisibility(View.VISIBLE);
-            String statusText = payloadPlaceholder(payload);
+            String statusText = payloadPlaceholder(holder.itemView.getContext(), payload);
             if (holder.audioStatusView != null) {
                 holder.audioStatusView.setText(statusText);
             }

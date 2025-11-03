@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 class BridgeResponseParser {
 
     private static final List<String> SUPPORTED_TRANSPORT_PREFIXES = Arrays.asList(
-            "obfs4", "snowflake", "meek", "meek_lite", "webtunnel", "conjure", "vanilla"
+            "obfs4",
+            "snowflake",
+            "webtunnel", "conjure", "vanilla"
     );
 
     private static final Pattern CAPTCHA_PATTERN = Pattern.compile(

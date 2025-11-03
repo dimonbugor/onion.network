@@ -10,8 +10,9 @@
         android:id="@+id/card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/colorBackgroundAlpha"
-        app:cardCornerRadius="@dimen/dp16"
+        android:background="?attr/liquidCardBackground"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="@dimen/dp20"
         app:cardElevation="0dp"
         app:cardUseCompatPadding="false"
         app:strokeWidth="0dp">
@@ -39,16 +40,16 @@
                         android:layout_height="@dimen/dp48"
                         android:layout_marginStart="@dimen/dp16"
                         android:layout_marginTop="@dimen/dp8"
+                        android:background="@drawable/glass_chip_circle"
                         app:cardBackgroundColor="@android:color/transparent"
                         app:cardCornerRadius="@dimen/dp48"
-                        app:strokeColor="@color/colorAccentAlpha"
-                        app:strokeWidth="1dp">
+                        app:strokeColor="@android:color/transparent">
 
                         <onion.network.ui.views.AvatarView
                             android:id="@+id/thumb"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:background="@color/colorBackgroundAlpha" />
+                            android:background="?attr/colorPrimaryContainer" />
                     </com.google.android.material.card.MaterialCardView>
 
                     <FrameLayout
@@ -82,6 +83,7 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:textColor="?attr/colorOnBackground"
                             android:layout_toLeftOf="@id/address"
                             android:layout_marginLeft="@dimen/dp8"
                             android:layout_marginTop="@dimen/dp8"
@@ -91,20 +93,19 @@
                             android:fontFamily="@font/geologica_600"
                             android:textFontWeight="600"
                             android:textSize="@dimen/sp16"
-                            android:text="Anonymous" />
+                            android:text="@string/anonymous" />
 
                         <TextView
                             android:id="@+id/date"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:fontFamily="@font/geologica_400"
-                            android:textColor="?attr/white_80"
+                            android:textColor="?attr/colorAccent"
                             android:gravity="bottom"
                             android:layout_marginLeft="@dimen/dp8"
                             android:layout_marginTop="@dimen/dp8"
                             android:singleLine="true"
-                            android:text="1234-12-12 12:12"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:text="@string/date_sample"
                             android:textSize="@dimen/sp12" />
                     </LinearLayout>
 
@@ -118,7 +119,7 @@
                             android:layout_marginLeft="@dimen/dp8"
                             android:ellipsize="none"
                             android:singleLine="true"
-                            android:textColor="?attr/white_80"
+                            android:textColor="?attr/colorOnBackground"
                             android:text="fuehwuajskdifuvh"
                             android:textSize="@dimen/sp14"/>
 
@@ -136,8 +137,9 @@
                     android:paddingTop="@dimen/dp16"
                     android:paddingRight="@dimen/dp16"
                     android:paddingBottom="0dp"
+                    android:textColor="?attr/colorOnBackground"
                     android:textSize="@dimen/sp14"
-                    android:text="Medium Text" />
+                    android:text="@string/medium_text" />
 
                 <FrameLayout
                     android:id="@+id/imageContainer"
@@ -162,7 +164,7 @@
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_play"
                         android:visibility="gone"
-                        app:tint="@android:color/white" />
+                        app:tint="?attr/colorAccent" />
                 </FrameLayout>
 
                 <LinearLayout
@@ -174,25 +176,28 @@
                     android:orientation="horizontal"
                     android:paddingLeft="@dimen/dp16"
                     android:paddingRight="@dimen/dp16"
+                    android:paddingTop="@dimen/dp8"
+                    android:paddingBottom="@dimen/dp8"
+                    android:background="@drawable/glass_pill"
                     android:visibility="gone">
 
                     <ImageButton
                         android:id="@+id/audioPlay"
-                        android:layout_width="@dimen/dp48"
-                        android:layout_height="@dimen/dp48"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:padding="@dimen/dp8"
+                        android:layout_width="@dimen/dp36"
+                        android:layout_height="@dimen/dp36"
+                        android:background="@drawable/glass_chip_circle"
+                        android:padding="@dimen/dp6"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_play"
-                        android:tint="?attr/white_80"
-                        android:contentDescription="@string/chat_audio_play" />
+                        android:contentDescription="@string/chat_audio_play"
+                        app:tint="?attr/colorAccent" />
 
                     <TextView
                         android:id="@+id/audioDuration"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/dp8"
-                        android:textColor="?attr/white_80"
+                        android:textColor="?attr/colorOnBackground"
                         android:textSize="@dimen/sp14"
                         android:textStyle="bold"
                         android:text="@string/chat_attachment_voice_message" />
@@ -219,7 +224,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:contentDescription="Like" />
 
                     <View
@@ -236,7 +241,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:contentDescription="Comments" />
 
                     <View
@@ -254,7 +259,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:contentDescription="Edit" />
 
                     <ImageView
@@ -267,7 +272,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:contentDescription="Share" />
 
                     <ImageView
@@ -280,7 +285,7 @@
                         android:paddingTop="@dimen/dp8"
                         android:paddingRight="@dimen/dp8"
                         android:paddingBottom="@dimen/dp8"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:contentDescription="Delete" />
 
                     <View

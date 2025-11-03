@@ -74,7 +74,7 @@ public class SplashActivity extends AppCompatActivity {
 
     private void showDeniedMessage() {
         // Показуємо повідомлення, якщо користувач відмовився від дозволів
-        Toast.makeText(this, "Error: Permissions required", Toast.LENGTH_SHORT).show();
+    Toast.makeText(this, getString(R.string.error_permissions_required), Toast.LENGTH_SHORT).show();
         goToMainActivity();
     }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme-aware alpha color attributes (prefixed to avoid name collisions) -->
+    <attr name="theme_overlay" format="reference|color" />
+    <attr name="theme_colorAccentAlpha" format="reference|color" />
+    <attr name="theme_colorPrimaryContainerAlpha" format="reference|color" />
+    <attr name="theme_colorBackgroundAlpha_80" format="reference|color" />
+    <attr name="theme_colorBackgroundAlpha" format="reference|color" />
+    <!-- Liquid-glass background drawable attribute -->
+    <attr name="liquidCardBackground" format="reference|color|reference" />
+</resources>

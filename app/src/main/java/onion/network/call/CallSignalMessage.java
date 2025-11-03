@@ -114,14 +114,27 @@ public final class CallSignalMessage {
     }
 
     public static CallSignalMessage fromPayload(ChatMessagePayload payload) {
-        if (payload == null || payload.getType() != ChatMessagePayload.Type.TEXT) {
+        if (payload == null) {
             return null;
         }
-        String text = payload.getText();
-        if (TextUtils.isEmpty(text)) {
-            text = payload.toStorageString();
+
+        String candidateJson = null;
+        String data = payload.getData();
+        if (!TextUtils.isEmpty(data) && isCallSignal(data)) {
+            candidateJson = data;
+        } else if (payload.getType() == ChatMessagePayload.Type.TEXT) {
+            String text = payload.getText();
+            if (!TextUtils.isEmpty(text) && isCallSignal(text)) {
+                candidateJson = text;
+            }
         }
-        return fromTransportString(text);
+        if (candidateJson == null && payload.getType() == ChatMessagePayload.Type.TEXT) {
+            String storage = payload.toStorageString();
+            if (!TextUtils.isEmpty(storage) && isCallSignal(storage)) {
+                candidateJson = storage;
+            }
+        }
+        return candidateJson != null ? fromTransportString(candidateJson) : null;
     }
 
     public static CallSignalMessage fromTransportString(String text) {
@@ -156,30 +169,37 @@ public final class CallSignalMessage {
     }
 
     public static CallSignalMessage offer(String callId, String sdp) {
+        android.util.Log.d("CallManager", "CallSignalMessage.offer callId=" + callId);
         return new CallSignalMessage(SignalType.OFFER, callId, sdp, null, null, null, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage answer(String callId, String sdp) {
+        android.util.Log.d("CallManager", "CallSignalMessage.answer callId=" + callId);
         return new CallSignalMessage(SignalType.ANSWER, callId, sdp, null, null, null, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage candidate(String callId, String candidate, String sdpMid, Integer sdpMLineIndex) {
+        android.util.Log.d("CallManager", "CallSignalMessage.candidate callId=" + callId);
         return new CallSignalMessage(SignalType.CANDIDATE, callId, null, candidate, sdpMid, sdpMLineIndex, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage hangup(String callId) {
+        android.util.Log.d("CallManager", "CallSignalMessage.hangup callId=" + callId);
         return new CallSignalMessage(SignalType.HANGUP, callId, null, null, null, null, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage ringing(String callId) {
+        android.util.Log.d("CallManager", "CallSignalMessage.ringing callId=" + callId);
         return new CallSignalMessage(SignalType.RINGING, callId, null, null, null, null, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage busy(String callId) {
+        android.util.Log.d("CallManager", "CallSignalMessage.busy callId=" + callId);
         return new CallSignalMessage(SignalType.BUSY, callId, null, null, null, null, System.currentTimeMillis(), null);
     }
 
     public static CallSignalMessage error(String callId, String message) {
+        android.util.Log.d("CallManager", "CallSignalMessage.error callId=" + callId);
         return new CallSignalMessage(SignalType.ERROR, callId, null, null, null, null, System.currentTimeMillis(), message);
     }
 

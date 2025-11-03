@@ -15,6 +15,7 @@ import java.util.HashSet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import onion.network.call.CallSignalMessage;
 import onion.network.databases.ChatDatabase;
 import onion.network.databases.ItemDatabase;
 import onion.network.TorManager;
@@ -133,6 +134,7 @@ public class ChatClient {
     }
 
     private Envelope buildEnvelope(String sender, String receiver, String rawContent, long time) {
+        log("buildEnvelope to=" + receiver + " len=" + (rawContent == null ? "null" : rawContent.length()));
         Envelope envelope = new Envelope();
         envelope.sender = sender;
         envelope.receiver = receiver;
@@ -182,7 +184,19 @@ public class ChatClient {
         try {
             ChatMessagePayload payload = ChatMessagePayload.fromStorageString(rawContent);
             if (payload.getType() == ChatMessagePayload.Type.TEXT) {
-                return rawLooksJson ? payload.getText() : rawContent;
+                String inlineJson = payload.getData();
+                String mime = payload.getMime();
+                if (!TextUtils.isEmpty(inlineJson)
+                        && !TextUtils.isEmpty(mime)
+                        && "application/json".equalsIgnoreCase(mime)
+                        && CallSignalMessage.isCallSignal(inlineJson)) {
+                    return inlineJson;
+                }
+                String textValue = payload.getText();
+                if (rawLooksJson && TextUtils.isEmpty(textValue)) {
+                    return rawContent;
+                }
+                return rawLooksJson ? textValue : rawContent;
             }
             if (ensureMediaReference(payload, receiver)) {
                 return payload.toStorageString();

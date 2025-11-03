@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="?attr/liquidCardBackground"
+    android:padding="20dp">
 
     <!--
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+                        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Darknet Address" />
+    android:text="@string/darknet_address" />
         -->
     <TextView
         android:textStyle="bold"
-        android:textColor="#080"
+        android:textColor="?attr/colorAccent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="aaaaztah77ekpkip.onion"
+    android:text="@string/onion_address_sample"
         android:id="@+id/darknet" />
     <TextView
         android:linksClickable="true"
         android:id="@+id/darkinfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Anonymous and most secure way to access your blog. Needs a Tor-enabled web browser." />
+    android:text="@string/anon_and_secure" />
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -36,7 +40,7 @@
             android:layout_weight="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Copy"
+            android:text="@string/copy"
             android:id="@+id/darkcopy"
             android:layout_gravity="center_horizontal" />
         <Button
@@ -44,7 +48,7 @@
             android:layout_weight="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Send"
+            android:text="@string/send"
             android:id="@+id/darksend"
             android:layout_gravity="center_horizontal" />
         <Button
@@ -52,7 +56,7 @@
             android:layout_weight="2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open"
+            android:text="@string/open"
             android:id="@+id/darkview"
             android:layout_gravity="center_horizontal" />
     </LinearLayout>
@@ -65,22 +69,24 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+                        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Clearnet Address" />
+    android:text="@string/clearnet_address" />
         -->
     <TextView
         android:textStyle="bold"
-        android:textColor="#369"
+        android:textColor="?attr/colorAccent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="aaaaztah77ekpkip.onion.to"
+    android:text="@string/clearnet_onion_address_sample"
         android:id="@+id/clearnet" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="?attr/colorOnBackground"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Can be accessed using any web browser, but might (like any 'normal' website) reveal the viewer's identity to ISP's, network operators, or governments." />
+        android:text="@string/can_be_accessed_using_any_web_browser_but_might_like_any_normal_website_reveal_the_viewer_s_identity_to_isp_s_network_operators_or_governments" />
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -121,7 +127,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="If the links don't work yet, please check your network connection and/or wait a few minutes for your hidden service to be registered." />
+        android:text="@string/if_the_links_don_t_work_yet_please_check_your_network_connection_and_or_wait_a_few_minutes_for_your_hidden_service_to_be_registered"
+        android:textColor="?attr/colorOnBackground" />
 
 
 </LinearLayout>

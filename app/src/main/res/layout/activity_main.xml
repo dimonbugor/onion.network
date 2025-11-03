@@ -67,6 +67,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
+                            android:textColor="?attr/colorOnBackground"
                             android:padding="@dimen/dp16"
                             android:singleLine="true" />
                     </LinearLayout>
@@ -88,7 +89,7 @@
             android:id="@+id/dimOverlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/overlay"
+            android:background="?attr/theme_overlay"
             android:visibility="gone" />
 
         <onion.network.ui.views.ArcButtonLayout
@@ -110,11 +111,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|bottom"
                 android:layout_margin="@dimen/dp24"
-                android:src="@drawable/ic_menu"
-                app:backgroundTint="?attr/colorPrimaryContainer"
+                android:src="@drawable/ic_menu_neon"
+                app:backgroundTint="?attr/colorAccent"
                 app:rippleColor="#fff"
                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-                app:tint="?attr/colorOnBackground" />
+                app:tint="?attr/colorAccent" />
 
         </onion.network.ui.views.ArcButtonLayout>
 
@@ -124,12 +125,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
-            android:src="@drawable/ic_edit"
+            android:src="@drawable/ic_edit_neon"
             android:visibility="visible"
-            app:backgroundTint="?attr/colorPrimaryContainer"
+            app:backgroundTint="?attr/colorAccent"
             app:rippleColor="#fff"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-            app:tint="?attr/colorOnBackground" />
+            app:tint="?attr/colorAccent" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/friendFab"
@@ -137,12 +138,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="@dimen/dp16"
-            android:src="@drawable/ic_person_add"
+            android:src="@drawable/ic_person_add_neon"
             android:visibility="gone"
-            app:backgroundTint="?attr/colorPrimaryContainer"
+            app:backgroundTint="?attr/colorAccent"
             app:rippleColor="#fff"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-            app:tint="?attr/colorOnBackground" />
+            app:tint="?attr/colorAccent" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

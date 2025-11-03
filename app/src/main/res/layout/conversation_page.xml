@@ -27,7 +27,8 @@
             android:paddingBottom="@dimen/dp8"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="No conversations yet"
+            android:text="@string/no_conversations_yet"
+            android:textColor="?attr/colorOnBackground"
             android:layout_gravity="center_horizontal|top" />
 
         <TextView
@@ -35,7 +36,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="To send a message, visit the receiver's profile and open their message tab."
+            android:textColor="?attr/colorOnBackground"
+            android:text="@string/to_send_a_message_visit_the_receiver_s_profile_and_open_their_message_tab"
             android:layout_gravity="center_horizontal|top" />
 
     </LinearLayout>

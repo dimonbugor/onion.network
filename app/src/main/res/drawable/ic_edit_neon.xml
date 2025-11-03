@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="@dimen/dp24"
+    android:height="@dimen/dp24"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- soft glow backdrop -->
+    <path
+        android:pathData="M3,17.25V21h3.75L17.81,9.94l-3.75,-3.75L3,17.25zM20.71,7.04c0.39,-0.39 0.39,-1.02 0,-1.41l-2.34,-2.34c-0.39,-0.39 -1.02,-0.39 -1.41,0l-1.83,1.83 3.75,3.75 1.83,-1.83z"
+        android:fillAlpha="0.32">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="12"
+                android:centerY="12"
+                android:gradientRadius="16"
+                android:startColor="#405AF2FF"
+                android:endColor="#00101829" />
+        </aapt:attr>
+    </path>
+
+    <!-- primary neon fill -->
+    <path
+        android:pathData="M3,17.25V21h3.75L17.81,9.94l-3.75,-3.75L3,17.25zM20.71,7.04c0.39,-0.39 0.39,-1.02 0,-1.41l-2.34,-2.34c-0.39,-0.39 -1.02,-0.39 -1.41,0l-1.83,1.83 3.75,3.75 1.83,-1.83z"
+        android:strokeWidth="1.2"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillAlpha="0.92">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:angle="75"
+                android:startColor="#F0FFFFFF"
+                android:centerColor="#E05AF2FF"
+                android:endColor="#B032FFC8" />
+        </aapt:attr>
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:angle="75"
+                android:startColor="#CC5AF2FF"
+                android:endColor="#4DFFFFFF" />
+        </aapt:attr>
+    </path>
+
+    <!-- highlight -->
+    <path
+        android:pathData="M12.4,8.59 L15.41,11.6"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.8">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:angle="45"
+                android:startColor="#FFFFFFFF"
+                android:endColor="#80FFFFFF" />
+        </aapt:attr>
+    </path>
+</vector>

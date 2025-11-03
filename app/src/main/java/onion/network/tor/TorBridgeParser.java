@@ -31,12 +31,13 @@ public class TorBridgeParser {
     private static final AtomicReference<CaptchaChallenge> pendingCaptcha = new AtomicReference<>(null);
     private static final CopyOnWriteArrayList<CaptchaListener> captchaListeners = new CopyOnWriteArrayList<>();
 
-    private static volatile List<String> lastFetched = Collections.emptyList();
-
     private static final String[] DEFAULT_BRIDGES = new String[]{
-            "Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn",
-            "Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn"
+//            "Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn",
+//            "Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://1098762253.rsc.cdn77.org/ fronts=www.cdn77.com,www.phpmyadmin.net ice=stun:stun.antisip.com:3478,stun:stun.epygi.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.mixvoip.com:3478,stun:stun.nextcloud.com:3478,stun:stun.bethesda.net:3478,stun:stun.nextcloud.com:443 utls-imitate=hellorandomizedalpn",
+//            "Bridge conjure 143.110.214.222:80 url=https://registration.refraction.network.global.prod.fastly.net/api front=cdn.sstatic.net"
     };
+    private static final int MAX_FETCH_ATTEMPTS = 2;
+    private static final int WEBTUNNEL_FETCH_ATTEMPTS = 2;
 
     public static synchronized List<String> getBridgeConfigs(Context context) {
         Set<String> bridgeConfigs = new LinkedHashSet<>();
@@ -46,25 +47,18 @@ public class TorBridgeParser {
             storeBridge(bridgeConfigs, fingerprintIndex, cached);
         }
 
+        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", false, MAX_FETCH_ATTEMPTS, 1);
+        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", true, MAX_FETCH_ATTEMPTS, 1);
+        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", false, WEBTUNNEL_FETCH_ATTEMPTS, 1);
+        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", true, WEBTUNNEL_FETCH_ATTEMPTS, 1);
+
         for (String bridge : DEFAULT_BRIDGES) {
             storeBridge(bridgeConfigs, fingerprintIndex, bridge);
         }
 
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", false);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", true);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", false);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", true);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "meek", false);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "meek_lite", false);
-
         List<String> result = new ArrayList<>(bridgeConfigs);
         persistBridges(context, result);
-        lastFetched = result;
         return result;
-    }
-
-    public static List<String> getLastFetched() {
-        return lastFetched;
     }
 
     public static void addCaptchaListener(CaptchaListener listener) {
@@ -141,7 +135,22 @@ public class TorBridgeParser {
                                            Set<String> bridgeConfigs,
                                            Map<String, String> fingerprintIndex,
                                            String transport,
-                                           boolean ipv6) {
+                                           boolean ipv6,
+                                           int attempts,
+                                           int minTransportCount) {
+        for (int i = 0; i < attempts; i++) {
+            collectBridgeLinesOnce(context, bridgeConfigs, fingerprintIndex, transport, ipv6);
+            if (minTransportCount > 0 && countTransport(bridgeConfigs, transport) >= minTransportCount) {
+                break;
+            }
+        }
+    }
+
+    private static void collectBridgeLinesOnce(Context context,
+                                               Set<String> bridgeConfigs,
+                                               Map<String, String> fingerprintIndex,
+                                               String transport,
+                                               boolean ipv6) {
         try {
             BridgeFetchResult result = BRIDGE_DB_CLIENT.fetch(transport, ipv6);
             if (result.getType() == BridgeFetchResult.Type.SUCCESS) {
@@ -161,6 +170,20 @@ public class TorBridgeParser {
         } catch (IOException e) {
             Log.w(TAG, "Failed to fetch bridges for " + transport + (ipv6 ? " (ipv6)" : ""), e);
         }
+    }
+
+    private static int countTransport(Set<String> bridgeConfigs, String transport) {
+        if (bridgeConfigs == null || bridgeConfigs.isEmpty() || transport == null) {
+            return 0;
+        }
+        String needle = ("Bridge " + transport).toLowerCase(Locale.US);
+        int count = 0;
+        for (String bridge : bridgeConfigs) {
+            if (bridge != null && bridge.toLowerCase(Locale.US).startsWith(needle)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static void notifyCaptcha(CaptchaChallenge challenge) {
@@ -194,7 +217,6 @@ public class TorBridgeParser {
 
         List<String> result = new ArrayList<>(bridgeConfigs);
         persistBridges(context, result);
-        lastFetched = result;
         return result;
     }
 

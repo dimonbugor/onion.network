@@ -24,12 +24,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:paddingLeft="@dimen/dp16"
+            android:textColor="?attr/colorOnBackground"
             android:paddingTop="@dimen/dp8"
             android:paddingRight="@dimen/dp16"
             android:paddingBottom="@dimen/dp8"
             android:singleLine="true"
             android:fontFamily="@font/geologica_400"
-            android:text="Offline"
+            android:text="@string/offline"
              />
 
         <View

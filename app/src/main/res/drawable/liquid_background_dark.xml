@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Deep midnight gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#151E3A"
+                android:centerColor="#0B1428"
+                android:endColor="#050914" />
+        </shape>
+    </item>
+
+    <!-- Cyan glow top-right -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="0.8"
+                android:centerY="0.1"
+                android:startColor="#405AF2FF"
+                android:endColor="#00050914" />
+        </shape>
+    </item>
+
+    <!-- Magenta glow bottom-left -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="360dp"
+                android:centerX="0.2"
+                android:centerY="0.8"
+                android:startColor="#338C7CFF"
+                android:endColor="#00050914" />
+        </shape>
+    </item>
+
+    <!-- Subtle vertical light streak -->
+    <item android:left="120dp" android:right="120dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#00101829"
+                android:centerColor="#40101829"
+                android:endColor="#00101829" />
+        </shape>
+    </item>
+</layer-list>

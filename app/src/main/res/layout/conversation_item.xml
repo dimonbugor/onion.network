@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="@dimen/dp8"
-    android:backgroundTint="@color/colorBackgroundAlpha"
+    android:background="?attr/liquidCardBackground"
+    app:cardBackgroundColor="@android:color/transparent"
     app:cardCornerRadius="@dimen/dp16"
     app:cardElevation="0dp"
     app:cardUseCompatPadding="false"
@@ -29,21 +30,21 @@
                 android:layout_marginStart="@dimen/dp16"
                 android:layout_marginVertical="@dimen/dp8"
                 app:cardCornerRadius="@dimen/dp48"
-                app:strokeColor="@color/colorAccentAlpha"
+                app:strokeColor="?attr/colorAccent"
                 app:strokeWidth="1dp">
 
                 <onion.network.ui.views.AvatarView
                     android:id="@+id/thumb"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@color/colorBackgroundAlpha" />
+                    android:background="?attr/colorPrimaryContainer" />
+
             </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:id="@+id/data"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
                 android:layout_weight="1"
                 android:layout_marginVertical="@dimen/dp8"
                 android:layout_marginHorizontal="@dimen/dp16"
@@ -51,18 +52,15 @@
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/address"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
-                        android:layout_weight="1"
                         android:singleLine="true"
                         android:fontFamily="@font/geologica_400"
-                        android:text="fuehwuajskdifuvh"
                         android:ellipsize="end"
                         android:textSize="@dimen/sp14"
                         android:textColor="?attr/colorOnBackground" />
@@ -79,14 +77,13 @@
                         android:textFontWeight="600"
                         android:textSize="@dimen/sp14"
                         android:textColor="?attr/colorOnBackground"
-                        android:text="Anonymous"
-                         />
+                        android:text="@string/anonymous" />
+
                 </RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/message"
@@ -96,16 +93,14 @@
                         android:gravity="center_vertical"
                         android:singleLine="true"
                         android:textColor="?attr/colorOnBackground"
-                        android:text="aifjnelsdfjpeuvb"
-                        android:textSize="@dimen/sp12"
-                         />
+                        android:textSize="@dimen/sp12" />
 
                     <ImageView
                         android:id="@+id/direction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        app:tint="?attr/white_80"
+                        app:tint="?attr/colorAccent"
                         android:src="@drawable/ic_received" />
 
                 </LinearLayout>
@@ -116,7 +111,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dp4"></FrameLayout>
+            android:layout_height="@dimen/dp4" />
 
     </LinearLayout>
 

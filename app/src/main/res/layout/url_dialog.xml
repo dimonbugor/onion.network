@@ -18,7 +18,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_400"
-                android:text="Hidden Service Link" />
+                android:textColor="?attr/colorOnBackground"
+                android:text="@string/hidden_service_link" />
 
             <TextView
                 android:id="@+id/onion_link_text"
@@ -26,6 +27,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_600"
                 android:textFontWeight="600"
+                android:textColor="?attr/colorOnBackground"
                 android:textSize="@dimen/sp16"
                 android:paddingBottom="@dimen/dp4"
                 android:text="fosuehnvjkdzshaw.onion/network.onion"
@@ -76,7 +78,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_400"
-                android:text="Clearnet Link" />
+                android:textColor="?attr/colorOnBackground"
+                android:text="@string/clearnet_link" />
 
             <TextView
                 android:id="@+id/clearnet_link_text"
@@ -85,6 +88,7 @@
                 android:fontFamily="@font/geologica_600"
                 android:textFontWeight="600"
                 android:textSize="@dimen/sp16"
+                android:textColor="?attr/colorOnBackground"
                 android:paddingBottom="@dimen/dp4"
                 android:text="fosuehnvjkdzshaw.onion.to/network.onion"
                 android:textAppearance="?android:attr/textAppearanceLarge"
@@ -133,7 +137,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/geologica_400"
-                android:text="If the links are not available yet, check your network connection and/or wait a few minutes for the hidden service to be registered." />
+                android:textColor="?attr/colorOnBackground"
+                android:text="@string/if_the_links_are_not_available_yet_check_your_network_connection_and_or_wait_a_few_minutes_for_the_hidden_service_to_be_registered" />
 
         </LinearLayout>
 

@@ -5,8 +5,8 @@
             <!-- Колір фону діалогу -->
             <gradient
                 android:angle="90"
-                android:endColor="@color/colorBackgroundAlpha"
-                android:centerColor="@color/colorBackgroundAlpha"
+                android:endColor="?attr/theme_colorBackgroundAlpha"
+                android:centerColor="?attr/theme_colorBackgroundAlpha"
                 android:startColor="@android:color/transparent" />
             <!-- Радіус заокруглення кутів -->
             <corners android:radius="@dimen/dp16" />

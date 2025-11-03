@@ -8,7 +8,7 @@
     </style>
 
     <style name="AppTheme.Dark" parent="AppTheme.Base">
-        <item name="android:windowBackground">@drawable/win_bg</item>
+        <item name="android:windowBackground">@drawable/liquid_background_dark</item>
         <item name="colorPrimary">@color/dark_colorPrimary</item>
         <item name="colorOnPrimary">@color/dark_colorOnPrimary</item>
         <item name="colorPrimaryContainer">@color/dark_colorPrimaryContainer</item>
@@ -19,6 +19,15 @@
         <item name="colorOnSurface">@color/dark_colorOnSurface</item>
         <item name="colorOnBackground">@color/dark_colorOnBackground</item>
         <item name="colorAccent">@color/dark_colorAccent</item>
+
+        <!-- Dark theme alpha color mappings (theme attributes) -->
+        <item name="theme_overlay">@color/dark_overlay</item>
+        <item name="theme_colorAccentAlpha">@color/dark_colorAccentAlpha</item>
+        <item name="theme_colorPrimaryContainerAlpha">@color/dark_colorPrimaryContainerAlpha</item>
+        <item name="theme_colorBackgroundAlpha_80">@color/dark_colorBackgroundAlpha_80</item>
+        <item name="theme_colorBackgroundAlpha">@color/dark_colorBackgroundAlpha</item>
+        <!-- liquid glass drawable for dark theme -->
+        <item name="liquidCardBackground">@drawable/frosted_card_dark</item>
 
         <!-- ActionBar -->
         <item name="android:windowLightStatusBar">false</item>
@@ -36,7 +45,7 @@
     </style>
 
     <style name="AppTheme.Light" parent="AppTheme.Base">
-        <item name="android:windowBackground">@drawable/win_bg_light</item>
+        <item name="android:windowBackground">@drawable/liquid_background_light</item>
         <item name="colorPrimary">@color/light_colorPrimary</item>
         <item name="colorOnPrimary">@color/light_colorOnPrimary</item>
         <item name="colorPrimaryContainer">@color/light_colorPrimaryContainer</item>
@@ -49,6 +58,15 @@
         <item name="white_50">@color/light_white_50</item>
         <item name="white_80">@color/light_white_80</item>
         <item name="colorAccent">@color/light_colorAccent</item>
+
+        <!-- Light theme alpha color mappings (theme attributes) -->
+        <item name="theme_overlay">@color/light_overlay</item>
+        <item name="theme_colorAccentAlpha">@color/light_colorAccentAlpha</item>
+        <item name="theme_colorPrimaryContainerAlpha">@color/light_colorPrimaryContainerAlpha</item>
+        <item name="theme_colorBackgroundAlpha_80">@color/light_colorBackgroundAlpha_80</item>
+        <item name="theme_colorBackgroundAlpha">@color/light_colorBackgroundAlpha</item>
+        <!-- liquid glass drawable for light theme -->
+        <item name="liquidCardBackground">@drawable/frosted_card_light</item>
 
         <!-- ActionBar -->
         <item name="android:windowLightStatusBar">true</item>
@@ -65,10 +83,16 @@
 
     <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight">
         <!-- Колір фону сплеш-екрана -->
-        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">@android:color/black</item>
+        <item name="android:windowSplashScreenBackground" tools:ignore="NewApi">
+            @android:color/black
+        </item>
         <!-- Анімація іконки (центрована) -->
-        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">@drawable/empty_icon</item>
-        <item name="android:windowSplashScreenIconBackgroundColor" tools:ignore="NewApi">@android:color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:ignore="NewApi">
+            @drawable/empty_icon
+        </item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:ignore="NewApi">
+            @android:color/black
+        </item>
         <!-- Тривалість анімації іконки (необов'язково) -->
         <item name="android:windowSplashScreenAnimationDuration" tools:ignore="NewApi">1000</item>
     </style>
@@ -109,6 +133,7 @@
         <item name="android:background">@android:color/transparent</item>
         <item name="android:titleTextStyle">@style/ActionBarTitleText.Dark</item>
     </style>
+
     <style name="ActionBar.Light" parent="Widget.Material3.ActionBar.Solid">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:titleTextStyle">@style/ActionBarTitleText.Light</item>
@@ -118,6 +143,7 @@
         <item name="android:textColor">@color/dark_colorOnPrimaryContainer</item>
         <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
     </style>
+
     <style name="ActionBarTitleText.Light" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textColor">@color/light_colorOnPrimaryContainer</item>
         <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
@@ -162,6 +188,7 @@
     <style name="WhiteButtonText" parent="Widget.MaterialComponents.Button">
         <item name="android:textColor">@android:color/white</item>
     </style>
+
     <style name="BlackButtonText" parent="Widget.MaterialComponents.Button">
         <item name="android:textColor">@android:color/black</item>
     </style>
@@ -170,6 +197,7 @@
     <style name="Widget.AppTheme.Dark.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
         <item name="android:background">@color/dark_colorBackground</item>
     </style>
+
     <style name="Widget.AppTheme.Light.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
         <item name="android:background">@color/light_colorBackground</item>
     </style>
@@ -185,6 +213,7 @@
         <item name="boxStrokeColor">@color/dark_colorAccent</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.App.rounded</item>
     </style>
+
     <style name="LightCustomEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
         <!-- Фонова заливка -->
         <item name="android:backgroundTint">@color/light_colorPrimaryContainer</item>

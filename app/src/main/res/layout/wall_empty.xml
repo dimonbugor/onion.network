@@ -10,7 +10,8 @@
         android:gravity="center_horizontal|top"
         android:fontFamily="@font/geologica_400"
         android:padding="@dimen/dp32"
-        android:text="No posts yet"
+        android:textColor="?attr/colorOnBackground"
+        android:text="@string/no_posts_yet"
          />
 
 </FrameLayout>

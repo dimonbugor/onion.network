@@ -820,7 +820,7 @@ public class WallPage extends BasePage {
             }
         } catch (Exception ignore) {
         }
-        if (!hasVideoAttachment(raw)) return;
+        if (!hasVideoAttachment(raw, data)) return;
         String videoId = raw != null ? raw.optString("video_id", "").trim() : "";
         String videoUriStr = raw != null ? raw.optString("video_uri", "").trim() : "";
         String videoData = raw != null ? raw.optString("video", "").trim() : "";
@@ -979,14 +979,40 @@ public class WallPage extends BasePage {
         tv.setPaintFlags(on ? (tv.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG) : (tv.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG));
     }
 
-    private static boolean hasVideoAttachment(JSONObject raw) {
-        return hasNonEmptyField(raw, "video_id", "video", "video_uri");
-    }
+    private static boolean hasVideoAttachment(@Nullable JSONObject raw, @Nullable JSONObject data) {
+        String videoId = raw != null ? raw.optString("video_id", "").trim() : "";
+        String videoUri = raw != null ? raw.optString("video_uri", "").trim() : "";
+        String videoData = raw != null ? raw.optString("video", "").trim() : "";
+        if (TextUtils.isEmpty(videoId) && TextUtils.isEmpty(videoUri) && TextUtils.isEmpty(videoData)) {
+            return false;
+        }
 
-    private static boolean hasNonEmptyField(JSONObject src, String... fields) {
-        if (src == null || fields == null) return false;
-        for (String f : fields) if (!TextUtils.isEmpty(src.optString(f, "").trim())) return true;
-        return false;
+        String authorVideoUri = "";
+        String authorVideoData = "";
+        if (data != null) {
+            authorVideoUri = data.optString("author_video_uri", "").trim();
+            authorVideoData = data.optString("author_video", "").trim();
+        }
+        if (TextUtils.isEmpty(authorVideoUri) && raw != null) {
+            authorVideoUri = raw.optString("author_video_uri", "").trim();
+        }
+        if (TextUtils.isEmpty(authorVideoData) && raw != null) {
+            authorVideoData = raw.optString("author_video", "").trim();
+        }
+
+        boolean hasId = !TextUtils.isEmpty(videoId);
+        boolean hasUri = !TextUtils.isEmpty(videoUri);
+        boolean hasData = !TextUtils.isEmpty(videoData);
+
+        if (!hasId) {
+            if (hasUri && !TextUtils.isEmpty(authorVideoUri) && TextUtils.equals(videoUri, authorVideoUri)) {
+                hasUri = false;
+            }
+            if (hasData && !TextUtils.isEmpty(authorVideoData) && TextUtils.equals(videoData, authorVideoData)) {
+                hasData = false;
+            }
+        }
+        return hasId || hasUri || hasData;
     }
 
     public void registerAvatar(AvatarView view) {
