@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Translucent graphite body -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="315"
+                android:startColor="#3D1F1F1F"
+                android:centerColor="#66262626"
+                android:endColor="#33141414" />
+            <corners android:radius="18dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#4C7A7A7A" />
+        </shape>
+    </item>
+
+    <!-- Soft top highlight -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="180"
+                android:startColor="#40FFFFFF"
+                android:endColor="#00FFFFFF" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+
+    <!-- Lower subtle lift -->
+    <item android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#00111111"
+                android:endColor="#33111111" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+
+    <!-- Inner sheen -->
+    <item android:top="6dp" android:bottom="6dp" android:left="6dp" android:right="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#14000000" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</layer-list>

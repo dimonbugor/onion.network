@@ -7,7 +7,69 @@
         <item name="fontFamily">@font/geologica_500</item>
     </style>
 
-    <style name="AppTheme.Dark" parent="AppTheme.Base">
+    <style name="AppTheme.MonochromeBlack" parent="AppTheme.Base">
+        <item name="android:windowBackground">@drawable/monochrome_background_black</item>
+        <item name="colorPrimary">@color/monochrome_black_colorPrimary</item>
+        <item name="colorOnPrimary">@color/monochrome_black_colorOnPrimary</item>
+        <item name="colorPrimaryContainer">@color/monochrome_black_colorPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/monochrome_black_colorOnPrimaryContainer</item>
+        <item name="colorSecondary">@color/monochrome_black_colorSecondary</item>
+        <item name="colorOnSecondary">@color/monochrome_black_colorOnSecondary</item>
+        <item name="colorSurface">@color/monochrome_black_colorSurface</item>
+        <item name="colorOnSurface">@color/monochrome_black_colorOnSurface</item>
+        <item name="colorOnBackground">@color/monochrome_black_colorOnBackground</item>
+        <item name="colorAccent">@color/monochrome_black_colorAccent</item>
+        <item name="theme_overlay">@color/monochrome_black_overlay</item>
+        <item name="theme_colorAccentAlpha">@color/monochrome_black_colorAccentAlpha</item>
+        <item name="theme_colorPrimaryContainerAlpha">@color/monochrome_black_colorPrimaryContainerAlpha</item>
+        <item name="theme_colorBackgroundAlpha_80">@color/monochrome_black_colorBackgroundAlpha_80</item>
+        <item name="theme_colorBackgroundAlpha">@color/monochrome_black_colorBackgroundAlpha</item>
+        <item name="liquidCardBackground">@drawable/frosted_card_monochrome_black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:actionBarStyle">@style/ActionBar.MonochromeBlack</item>
+        <item name="popupMenuStyle">@style/MonochromeBlackPopupMenuStyle</item>
+        <item name="actionOverflowMenuStyle">@style/MonochromeBlackOverflowMenu</item>
+        <item name="actionMenuTextColor">@color/monochrome_black_colorOnBackground</item>
+        <item name="white_50">@color/monochrome_black_white_50</item>
+        <item name="white_80">@color/monochrome_black_white_80</item>
+        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.MonochromeBlack</item>
+        <item name="android:textColor">@color/monochrome_black_colorOnBackground</item>
+        <item name="android:textColorPrimary">@color/monochrome_black_colorOnBackground</item>
+        <item name="android:textColorSecondary">@color/monochrome_black_colorOnSurface</item>
+    </style>
+
+    <style name="AppTheme.MonochromeLight" parent="AppTheme.Base">
+        <item name="android:windowBackground">@drawable/monochrome_background_light</item>
+        <item name="colorPrimary">@color/monochrome_light_colorPrimary</item>
+        <item name="colorOnPrimary">@color/monochrome_light_colorOnPrimary</item>
+        <item name="colorPrimaryContainer">@color/monochrome_light_colorPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/monochrome_light_colorOnPrimaryContainer</item>
+        <item name="colorSecondary">@color/monochrome_light_colorSecondary</item>
+        <item name="colorOnSecondary">@color/monochrome_light_colorOnSecondary</item>
+        <item name="colorSurface">@color/monochrome_light_colorSurface</item>
+        <item name="colorOnSurface">@color/monochrome_light_colorOnSurface</item>
+        <item name="colorOnBackground">@color/monochrome_light_colorOnBackground</item>
+        <item name="colorAccent">@color/monochrome_light_colorAccent</item>
+        <item name="theme_overlay">@color/monochrome_light_overlay</item>
+        <item name="theme_colorAccentAlpha">@color/monochrome_light_colorAccentAlpha</item>
+        <item name="theme_colorPrimaryContainerAlpha">@color/monochrome_light_colorPrimaryContainerAlpha</item>
+        <item name="theme_colorBackgroundAlpha_80">@color/monochrome_light_colorBackgroundAlpha_80</item>
+        <item name="theme_colorBackgroundAlpha">@color/monochrome_light_colorBackgroundAlpha</item>
+        <item name="liquidCardBackground">@drawable/frosted_card_monochrome_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:actionBarStyle">@style/ActionBar.MonochromeLight</item>
+        <item name="popupMenuStyle">@style/MonochromeLightPopupMenuStyle</item>
+        <item name="actionOverflowMenuStyle">@style/MonochromeLightOverflowMenu</item>
+        <item name="actionMenuTextColor">@color/monochrome_light_colorOnBackground</item>
+        <item name="white_50">@color/monochrome_light_white_50</item>
+        <item name="white_80">@color/monochrome_light_white_80</item>
+        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.MonochromeLight</item>
+        <item name="android:textColor">@color/monochrome_light_colorOnBackground</item>
+        <item name="android:textColorPrimary">@color/monochrome_light_colorOnBackground</item>
+        <item name="android:textColorSecondary">@color/monochrome_light_colorOnSurface</item>
+    </style>
+
+    <style name="AppTheme.DarkNeon" parent="AppTheme.Base">
         <item name="android:windowBackground">@drawable/liquid_background_dark</item>
         <item name="colorPrimary">@color/dark_colorPrimary</item>
         <item name="colorOnPrimary">@color/dark_colorOnPrimary</item>
@@ -31,20 +93,20 @@
 
         <!-- ActionBar -->
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:actionBarStyle">@style/ActionBar.Dark</item>
+        <item name="android:actionBarStyle">@style/ActionBar.DarkNeon</item>
 
-        <item name="popupMenuStyle">@style/DarkPopupMenuStyle</item>
-        <item name="actionOverflowMenuStyle">@style/DarkOverflowMenu</item>
+        <item name="popupMenuStyle">@style/DarkNeonPopupMenuStyle</item>
+        <item name="actionOverflowMenuStyle">@style/DarkNeonOverflowMenu</item>
         <item name="actionMenuTextColor">@color/dark_colorOnBackground</item>
         <item name="white_50">@color/dark_white_50</item>
         <item name="white_80">@color/dark_white_80</item>
-        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.Dark</item>
+        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.DarkNeon</item>
         <item name="android:textColor">@color/dark_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/dark_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/dark_colorOnSurface</item>
     </style>
 
-    <style name="AppTheme.Light" parent="AppTheme.Base">
+    <style name="AppTheme.LightNeon" parent="AppTheme.Base">
         <item name="android:windowBackground">@drawable/liquid_background_light</item>
         <item name="colorPrimary">@color/light_colorPrimary</item>
         <item name="colorOnPrimary">@color/light_colorOnPrimary</item>
@@ -70,12 +132,12 @@
 
         <!-- ActionBar -->
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:actionBarStyle">@style/ActionBar.Light</item>
+        <item name="android:actionBarStyle">@style/ActionBar.LightNeon</item>
 
-        <item name="popupMenuStyle">@style/LightPopupMenuStyle</item>
-        <item name="actionOverflowMenuStyle">@style/LightOverflowMenu</item>
+        <item name="popupMenuStyle">@style/LightNeonPopupMenuStyle</item>
+        <item name="actionOverflowMenuStyle">@style/LightNeonOverflowMenu</item>
         <item name="actionMenuTextColor">@color/light_colorOnBackground</item>
-        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.Light</item>
+        <item name="alertDialogThemeCustom">@style/RoundedAlertDialog.LightNeon</item>
         <item name="android:textColor">@color/light_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/light_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/light_colorOnSurface</item>
@@ -104,48 +166,92 @@
     </style>
 
     <!-- Світла тема -->
-    <style name="LightPopupMenuStyle" parent="PopupMenuStyle">
+    <style name="LightNeonPopupMenuStyle" parent="PopupMenuStyle">
         <item name="android:popupBackground">@drawable/rounded_dialog_light</item>
         <item name="android:textColor">@color/light_colorOnSurface</item>
     </style>
 
     <!-- Темна тема -->
-    <style name="DarkPopupMenuStyle" parent="PopupMenuStyle">
+    <style name="DarkNeonPopupMenuStyle" parent="PopupMenuStyle">
         <item name="android:popupBackground">@drawable/rounded_dialog_dark</item>
         <item name="android:textColor">@color/dark_colorOnSurface</item>
     </style>
 
     <!-- Overflow menu для темної теми -->
-    <style name="DarkOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+    <style name="DarkNeonOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/rounded_dialog_dark</item>
         <item name="android:popupElevation">8dp</item>
         <item name="android:textColor">@color/dark_colorOnSurface</item>
     </style>
 
     <!-- Overflow menu для світлої теми -->
-    <style name="LightOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+    <style name="LightNeonOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/rounded_dialog_light</item>
         <item name="android:popupElevation">8dp</item>
         <item name="android:textColor">@color/light_colorOnSurface</item>
     </style>
 
-    <style name="ActionBar.Dark" parent="Widget.Material3.ActionBar.Solid">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:titleTextStyle">@style/ActionBarTitleText.Dark</item>
+    <!-- Monochrome black theme -->
+    <style name="MonochromeBlackPopupMenuStyle" parent="PopupMenuStyle">
+        <item name="android:popupBackground">@drawable/rounded_dialog_monochrome_black</item>
+        <item name="android:textColor">@color/monochrome_black_colorOnSurface</item>
     </style>
 
-    <style name="ActionBar.Light" parent="Widget.Material3.ActionBar.Solid">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:titleTextStyle">@style/ActionBarTitleText.Light</item>
+    <style name="MonochromeBlackOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/rounded_dialog_monochrome_black</item>
+        <item name="android:popupElevation">8dp</item>
+        <item name="android:textColor">@color/monochrome_black_colorOnSurface</item>
     </style>
 
-    <style name="ActionBarTitleText.Dark" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+    <!-- Monochrome light theme -->
+    <style name="MonochromeLightPopupMenuStyle" parent="PopupMenuStyle">
+        <item name="android:popupBackground">@drawable/rounded_dialog_monochrome_light</item>
+        <item name="android:textColor">@color/monochrome_light_colorOnSurface</item>
+    </style>
+
+    <style name="MonochromeLightOverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/rounded_dialog_monochrome_light</item>
+        <item name="android:popupElevation">8dp</item>
+        <item name="android:textColor">@color/monochrome_light_colorOnSurface</item>
+    </style>
+
+    <style name="ActionBar.DarkNeon" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleText.DarkNeon</item>
+    </style>
+
+    <style name="ActionBar.LightNeon" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleText.LightNeon</item>
+    </style>
+
+    <style name="ActionBar.MonochromeBlack" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleText.MonochromeBlack</item>
+    </style>
+
+    <style name="ActionBar.MonochromeLight" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:titleTextStyle">@style/ActionBarTitleText.MonochromeLight</item>
+    </style>
+
+    <style name="ActionBarTitleText.DarkNeon" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textColor">@color/dark_colorOnPrimaryContainer</item>
         <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
     </style>
 
-    <style name="ActionBarTitleText.Light" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+    <style name="ActionBarTitleText.LightNeon" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textColor">@color/light_colorOnPrimaryContainer</item>
+        <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
+    </style>
+
+    <style name="ActionBarTitleText.MonochromeBlack" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textColor">@color/monochrome_black_colorOnPrimaryContainer</item>
+        <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
+    </style>
+
+    <style name="ActionBarTitleText.MonochromeLight" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textColor">@color/monochrome_light_colorOnPrimaryContainer</item>
         <item name="android:titleTextAppearance">@style/ToolbarTitleStyle</item>
     </style>
 
@@ -155,12 +261,22 @@
     </style>
 
     <!-- Тема без панелі дій -->
-    <style name="AppTheme.Dark.NoActionBar" parent="AppTheme.Dark">
+    <style name="AppTheme.DarkNeon.NoActionBar" parent="AppTheme.DarkNeon">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.Light.NoActionBar" parent="AppTheme.Light">
+    <style name="AppTheme.LightNeon.NoActionBar" parent="AppTheme.LightNeon">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.MonochromeBlack.NoActionBar" parent="AppTheme.MonochromeBlack">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.MonochromeLight.NoActionBar" parent="AppTheme.MonochromeLight">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
@@ -172,14 +288,26 @@
         <item name="android:backgroundDimAmount">0.8</item>
     </style>
 
-    <style name="RoundedAlertDialog.Dark" parent="RoundedAlertDialog">
+    <style name="RoundedAlertDialog.DarkNeon" parent="RoundedAlertDialog">
         <item name="android:windowBackground">@drawable/rounded_dialog_dark</item>
         <item name="buttonBarPositiveButtonStyle">@style/WhiteButtonText</item>
         <item name="buttonBarNegativeButtonStyle">@style/WhiteButtonText</item>
     </style>
 
-    <style name="RoundedAlertDialog.Light" parent="RoundedAlertDialog">
+    <style name="RoundedAlertDialog.LightNeon" parent="RoundedAlertDialog">
         <item name="android:windowBackground">@drawable/rounded_dialog_light</item>
+        <item name="buttonBarPositiveButtonStyle">@style/BlackButtonText</item>
+        <item name="buttonBarNegativeButtonStyle">@style/BlackButtonText</item>
+    </style>
+
+    <style name="RoundedAlertDialog.MonochromeBlack" parent="RoundedAlertDialog">
+        <item name="android:windowBackground">@drawable/rounded_dialog_monochrome_black</item>
+        <item name="buttonBarPositiveButtonStyle">@style/WhiteButtonText</item>
+        <item name="buttonBarNegativeButtonStyle">@style/WhiteButtonText</item>
+    </style>
+
+    <style name="RoundedAlertDialog.MonochromeLight" parent="RoundedAlertDialog">
+        <item name="android:windowBackground">@drawable/rounded_dialog_monochrome_light</item>
         <item name="buttonBarPositiveButtonStyle">@style/BlackButtonText</item>
         <item name="buttonBarNegativeButtonStyle">@style/BlackButtonText</item>
     </style>
@@ -194,12 +322,20 @@
     </style>
 
     <!-- Стиль для повноекранної панелі дій -->
-    <style name="Widget.AppTheme.Dark.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
+    <style name="Widget.AppTheme.DarkNeon.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
         <item name="android:background">@color/dark_colorBackground</item>
     </style>
 
-    <style name="Widget.AppTheme.Light.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
+    <style name="Widget.AppTheme.LightNeon.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
         <item name="android:background">@color/light_colorBackground</item>
+    </style>
+
+    <style name="Widget.AppTheme.MonochromeBlack.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@color/monochrome_black_colorBackground</item>
+    </style>
+
+    <style name="Widget.AppTheme.MonochromeLight.ActionBar.Fullscreen" parent="Widget.Material3.ActionBar.Solid">
+        <item name="android:background">@color/monochrome_light_colorBackground</item>
     </style>
 
     <style name="DarkCustomEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">

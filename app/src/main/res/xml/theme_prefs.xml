@@ -8,6 +8,13 @@
         android:summaryOn="@string/theme_dark_mode_summary_on"
         android:summaryOff="@string/theme_dark_mode_summary_off" />
 
+    <SwitchPreference
+        android:key="theme_monochrome_mode"
+        android:defaultValue="false"
+        android:title="@string/theme_monochrome_mode_title"
+        android:summaryOn="@string/theme_monochrome_mode_summary_on"
+        android:summaryOff="@string/theme_monochrome_mode_summary_off" />
+
     <PreferenceCategory
         android:key="ui_customization"
         android:title="@string/theme_customization_category">

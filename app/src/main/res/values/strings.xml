@@ -176,6 +176,9 @@
     <string name="theme_dark_mode_title">Dark mode</string>
     <string name="theme_dark_mode_summary_on">Dark theme is enabled</string>
     <string name="theme_dark_mode_summary_off">Light theme is enabled</string>
+    <string name="theme_monochrome_mode_title">Monochrome mode</string>
+    <string name="theme_monochrome_mode_summary_on">Monochrome surfaces enabled</string>
+    <string name="theme_monochrome_mode_summary_off">Neon color accents enabled</string>
     <string name="theme_customization_category">Interface</string>
     <string name="pref_title_color_preset">Color preset</string>
     <string name="pref_title_page_action_fab_position">Page action button position</string>

@@ -53,6 +53,48 @@
     <color name="light_white_50">#80FFFFFF</color>
     <color name="light_white_80">#CCFFFFFF</color>
 
+    <!-- Monochrome Black -->
+    <color name="monochrome_black_overlay">#66101010</color>
+    <color name="monochrome_black_colorAccentAlpha">#4C7A7A7A</color>
+    <color name="monochrome_black_colorPrimaryContainerAlpha">#33202020</color>
+    <color name="monochrome_black_colorBackgroundAlpha_80">#CC111111</color>
+    <color name="monochrome_black_colorBackgroundAlpha">#40101010</color>
+    <color name="monochrome_black_colorPrimary">#101010</color>
+    <color name="monochrome_black_colorOnPrimary">#E5E5E5</color>
+    <color name="monochrome_black_colorPrimaryContainer">#181818</color>
+    <color name="monochrome_black_colorOnPrimaryContainer">#F2F2F2</color>
+    <color name="monochrome_black_colorSecondary">#262626</color>
+    <color name="monochrome_black_colorOnSecondary">#F0F0F0</color>
+    <color name="monochrome_black_colorSurface">#121212</color>
+    <color name="monochrome_black_colorOnSurface">#DCDCDC</color>
+    <color name="monochrome_black_colorBackground">#050505</color>
+    <color name="monochrome_black_colorOnBackground">#F7F7F7</color>
+    <color name="monochrome_black_colorAccent">#7A7A7A</color>
+    <color name="monochrome_black_colorDialogBackgroundAlpha">#CC3F4C3F</color>
+    <color name="monochrome_black_white_50">#80E0E0E0</color>
+    <color name="monochrome_black_white_80">#CCE0E0E0</color>
+
+    <!-- Monochrome Light -->
+    <color name="monochrome_light_overlay">#1A000000</color>
+    <color name="monochrome_light_colorAccentAlpha">#33999999</color>
+    <color name="monochrome_light_colorPrimaryContainerAlpha">#33FFFFFF</color>
+    <color name="monochrome_light_colorBackgroundAlpha_80">#CCF5F5F5</color>
+    <color name="monochrome_light_colorBackgroundAlpha">#33F5F5F5</color>
+    <color name="monochrome_light_colorPrimary">#F6F6F6</color>
+    <color name="monochrome_light_colorOnPrimary">#1A1A1A</color>
+    <color name="monochrome_light_colorPrimaryContainer">#FFFFFF</color>
+    <color name="monochrome_light_colorOnPrimaryContainer">#262626</color>
+    <color name="monochrome_light_colorSecondary">#D1D1D1</color>
+    <color name="monochrome_light_colorOnSecondary">#141414</color>
+    <color name="monochrome_light_colorSurface">#FAFAFA</color>
+    <color name="monochrome_light_colorOnSurface">#202020</color>
+    <color name="monochrome_light_colorBackground">#FFFFFF</color>
+    <color name="monochrome_light_colorOnBackground">#1A1A1A</color>
+    <color name="monochrome_light_colorAccent">#9E9E9E</color>
+    <color name="monochrome_light_colorDialogBackgroundAlpha">#CCCBD7CC</color>
+    <color name="monochrome_light_white_50">#80999999</color>
+    <color name="monochrome_light_white_80">#CC999999</color>
+
     <!-- UI custom presets -->
     <color name="ui_preset_midnight_accent">#6C63FF</color>
     <color name="ui_preset_midnight_surface">#1B2236</color>

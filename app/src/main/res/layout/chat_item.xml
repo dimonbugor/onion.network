@@ -129,6 +129,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="@dimen/dp4">
+
             <TextView
                 android:id="@+id/status"
                 android:layout_width="0dp"

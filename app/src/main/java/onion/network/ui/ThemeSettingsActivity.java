@@ -89,26 +89,80 @@ public class ThemeSettingsActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.theme_prefs);
 
+            final android.app.Activity activity = getActivity();
+            if (activity == null) {
+                return;
+            }
+
+            ThemeManager themeManager = ThemeManager.init(activity);
+            String currentTheme = themeManager.getTheme();
+
             SwitchPreference themeSwitch = (SwitchPreference) getPreferenceManager().findPreference("theme_dark_mode");
+            SwitchPreference monochromeSwitch = (SwitchPreference) getPreferenceManager().findPreference("theme_monochrome_mode");
+
             if (themeSwitch != null) {
-                final android.app.Activity activity = getActivity();
-                if (activity == null) {
-                    return;
-                }
-                boolean isDark = ThemeManager.init(activity).getTheme().equals(ThemeManager.themeKeys[0]);
-                themeSwitch.setChecked(isDark);
+                themeSwitch.setChecked(isDarkTheme(currentTheme));
+            }
+
+            if (monochromeSwitch != null) {
+                monochromeSwitch.setChecked(isMonochromeTheme(currentTheme));
+            }
+
+            if (themeSwitch != null) {
                 themeSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
-                    boolean enableDark = (Boolean) newValue;
                     android.app.Activity host = getActivity();
                     if (host == null) {
                         return false;
                     }
-                    ThemeManager.init(host).setTheme(host,
-                            enableDark ? ThemeManager.themeKeys[0] : ThemeManager.themeKeys[1]);
-                    host.recreate();
-                    return true;
+                    boolean enableDark = (Boolean) newValue;
+                    boolean enableMonochrome = monochromeSwitch != null && monochromeSwitch.isChecked();
+                    return applyThemeSelection(host, enableDark, enableMonochrome);
                 });
             }
+
+            if (monochromeSwitch != null) {
+                monochromeSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+                    android.app.Activity host = getActivity();
+                    if (host == null) {
+                        return false;
+                    }
+                    boolean enableMonochrome = (Boolean) newValue;
+                    boolean enableDark = themeSwitch != null && themeSwitch.isChecked();
+                    return applyThemeSelection(host, enableDark, enableMonochrome);
+                });
+            }
+        }
+
+        private boolean applyThemeSelection(android.app.Activity host, boolean enableDark, boolean enableMonochrome) {
+            ThemeManager manager = ThemeManager.init(host);
+            String targetThemeKey;
+            if (enableMonochrome) {
+                targetThemeKey = enableDark ? ThemeManager.themeKeys[2] : ThemeManager.themeKeys[3];
+            } else {
+                targetThemeKey = enableDark ? ThemeManager.themeKeys[0] : ThemeManager.themeKeys[1];
+            }
+
+            if (targetThemeKey.equals(manager.getTheme())) {
+                return true;
+            }
+
+            manager.setTheme(host, targetThemeKey);
+            host.recreate();
+            return true;
+        }
+
+        private boolean isDarkTheme(String themeKey) {
+            if (themeKey == null) {
+                return true;
+            }
+            return ThemeManager.themeKeys[0].equals(themeKey) || ThemeManager.themeKeys[2].equals(themeKey);
+        }
+
+        private boolean isMonochromeTheme(String themeKey) {
+            if (themeKey == null) {
+                return false;
+            }
+            return ThemeManager.themeKeys[2].equals(themeKey) || ThemeManager.themeKeys[3].equals(themeKey);
         }
     }
 

@@ -9,8 +9,13 @@ import android.util.TypedValue;
 import onion.network.R;
 
 public class ThemeManager {
-    public final static String[] themes = {"Dark", "Light"};
-    public final static String[] themeKeys = {"AppTheme.Dark", "AppTheme.Light"};
+    public final static String[] themes = {"Dark Neon", "Light Neon", "Monochrome Black", "Monochrome Light"};
+    public final static String[] themeKeys = {
+            "AppTheme.DarkNeon",
+            "AppTheme.LightNeon",
+            "AppTheme.MonochromeBlack",
+            "AppTheme.MonochromeLight"
+    };
     private final String PREFS_NAME = "settings";
     private final String KEY_THEME = "theme";
     private static ThemeManager instance = null;
@@ -19,7 +24,11 @@ public class ThemeManager {
 
     private ThemeManager(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        currentTheme = prefs.getString(KEY_THEME, "AppTheme.Dark");
+        String storedTheme = prefs.getString(KEY_THEME, "AppTheme.DarkNeon");
+        currentTheme = migrateLegacyThemeKey(storedTheme);
+        if (!currentTheme.equals(storedTheme)) {
+            prefs.edit().putString(KEY_THEME, currentTheme).apply();
+        }
         currentNoActionBarTheme = currentTheme + ".NoActionBar";
     }
 
@@ -50,11 +59,11 @@ public class ThemeManager {
     }
 
     public String getTheme() {
-        return currentTheme == null ? "AppTheme.Dark" : currentTheme;
+        return currentTheme == null ? "AppTheme.DarkNeon" : currentTheme;
     }
 
     public String getNoActionBarTheme() {
-        return currentNoActionBarTheme == null ? "AppTheme.Dark.NoActionBar" : currentNoActionBarTheme;
+        return currentNoActionBarTheme == null ? "AppTheme.DarkNeon.NoActionBar" : currentNoActionBarTheme;
     }
 
     public static int getColor(Context context, int attr) {
@@ -71,5 +80,19 @@ public class ThemeManager {
         theme.resolveAttribute(R.attr.alertDialogThemeCustom, typedValue, true);
         int dialogThemeResId = typedValue.resourceId;
         return dialogThemeResId;
+    }
+
+    private String migrateLegacyThemeKey(String themeKey) {
+        if (themeKey == null) {
+            return "AppTheme.DarkNeon";
+        }
+        switch (themeKey) {
+            case "AppTheme.Dark":
+                return "AppTheme.DarkNeon";
+            case "AppTheme.Light":
+                return "AppTheme.LightNeon";
+            default:
+                return themeKey;
+        }
     }
 }
