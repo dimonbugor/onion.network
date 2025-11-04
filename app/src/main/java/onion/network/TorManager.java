@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +32,12 @@ public class TorManager {
     private String status = "";
     private volatile boolean ready = false;
     private volatile List<String> bridgeOverride = null;
+    private final Object restartLock = new Object();
+    private volatile boolean restartScheduled = false;
+    private static final int MAX_RESTARTS_BEFORE_BRIDGE_REFRESH = 3;
+    private static final long RESTART_WINDOW_MS = 5 * 60_000L;
+    private volatile int restartAttempts = 0;
+    private volatile long lastRestartAttemptMs = 0;
 
     private native boolean nativeStartTor(String torrcPath, String dataDir);
     private final Object portLock = new Object();
@@ -115,6 +123,8 @@ public class TorManager {
             writer.println("SocksPort auto");
             writer.println("ExitPolicy accept *:*");
             writer.println("NumCPUs 2");
+            writer.println("ClientPreferIPv6ORPort 0");
+            writer.println("ClientPreferIPv6DirPort 0");
 
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
@@ -135,45 +145,59 @@ public class TorManager {
                 File conjureFile = new File(libConjurePath);
                 if (conjureFile.exists()) conjureFile.setExecutable(true);
 
-                Set<String> clients = new HashSet<>();
+                List<String> sanitizedBridges = new ArrayList<>();
                 for (String bridge : bridgeConfigs) {
-                    if (bridge == null || bridge.isEmpty()) {
+                    if (bridge == null) {
                         continue;
                     }
-
-                    String normalized = bridge.toLowerCase(Locale.US);
+                    String trimmed = bridge.trim();
+                    if (trimmed.isEmpty()) {
+                        continue;
+                    }
+                    String normalized = trimmed.toLowerCase(Locale.US);
                     if (normalized.contains("bridge conjure") || normalized.contains(" conjure ")) {
                         Log.i("TorManager", "Skipping conjure bridge: " + bridge);
                         continue;
                     }
+                    if (!normalized.startsWith("bridge ")) {
+                        trimmed = "Bridge " + trimmed;
+                    }
+                    sanitizedBridges.add(trimmed);
+                }
 
-                    writer.println(bridge);
+                if (!sanitizedBridges.isEmpty()) {
+                    writer.println("UseBridges 1");
+                    Set<String> clients = new HashSet<>();
+                    for (String bridge : sanitizedBridges) {
+                        String normalized = bridge.toLowerCase(Locale.US);
+                        writer.println(bridge);
 
-                    if (normalized.contains("bridge obfs4") || normalized.contains(" obfs4 ")) {
-                        clients.add("obfs4");
+                        if (normalized.contains("bridge obfs4") || normalized.contains(" obfs4 ")) {
+                            clients.add("obfs4");
+                        }
+                        if (normalized.contains("bridge webtunnel") || normalized.contains(" webtunnel ")) {
+                            clients.add("webtunnel");
+                        }
+                        if (normalized.contains("bridge snowflake") || normalized.contains(" snowflake ")) {
+                            clients.add("snowflake");
+                        }
+                        if (normalized.contains("bridge meek") || normalized.contains(" meek_lite ") || normalized.contains(" meek ")) {
+                            clients.add("meek");
+                        }
                     }
-                    if (normalized.contains("bridge webtunnel") || normalized.contains(" webtunnel ")) {
-                        clients.add("webtunnel");
-                    }
-                    if (normalized.contains("bridge snowflake") || normalized.contains(" snowflake ")) {
-                        clients.add("snowflake");
-                    }
-                    if (normalized.contains("bridge meek") || normalized.contains(" meek_lite ") || normalized.contains(" meek ")) {
-                        clients.add("meek");
-                    }
-                }
-                writer.println();
+                    writer.println();
 
-                if (clients.contains("obfs4")) {
-                    writer.println("ClientTransportPlugin obfs4 exec " + libObfs4Path);
+                    if (clients.contains("obfs4")) {
+                        writer.println("ClientTransportPlugin obfs4 exec " + libObfs4Path);
+                    }
+                    if (clients.contains("webtunnel")) {
+                        writer.println("ClientTransportPlugin webtunnel exec " + libWebtunnelPath);
+                    }
+                    if (clients.contains("snowflake")) {
+                        writer.println("ClientTransportPlugin snowflake exec " + libSnowflakePath);
+                    }
+                    writer.println();
                 }
-                if (clients.contains("webtunnel")) {
-                    writer.println("ClientTransportPlugin webtunnel exec " + libWebtunnelPath);
-                }
-                if (clients.contains("snowflake")) {
-                    writer.println("ClientTransportPlugin snowflake exec " + libSnowflakePath);
-                }
-                writer.println();
             }
         }
 
@@ -220,6 +244,9 @@ public class TorManager {
         onPortInLogListener(line);
         if(line.contains("Bootstrapped 100%")) {
             ready = true;
+            synchronized (restartLock) {
+                restartAttempts = 0;
+            }
         }
         synchronized (logListeners) {
             for (LogListener l : logListeners) {
@@ -343,5 +370,82 @@ public class TorManager {
         synchronized (logListeners) {
             logListeners.remove(listener);
         }
+    }
+
+    public void reportSocksFailure(IOException exception) {
+        if (exception == null) return;
+        String message = exception.getMessage();
+        if (message == null) {
+            return;
+        }
+        boolean relevant = message.contains("127.0.0.1") &&
+                (message.contains("ECONNREFUSED") || message.contains("ENETUNREACH") || message.contains("EPIPE"));
+        if (!relevant) {
+            return;
+        }
+        ensureTorAlive("SOCKS failure: " + message);
+    }
+
+    private void ensureTorAlive(String reason) {
+        int currentPort = socksPort;
+        if (!ready || currentPort <= 0) {
+            return;
+        }
+        boolean reachable = false;
+        try (Socket test = new Socket()) {
+            test.connect(new InetSocketAddress("127.0.0.1", currentPort), 3_000);
+            reachable = true;
+        } catch (IOException ignored) {
+        }
+        if (reachable) {
+            return;
+        }
+        boolean refreshBridges = false;
+        synchronized (restartLock) {
+            if (restartScheduled) {
+                return;
+            }
+            long now = System.currentTimeMillis();
+            if (now - lastRestartAttemptMs > RESTART_WINDOW_MS) {
+                restartAttempts = 0;
+            }
+            restartAttempts++;
+            lastRestartAttemptMs = now;
+            if (restartAttempts >= MAX_RESTARTS_BEFORE_BRIDGE_REFRESH) {
+                refreshBridges = true;
+                restartAttempts = 0;
+            }
+            restartScheduled = true;
+        }
+        final boolean refreshBridgesFinal = refreshBridges;
+        log("Restarting Tor (" + reason + ")");
+        new Thread(() -> {
+            try {
+                nativeStopTor();
+            } catch (Exception e) {
+                log("nativeStopTor during restart failed: " + e.getMessage());
+            }
+            if (refreshBridgesFinal) {
+                try {
+                    List<String> refreshed = TorBridgeParser.refreshBridgeConfigs(context);
+                    synchronized (TorManager.this) {
+                        bridgeOverride = new ArrayList<>(refreshed);
+                    }
+                    log("Bridge cache refreshed after repeated failures");
+                } catch (Exception e) {
+                    log("Failed to refresh bridges: " + e.getMessage());
+                }
+            }
+            ready = false;
+            socksPort = -1;
+            try {
+                Thread.sleep(1_500);
+            } catch (InterruptedException ignored) {
+            }
+            startTorServer();
+            synchronized (restartLock) {
+                restartScheduled = false;
+            }
+        }).start();
     }
 }

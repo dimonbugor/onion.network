@@ -35,6 +35,10 @@ public class ChatClient {
     private TorManager torManager;
     private HashSet<OnMessageSentListener> listeners = new HashSet<OnMessageSentListener>();
 
+    private static final int SEND_ATTEMPTS = 3;
+    private static final long SEND_RETRY_INITIAL_DELAY_MS = 1500L;
+    private static final long SEND_RETRY_MAX_DELAY_MS = 6000L;
+
     public ChatClient(Context context) {
         this.context = context;
         this.torManager = TorManager.getInstance(context);
@@ -65,32 +69,53 @@ public class ChatClient {
     }
 
     public boolean sendOne(String sender, String receiver, String content, long time) throws IOException {
-
         String networkContent = prepareContentForSend(content, receiver);
         Envelope envelope = buildEnvelope(sender, receiver, networkContent, time);
-        boolean sent = sendViaPost(envelope);
-        if (!sent) {
+
+        IOException lastError = null;
+        long delay = SEND_RETRY_INITIAL_DELAY_MS;
+        for (int attempt = 1; attempt <= SEND_ATTEMPTS; attempt++) {
             try {
-                sent = sendViaGet(envelope);
+                if (sendViaPost(envelope)) {
+                    onSent(sender, receiver, time);
+                    return true;
+                }
             } catch (IOException ex) {
-                log("exception");
-                log("" + ex.getMessage());
-                ex.printStackTrace();
-                throw ex;
+                lastError = ex;
+                log("POST attempt " + attempt + " failed: " + ex.getMessage());
+            }
+
+            try {
+                if (sendViaGet(envelope)) {
+                    onSent(sender, receiver, time);
+                    return true;
+                }
+            } catch (IOException ex) {
+                lastError = ex;
+                log("GET attempt " + attempt + " failed: " + ex.getMessage());
+            }
+
+            if (attempt < SEND_ATTEMPTS) {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted during send retry", ie);
+                }
+                delay = Math.min(delay * 2, SEND_RETRY_MAX_DELAY_MS);
             }
         }
-        if (!sent) {
-            return false;
+
+        if (lastError != null) {
+            throw lastError;
         }
+        return false;
+    }
 
+    private void onSent(String sender, String receiver, long time) {
         log("message sent");
-
         chatDatabase.touch(sender, receiver, time);
-
         callOnMessageSentListeners();
-
-        return true;
-
     }
 
     private void sendAll(Cursor cursor) throws IOException {
@@ -149,24 +174,19 @@ public class ChatClient {
         return envelope;
     }
 
-    private boolean sendViaPost(Envelope envelope) {
+    private boolean sendViaPost(Envelope envelope) throws IOException {
         JSONObject body = envelope.toJson();
-        try {
-            byte[] response = HttpClient.postbin(
-                    envelope.toPostUri(),
-                    body.toString().getBytes(Utils.UTF_8),
-                    "application/json; charset=utf-8"
-            );
-            String responseText = new String(response, Utils.UTF_8).trim();
-            if ("1".equals(responseText)) {
-                return true;
-            }
-            log("POST declined: " + responseText);
-            return false;
-        } catch (IOException ex) {
-            log("POST failed: " + ex.getMessage());
-            return false;
+        byte[] response = HttpClient.postbin(
+                envelope.toPostUri(),
+                body.toString().getBytes(Utils.UTF_8),
+                "application/json; charset=utf-8"
+        );
+        String responseText = new String(response, Utils.UTF_8).trim();
+        if ("1".equals(responseText)) {
+            return true;
         }
+        log("POST declined: " + responseText);
+        return false;
     }
 
     private boolean sendViaGet(Envelope envelope) throws IOException {

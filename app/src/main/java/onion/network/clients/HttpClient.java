@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -26,6 +27,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 public class HttpClient {
+
+    private static final int CONNECT_TIMEOUT_MS = 12_000;
+    private static final int READ_TIMEOUT_MS = 28_000;
+    private static final int TOR_RETRY_ATTEMPTS = 4;
+    private static final int DIRECT_RETRY_ATTEMPTS = 2;
+    private static final long INITIAL_RETRY_DELAY_MS = 1_000L;
+    private static final long MAX_RETRY_DELAY_MS = 5_000L;
 
     private static void log(String str) {
         Log.i("HTTP", str);
@@ -86,6 +94,44 @@ public class HttpClient {
         log(method + " " + uri + " tor=" + torified + " tls=" + allowTls + " redirs=" + redirs);
         if (redirs < 0) throw new IOException("Too many redirects");
 
+        int attempts = torified ? TOR_RETRY_ATTEMPTS : DIRECT_RETRY_ATTEMPTS;
+        IOException lastError = null;
+        long delay = INITIAL_RETRY_DELAY_MS;
+        for (int attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                return executeRequest(uri, method, body, contentType, torified, allowTls, redirs);
+            } catch (IOException ex) {
+                lastError = ex;
+                if (attempt == attempts) {
+                    throw ex;
+                }
+                String reason = ex instanceof SocketTimeoutException ? "timeout" : ex.getClass().getSimpleName();
+                log("retry " + attempt + " failed (" + reason + "): " + ex.getMessage());
+                if (torified) {
+                    Context appContext = App.context;
+                    if (appContext != null) {
+                        TorManager.getInstance(appContext).reportSocksFailure(ex);
+                    }
+                }
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted during HTTP retry", ie);
+                }
+                delay = Math.min(delay * 2, MAX_RETRY_DELAY_MS);
+            }
+        }
+        throw lastError == null ? new IOException("Unknown HTTP failure") : lastError;
+    }
+
+    private static byte[] executeRequest(Uri uri,
+                                         String method,
+                                         byte[] body,
+                                         String contentType,
+                                         boolean torified,
+                                         boolean allowTls,
+                                         int redirs) throws IOException {
         Context context = App.context;
         Socket socket = null;
         boolean hasBody = body != null && body.length > 0;
@@ -108,10 +154,10 @@ public class HttpClient {
                 int torPort = TorManager.getInstance(context).getPort();
                 Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", torPort));
                 socket = new Socket(proxy);
-                socket.connect(new InetSocketAddress(uri.getHost(), port), 90000);
+                socket.connect(new InetSocketAddress(uri.getHost(), port), CONNECT_TIMEOUT_MS);
             } else {
                 socket = new Socket();
-                socket.connect(new InetSocketAddress(uri.getHost(), port), 90000);
+                socket.connect(new InetSocketAddress(uri.getHost(), port), CONNECT_TIMEOUT_MS);
             }
 
             if (tls) {
@@ -120,6 +166,7 @@ public class HttpClient {
             }
 
             if (socket == null) throw new IOException("Socket init failed");
+            socket.setSoTimeout(READ_TIMEOUT_MS);
 
             OutputStream os = socket.getOutputStream();
             String path = uri.getEncodedPath();
@@ -180,7 +227,7 @@ public class HttpClient {
                 String loc = headers.get("Location");
                 if (loc != null) {
                     log("redirect to " + loc);
-                    responseContent = request(Uri.parse(loc), method, body, contentType, torified, allowTls, redirs - 1);
+                    return request(Uri.parse(loc), method, body, contentType, torified, allowTls, redirs - 1);
                 }
             }
 

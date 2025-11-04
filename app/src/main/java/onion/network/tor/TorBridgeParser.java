@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import onion.network.helpers.NetworkUtils;
 import onion.network.settings.Settings;
 
 public class TorBridgeParser {
@@ -37,9 +38,9 @@ public class TorBridgeParser {
 //            "Bridge conjure 143.110.214.222:80 url=https://registration.refraction.network.global.prod.fastly.net/api front=cdn.sstatic.net"
     };
     private static final int MAX_FETCH_ATTEMPTS = 2;
-    private static final int WEBTUNNEL_FETCH_ATTEMPTS = 2;
 
     public static synchronized List<String> getBridgeConfigs(Context context) {
+        boolean ipv6Allowed = NetworkUtils.hasGlobalIpv6Connectivity();
         Set<String> bridgeConfigs = new LinkedHashSet<>();
         Map<String, String> fingerprintIndex = new HashMap<>();
 
@@ -48,15 +49,18 @@ public class TorBridgeParser {
         }
 
         collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", false, MAX_FETCH_ATTEMPTS, 1);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", true, MAX_FETCH_ATTEMPTS, 1);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", false, WEBTUNNEL_FETCH_ATTEMPTS, 1);
-        collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "webtunnel", true, WEBTUNNEL_FETCH_ATTEMPTS, 1);
+        if (ipv6Allowed) {
+            collectBridgeLines(context, bridgeConfigs, fingerprintIndex, "obfs4", true, MAX_FETCH_ATTEMPTS, 1);
+        }
 
         for (String bridge : DEFAULT_BRIDGES) {
             storeBridge(bridgeConfigs, fingerprintIndex, bridge);
         }
 
         List<String> result = new ArrayList<>(bridgeConfigs);
+        if (!ipv6Allowed) {
+            result.removeIf(TorBridgeParser::isIpv6Line);
+        }
         persistBridges(context, result);
         return result;
     }
@@ -216,6 +220,9 @@ public class TorBridgeParser {
         }
 
         List<String> result = new ArrayList<>(bridgeConfigs);
+        if (!NetworkUtils.hasGlobalIpv6Connectivity()) {
+            result.removeIf(TorBridgeParser::isIpv6Line);
+        }
         persistBridges(context, result);
         return result;
     }
@@ -267,6 +274,11 @@ public class TorBridgeParser {
 
         String trimmed = bridge.trim();
         if (trimmed.isEmpty()) {
+            return;
+        }
+
+        String lower = trimmed.toLowerCase(Locale.US);
+        if (lower.contains("bridge webtunnel") || lower.contains(" webtunnel ")) {
             return;
         }
 
@@ -368,5 +380,10 @@ public class TorBridgeParser {
         void onSuccess(List<String> bridges);
         void onNewChallenge(CaptchaChallenge challenge, String message);
         void onFailure(Exception exception);
+    }
+
+    public static synchronized List<String> refreshBridgeConfigs(Context context) {
+        Settings.getPrefs(context).edit().remove(PREF_BRIDGE_CACHE).apply();
+        return getBridgeConfigs(context);
     }
 }
