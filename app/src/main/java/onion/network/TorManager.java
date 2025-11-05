@@ -34,7 +34,7 @@ public class TorManager {
     private volatile List<String> bridgeOverride = null;
     private final Object restartLock = new Object();
     private volatile boolean restartScheduled = false;
-    private static final int MAX_RESTARTS_BEFORE_BRIDGE_REFRESH = 3;
+    private static final int MAX_RESTARTS_BEFORE_BRIDGE_REFRESH = 2;
     private static final long RESTART_WINDOW_MS = 5 * 60_000L;
     private volatile int restartAttempts = 0;
     private volatile long lastRestartAttemptMs = 0;
@@ -157,6 +157,10 @@ public class TorManager {
                     String normalized = trimmed.toLowerCase(Locale.US);
                     if (normalized.contains("bridge conjure") || normalized.contains(" conjure ")) {
                         Log.i("TorManager", "Skipping conjure bridge: " + bridge);
+                        continue;
+                    }
+                    if (normalized.contains("bridge snowflake") || normalized.contains(" snowflake ")) {
+                        Log.i("TorManager", "Skipping snowflake bridge: " + bridge);
                         continue;
                     }
                     if (!normalized.startsWith("bridge ")) {

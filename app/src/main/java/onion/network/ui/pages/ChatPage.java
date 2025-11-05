@@ -229,6 +229,9 @@ public class ChatPage extends BasePage
         }
 
         ColorStateList iconTint = ColorStateList.valueOf(preset.getOnSurfaceColor(context));
+        if (attachButton != null) {
+            attachButton.setImageTintList(iconTint);
+        }
         if (microButton != null) {
             microButton.setImageTintList(iconTint);
         }

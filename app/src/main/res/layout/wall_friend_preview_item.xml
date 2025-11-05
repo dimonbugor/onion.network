@@ -31,7 +31,6 @@
                 android:id="@+id/postImageContainer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_constraintTop_toTopOf="parent"
                 android:visibility="gone"
                 tools:visibility="visible">
 
@@ -39,8 +38,8 @@
                     android:id="@+id/postImage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
+                    android:adjustViewBounds="false"
                     tools:src="@mipmap/ic_launcher" />
             </FrameLayout>
 
@@ -67,7 +66,6 @@
                         android:id="@+id/avatar"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="?attr/colorPrimaryContainer"
                         tools:src="@mipmap/ic_launcher" />
                 </com.google.android.material.card.MaterialCardView>
 

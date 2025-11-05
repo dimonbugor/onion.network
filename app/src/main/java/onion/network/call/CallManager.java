@@ -185,15 +185,10 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
 
         List<PeerConnection.IceServer> iceServers = buildIceServers();
-        if (iceServers.isEmpty()) {
-            toast("TURN configuration missing. Set CALL_TURN_URLS.");
-            tearDown(CallState.FAILED);
-            return;
-        }
         Log.d(TAG, "createPeerConnection outgoing=" + outgoing + " iceServers=" + iceServers.size());
         PeerConnection.RTCConfiguration rtc = new PeerConnection.RTCConfiguration(iceServers);
         rtc.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
-        rtc.iceTransportsType = PeerConnection.IceTransportsType.RELAY;
+        rtc.iceTransportsType = PeerConnection.IceTransportsType.ALL;
         rtc.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.ENABLED;
         rtc.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_ONCE;
 
@@ -440,6 +435,16 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             return;
         }
         Log.d(TAG, "onIncomingSignal type=" + signal.getType() + " from=" + fromAddress);
+        if (signal.getType() != SignalType.OFFER) {
+            CallSession current;
+            synchronized (this) {
+                current = session;
+            }
+            if (current == null || TextUtils.isEmpty(signal.getCallId()) || !TextUtils.equals(current.callId, signal.getCallId())) {
+                Log.d(TAG, "Ignoring signal for stale or unknown callId=" + signal.getCallId());
+                return;
+            }
+        }
         switch (signal.getType()) {
             case OFFER -> handleIncomingOffer(fromAddress, signal);
             case ANSWER -> handleIncomingAnswer(signal);

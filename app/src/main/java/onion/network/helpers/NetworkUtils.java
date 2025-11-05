@@ -1,5 +1,6 @@
 package onion.network.helpers;
 
+import android.os.Build;
 import android.util.Log;
 
 import java.net.Inet6Address;
@@ -21,6 +22,10 @@ public final class NetworkUtils {
      * @return true when the device appears to have routable IPv6 connectivity.
      */
     public static boolean hasGlobalIpv6Connectivity() {
+        if (isEmulator()) {
+            Log.i(TAG, "Skipping IPv6 connectivity checks on emulator");
+            return false;
+        }
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -43,5 +48,14 @@ public final class NetworkUtils {
             Log.w(TAG, "Failed to check IPv6 interfaces", e);
         }
         return false;
+    }
+
+    public static boolean isEmulator() {
+        String fingerprint = Build.FINGERPRINT;
+        if (fingerprint != null && fingerprint.contains("generic")) return true;
+        String product = Build.PRODUCT;
+        if (product != null && product.contains("sdk")) return true;
+        String model = Build.MODEL;
+        return model != null && (model.contains("Android SDK built for x86") || model.contains("google_sdk"));
     }
 }

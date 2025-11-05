@@ -64,6 +64,11 @@ public class CallActivity extends AppCompatActivity implements CallListener {
     private boolean timerRunning;
 
     private CallManager callManager;
+    private final Runnable finishRunnable = () -> {
+        if (!isFinishing()) {
+            finish();
+        }
+    };
 
     public static void startOutgoing(Context context, String remoteAddress) {
         Intent intent = new Intent(context, CallActivity.class);
@@ -102,11 +107,11 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         setupActions();
 
         CallState currentState = callManager.getState();
-        updateForState(currentState, callManager.getSession());
-
-        if (!isIncoming && shouldStartNewCall(currentState, callManager.getSession())) {
+        CallSession currentSession = callManager.getSession();
+        if (!isIncoming && shouldStartNewCall(currentState, currentSession)) {
             callManager.startOutgoingCall(remoteAddress);
         }
+        updateForState(callManager.getState(), callManager.getSession());
     }
 
     private void bindViews() {
@@ -267,6 +272,7 @@ public class CallActivity extends AppCompatActivity implements CallListener {
     }
 
     private void updateForState(@NonNull CallState state, @Nullable CallSession session) {
+        cancelPendingFinish();
         if (session != null && !TextUtils.isEmpty(session.remoteAddress)) {
             remoteAddress = session.remoteAddress;
             bindRemoteIdentity(remoteAddress);
@@ -369,6 +375,7 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         if (callManager != null) {
             callManager.removeListener(this);
         }
+        cancelPendingFinish();
         stopTimer(true);
         setKeepScreenOnForState(CallState.IDLE);
         if (avatarView != null) {
@@ -378,6 +385,7 @@ public class CallActivity extends AppCompatActivity implements CallListener {
 
     @Override
     public void onBackPressed() {
+        cancelPendingFinish();
         if (callManager != null) {
             callManager.hangup();
         }
@@ -385,16 +393,21 @@ public class CallActivity extends AppCompatActivity implements CallListener {
     }
 
     private void finishWithDelay() {
+        cancelPendingFinish();
         if (hangupButton != null) {
             hangupButton.setEnabled(false);
         }
         if (acceptButton != null) {
             acceptButton.setEnabled(false);
         }
-        statusView.postDelayed(() -> {
-            if (!isFinishing()) {
-                finish();
-            }
-        }, 900L);
+        if (statusView != null) {
+            statusView.postDelayed(finishRunnable, 900L);
+        }
+    }
+
+    private void cancelPendingFinish() {
+        if (statusView != null) {
+            statusView.removeCallbacks(finishRunnable);
+        }
     }
 }

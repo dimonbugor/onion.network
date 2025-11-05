@@ -81,6 +81,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import onion.network.helpers.DeepLinkParser;
 import onion.network.models.FriendTool;
@@ -118,6 +120,8 @@ import onion.network.ui.views.AvatarView;
 import onion.network.ui.views.RequestTool;
 import onion.network.helpers.PermissionHelper;
 import onion.network.helpers.ThemeManager;
+import onion.network.clients.HttpClient;
+import onion.network.helpers.StreamMediaStore;
 import onion.network.helpers.UiCustomizationManager;
 import onion.network.settings.Settings;
 import onion.network.tor.TorBridgeParser;
@@ -243,6 +247,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean overlayVisible = false;
+    private final ExecutorService mediaExecutor = Executors.newSingleThreadExecutor();
 
     private ActivityResultLauncher<Intent> wallImagePickerLauncher;
     private ActivityResultLauncher<Intent> wallVideoPickerLauncher;
@@ -1646,6 +1651,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        mediaExecutor.shutdownNow();
         if (lightbox != null) lightbox.release();
         super.onDestroy();
         if (preferences != null && preferenceListener != null) {
@@ -1808,6 +1814,35 @@ public class MainActivity extends AppCompatActivity {
 
     public void lightboxVideo(Uri videoUri, Bitmap preview) {
         if (videoUri == null) return;
+        String scheme = videoUri.getScheme();
+        if (scheme != null && (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
+            Toast.makeText(this, R.string.video_download_preparing, Toast.LENGTH_SHORT).show();
+            mediaExecutor.execute(() -> {
+                try {
+                    byte[] data = HttpClient.getbin(videoUri);
+                    if (data == null || data.length == 0) {
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, R.string.video_download_failed, Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+                    StreamMediaStore.MediaDescriptor descriptor = StreamMediaStore.save(MainActivity.this, data, "video/mp4");
+                    Uri localUri = StreamMediaStore.createContentUri(MainActivity.this, descriptor.id);
+                    if (localUri == null) {
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, R.string.video_download_failed, Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+                    runOnUiThread(() -> {
+                        if (isFinishing()) {
+                            return;
+                        }
+                        lightbox.hideAll();
+                        lightbox.showVideo(localUri, preview);
+                    });
+                } catch (Exception ex) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, R.string.video_download_failed, Toast.LENGTH_SHORT).show());
+                }
+            });
+            return;
+        }
         lightbox.hideAll();
         lightbox.showVideo(videoUri, preview);
     }
