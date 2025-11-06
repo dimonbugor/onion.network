@@ -5,6 +5,7 @@ public final class CallSession {
     public final boolean outgoing;
     public final String callId;
     public final long startedAt;
+    public volatile String transportToken;
 
     CallSession(String remoteAddress, boolean outgoing, String callId) {
         this.remoteAddress = remoteAddress;

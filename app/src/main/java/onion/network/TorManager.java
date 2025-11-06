@@ -24,6 +24,7 @@ import onion.network.tor.TorBridgeParser;
 
 public class TorManager {
     private static final String TAG = "TorManager";
+    public static final int CALL_PORT = 17443;
     private static TorManager instance = null;
     private Context context;
 
@@ -130,6 +131,7 @@ public class TorManager {
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
             Server server = Server.getInstance(context);
             writer.println("HiddenServicePort 80 " + server.getSocketName());
+            writer.println("HiddenServicePort " + CALL_PORT + " 127.0.0.1:" + CALL_PORT);
             writer.println();
 
             if (!bridgeConfigs.isEmpty()) {
