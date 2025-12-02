@@ -1,13 +1,23 @@
 package onion.network.call.codec;
 
-import androidx.annotation.Nullable;
+import android.util.Log;
 
 import java.io.IOException;
 
 public class OpusCodec implements AudioCodec {
 
+    private static final String TAG = "OpusCodec";
+    private static final boolean NATIVE_LOADED;
+
     static {
-        System.loadLibrary("tor-native");
+        boolean loaded = false;
+        try {
+            System.loadLibrary("tor-native");
+            loaded = true;
+        } catch (Throwable e) {
+            Log.e(TAG, "Failed to load tor-native library", e);
+        }
+        NATIVE_LOADED = loaded;
     }
 
     private long encoderPtr;
@@ -15,6 +25,9 @@ public class OpusCodec implements AudioCodec {
     private boolean released;
 
     public OpusCodec(int sampleRate, int channelCount, int bitrate) throws IOException {
+        if (!NATIVE_LOADED) {
+            throw new IOException("Native Opus library not available");
+        }
         encoderPtr = nativeCreateEncoder(sampleRate, channelCount, bitrate);
         if (encoderPtr == 0) throw new IOException("Failed to create Opus encoder");
         decoderPtr = nativeCreateDecoder(sampleRate, channelCount);
@@ -63,4 +76,8 @@ public class OpusCodec implements AudioCodec {
     private static native long nativeCreateDecoder(int sampleRate, int channels);
     private static native byte[] nativeDecode(long decoderPtr, byte[] data, int length) throws IOException;
     private static native void nativeDestroyDecoder(long decoderPtr);
+
+    public static boolean isNativeAvailable() {
+        return NATIVE_LOADED;
+    }
 }

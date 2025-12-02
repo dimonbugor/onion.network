@@ -104,3 +104,52 @@ dependencies {
     implementation files('libs/core-1.52.0.0.jar')
     implementation files('libs/prov-1.52.0.0.jar')
 }
+
+// Fix 16KB page size alignment for all native libs (16KB kernel page size devices)
+afterEvaluate {
+    def scriptPath = "${project.rootDir}/fix-alignment.py"
+    def abis = ['arm64-v8a', 'armeabi-v7a']
+
+    def alignElf = { File libFile ->
+        if (!libFile.exists()) return
+        def tmpFile = File.createTempFile(libFile.name, ".tmp")
+        println "🔧 Aligning 16KB pages: ${libFile.path}"
+        def result = exec {
+            commandLine 'python3', scriptPath, libFile.path, tmpFile.absolutePath
+            ignoreExitValue = true
+        }
+        if (result.exitValue == 0 && tmpFile.length() > 0) {
+            exec {
+                commandLine 'cp', tmpFile.absolutePath, libFile.path
+                ignoreExitValue = true
+            }
+        }
+        tmpFile.delete()
+    }
+
+    // Align prebuilt jniLibs before they are merged into the APK
+    tasks.matching { it.name.startsWith('merge') && it.name.endsWith('JniLibFolders') }.all { mergeTask ->
+        mergeTask.doFirst {
+            abis.each { abi ->
+                fileTree("${project.projectDir}/src/main/jniLibs/${abi}").matching {
+                    include "*.so"
+                }.each { libFile ->
+                    alignElf(libFile)
+                }
+            }
+        }
+    }
+
+    // Align native build outputs (CMake) after compilation
+    tasks.matching { it.name.toLowerCase().contains('externalnativebuild') }.all { buildTask ->
+        buildTask.doLast {
+            abis.each { abi ->
+                fileTree("${project.buildDir}/intermediates/cxx").matching {
+                    include "**/obj/${abi}/*.so"
+                }.each { libFile ->
+                    alignElf(libFile)
+                }
+            }
+        }
+    }
+}

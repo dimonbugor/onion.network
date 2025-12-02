@@ -1,0 +1,426 @@
+The target system is: Android - 1 - aarch64
+The host system is: Darwin - 25.1.0 - arm64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang 
+Build flags: -g;-DANDROID;-fdata-sections;-ffunction-sections;-funwind-tables;-fstack-protector-strong;-no-canonical-prefixes;-D_FORTIFY_SOURCE=2;-Wformat;-Werror=format-security;
+Id flags: -c;--target=aarch64-none-linux-android24 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+
+The C compiler identification is Clang, found in "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/3.22.1-g37088a8/CompilerIdC/CMakeCCompilerId.o"
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_c8c60/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_c8c60.dir/build.make CMakeFiles/cmTC_c8c60.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat   -fPIE   -v -MD -MT CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -c /Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCCompilerABI.c
+Android (12896553, +pgo, -bolt, +lto, -mlgo, based on r530567c) clang version 19.0.0 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)
+Target: aarch64-none-linux-android24
+Thread model: posix
+InstalledDir: /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin
+ (in-process)
+ "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang" -cc1 -triple aarch64-none-linux-android24 -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=non-leaf -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu generic -target-feature +v8a -target-feature +fp-armv8 -target-feature +neon -target-feature +fix-cortex-a53-835769 -target-abi aapcs -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -fdebug-compilation-dir=/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp -v -ffunction-sections -fdata-sections -fcoverage-compilation-dir=/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp -resource-dir /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19 -dependency-file CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -sys-header-deps -D ANDROID -D _FORTIFY_SOURCE=2 -isysroot /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -internal-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include -internal-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/local/include -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/include -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include -Wformat -ferror-limit 19 -femulated-tls -stack-protector 2 -fno-signed-char -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -target-feature +outline-atomics -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -x c /Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCCompilerABI.c
+clang -cc1 version 19.0.0 based upon LLVM 19.0.0 default target x86_64-apple-darwin25.1.0
+ignoring nonexistent directory "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/local/include"
+ignoring nonexistent directory "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include
+ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android
+ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include
+End of search list.
+Linking C executable cmTC_c8c60
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c8c60.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384 -v CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -o cmTC_c8c60 
+Android (12896553, +pgo, -bolt, +lto, -mlgo, based on r530567c) clang version 19.0.0 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)
+Target: aarch64-none-linux-android24
+Thread model: posix
+InstalledDir: /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin
+ "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/ld.lld" --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -EL --fix-cortex-a53-843419 -z now -z relro -z max-page-size=16384 --hash-style=gnu --eh-frame-hdr -m aarch64linux -pie -dynamic-linker /system/bin/linker64 -o cmTC_c8c60 /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64 -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24 -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib --build-id=sha1 --no-rosegment --no-undefined-version --fatal-warnings --no-undefined -z common-page-size=16384 -z max-page-size=16384 CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl -lc /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtend_android.o
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include]
+    add: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android]
+    add: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include]
+  end of search list found
+  collapse include dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include]
+  collapse include dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android]
+  collapse include dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include]
+  implicit include dirs: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld\.lld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_c8c60/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_c8c60.dir/build.make CMakeFiles/cmTC_c8c60.dir/build]
+  ignore line: [gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat   -fPIE   -v -MD -MT CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -c /Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCCompilerABI.c]
+  ignore line: [Android (12896553  +pgo  -bolt  +lto  -mlgo  based on r530567c) clang version 19.0.0 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)]
+  ignore line: [Target: aarch64-none-linux-android24]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin]
+  ignore line: [ (in-process)]
+  ignore line: [ "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang" -cc1 -triple aarch64-none-linux-android24 -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=non-leaf -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu generic -target-feature +v8a -target-feature +fp-armv8 -target-feature +neon -target-feature +fix-cortex-a53-835769 -target-abi aapcs -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -fdebug-compilation-dir=/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp -v -ffunction-sections -fdata-sections -fcoverage-compilation-dir=/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp -resource-dir /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19 -dependency-file CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o.d -MT CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -sys-header-deps -D ANDROID -D _FORTIFY_SOURCE=2 -isysroot /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -internal-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include -internal-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/local/include -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/include -internal-externc-isystem /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include -Wformat -ferror-limit 19 -femulated-tls -stack-protector 2 -fno-signed-char -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -target-feature +outline-atomics -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -x c /Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCCompilerABI.c]
+  ignore line: [clang -cc1 version 19.0.0 based upon LLVM 19.0.0 default target x86_64-apple-darwin25.1.0]
+  ignore line: [ignoring nonexistent directory "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/local/include"]
+  ignore line: [ignoring nonexistent directory "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/include]
+  ignore line: [ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/aarch64-linux-android]
+  ignore line: [ /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include]
+  ignore line: [End of search list.]
+  ignore line: [Linking C executable cmTC_c8c60]
+  ignore line: [/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c8c60.dir/link.txt --verbose=1]
+  ignore line: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat   -Wl --build-id=sha1 -Wl --no-rosegment -Wl --no-undefined-version -Wl --fatal-warnings -Wl --no-undefined -Qunused-arguments  -Wl -z common-page-size=16384 -Wl -z max-page-size=16384 -v CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o -o cmTC_c8c60 ]
+  ignore line: [Android (12896553  +pgo  -bolt  +lto  -mlgo  based on r530567c) clang version 19.0.0 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)]
+  ignore line: [Target: aarch64-none-linux-android24]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin]
+  link line: [ "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/ld.lld" --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -EL --fix-cortex-a53-843419 -z now -z relro -z max-page-size=16384 --hash-style=gnu --eh-frame-hdr -m aarch64linux -pie -dynamic-linker /system/bin/linker64 -o cmTC_c8c60 /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64 -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24 -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android -L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib --build-id=sha1 --no-rosegment --no-undefined-version --fatal-warnings --no-undefined -z common-page-size=16384 -z max-page-size=16384 CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl -lc /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a -l:libunwind.a -ldl /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtend_android.o]
+    arg [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/ld.lld] ==> ignore
+    arg [--sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot] ==> ignore
+    arg [-EL] ==> ignore
+    arg [--fix-cortex-a53-843419] ==> ignore
+    arg [-znow] ==> ignore
+    arg [-zrelro] ==> ignore
+    arg [-zmax-page-size=16384] ==> ignore
+    arg [--hash-style=gnu] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [aarch64linux] ==> ignore
+    arg [-pie] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/system/bin/linker64] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_c8c60] ==> ignore
+    arg [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o] ==> obj [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o]
+    arg [-L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64] ==> dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64]
+    arg [-L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24] ==> dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24]
+    arg [-L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android] ==> dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android]
+    arg [-L/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib] ==> dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib]
+    arg [--build-id=sha1] ==> ignore
+    arg [--no-rosegment] ==> ignore
+    arg [--no-undefined-version] ==> ignore
+    arg [--fatal-warnings] ==> ignore
+    arg [--no-undefined] ==> ignore
+    arg [-zcommon-page-size=16384] ==> ignore
+    arg [-zmax-page-size=16384] ==> ignore
+    arg [CMakeFiles/cmTC_c8c60.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a] ==> lib [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a]
+    arg [-l:libunwind.a] ==> lib [-l:libunwind.a]
+    arg [-ldl] ==> lib [dl]
+    arg [-lc] ==> lib [c]
+    arg [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a] ==> lib [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a]
+    arg [-l:libunwind.a] ==> lib [-l:libunwind.a]
+    arg [-ldl] ==> lib [dl]
+    arg [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtend_android.o] ==> obj [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtend_android.o]
+  remove lib [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a]
+  remove lib [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-aarch64-android.a]
+  collapse library dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64]
+  collapse library dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24]
+  collapse library dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android]
+  collapse library dir [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib] ==> [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib]
+  implicit libs: [-l:libunwind.a;dl;c;-l:libunwind.a;dl]
+  implicit objs: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtbegin_dynamic.o;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24/crtend_android.o]
+  implicit dirs: [/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/24;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android;/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib]
+  implicit fwks: []
+
+
+Determining if the include file alloca.h exists passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_67766/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_67766.dir/build.make CMakeFiles/cmTC_67766.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_67766.dir/CheckIncludeFile.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_67766.dir/CheckIncludeFile.c.o -MF CMakeFiles/cmTC_67766.dir/CheckIncludeFile.c.o.d -o CMakeFiles/cmTC_67766.dir/CheckIncludeFile.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_67766
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_67766.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_67766.dir/CheckIncludeFile.c.o -o cmTC_67766  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the alloca exist passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_54886/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_54886.dir/build.make CMakeFiles/cmTC_54886.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_54886.dir/CheckSymbolExists.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_54886.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_54886.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_54886.dir/CheckSymbolExists.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_54886
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_54886.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_54886.dir/CheckSymbolExists.c.o -o cmTC_54886  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+File /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <alloca.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef alloca
+  return ((int*)(&alloca))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the function floor exists in the m passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_94470/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_94470.dir/build.make CMakeFiles/cmTC_94470.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_94470.dir/CheckFunctionExists.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -DCHECK_FUNCTION_EXISTS=floor -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_94470.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_94470.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_94470.dir/CheckFunctionExists.c.o -c /Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckFunctionExists.c
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckFunctionExists.c:7:3: warning: incompatible redeclaration of library function 'floor' [-Wincompatible-library-redeclaration]
+    7 |   CHECK_FUNCTION_EXISTS(void);
+      |   ^
+<command line>:3:31: note: expanded from macro 'CHECK_FUNCTION_EXISTS'
+    3 | #define CHECK_FUNCTION_EXISTS floor
+      |                               ^
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckFunctionExists.c:7:3: note: 'floor' is a builtin with type 'double (double)'
+<command line>:3:31: note: expanded from macro 'CHECK_FUNCTION_EXISTS'
+    3 | #define CHECK_FUNCTION_EXISTS floor
+      |                               ^
+1 warning generated.
+Linking C executable cmTC_94470
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_94470.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -DCHECK_FUNCTION_EXISTS=floor -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_94470.dir/CheckFunctionExists.c.o -o cmTC_94470  -lm -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the lrintf exist passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_81f48/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_81f48.dir/build.make CMakeFiles/cmTC_81f48.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_81f48.dir/CheckSymbolExists.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_81f48.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_81f48.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_81f48.dir/CheckSymbolExists.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_81f48
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_81f48.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_81f48.dir/CheckSymbolExists.c.o -o cmTC_81f48  -lm -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+File /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <math.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef lrintf
+  return ((int*)(&lrintf))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the lrint exist passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_b43ae/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_b43ae.dir/build.make CMakeFiles/cmTC_b43ae.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_b43ae.dir/CheckSymbolExists.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_b43ae.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_b43ae.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_b43ae.dir/CheckSymbolExists.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_b43ae
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b43ae.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_b43ae.dir/CheckSymbolExists.c.o -o cmTC_b43ae  -lm -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+File /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <math.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef lrint
+  return ((int*)(&lrint))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the include file arm_neon.h exists passed with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_630bf/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_630bf.dir/build.make CMakeFiles/cmTC_630bf.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_630bf.dir/CheckIncludeFile.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot   -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE -std=gnu99 -MD -MT CMakeFiles/cmTC_630bf.dir/CheckIncludeFile.c.o -MF CMakeFiles/cmTC_630bf.dir/CheckIncludeFile.c.o.d -o CMakeFiles/cmTC_630bf.dir/CheckIncludeFile.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_630bf
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_630bf.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_630bf.dir/CheckIncludeFile.c.o -o cmTC_630bf  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+
+Performing C SOURCE FILE Test FAST_MATH_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_33243/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_33243.dir/build.make CMakeFiles/cmTC_33243.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_33243.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DFAST_MATH_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -ffast-math -std=gnu99 -MD -MT CMakeFiles/cmTC_33243.dir/src.c.o -MF CMakeFiles/cmTC_33243.dir/src.c.o.d -o CMakeFiles/cmTC_33243.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_33243
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_33243.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_33243.dir/src.c.o -o cmTC_33243  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test STACK_PROTECTOR_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_f8947/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_f8947.dir/build.make CMakeFiles/cmTC_f8947.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f8947.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DSTACK_PROTECTOR_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -fstack-protector-strong -std=gnu99 -MD -MT CMakeFiles/cmTC_f8947.dir/src.c.o -MF CMakeFiles/cmTC_f8947.dir/src.c.o.d -o CMakeFiles/cmTC_f8947.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_f8947
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f8947.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_f8947.dir/src.c.o -o cmTC_f8947  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test HIDDEN_VISIBILITY_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_2b24c/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_2b24c.dir/build.make CMakeFiles/cmTC_2b24c.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2b24c.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DHIDDEN_VISIBILITY_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -fvisibility=hidden -std=gnu99 -MD -MT CMakeFiles/cmTC_2b24c.dir/src.c.o -MF CMakeFiles/cmTC_2b24c.dir/src.c.o.d -o CMakeFiles/cmTC_2b24c.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_2b24c
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2b24c.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_2b24c.dir/src.c.o -o cmTC_2b24c  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wall_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_428ae/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_428ae.dir/build.make CMakeFiles/cmTC_428ae.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_428ae.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWall_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wall -std=gnu99 -MD -MT CMakeFiles/cmTC_428ae.dir/src.c.o -MF CMakeFiles/cmTC_428ae.dir/src.c.o.d -o CMakeFiles/cmTC_428ae.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_428ae
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_428ae.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_428ae.dir/src.c.o -o cmTC_428ae  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test W_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_7bea6/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_7bea6.dir/build.make CMakeFiles/cmTC_7bea6.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_7bea6.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DW_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -W -std=gnu99 -MD -MT CMakeFiles/cmTC_7bea6.dir/src.c.o -MF CMakeFiles/cmTC_7bea6.dir/src.c.o.d -o CMakeFiles/cmTC_7bea6.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_7bea6
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7bea6.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_7bea6.dir/src.c.o -o cmTC_7bea6  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wstrictprototypes_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_c02dc/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_c02dc.dir/build.make CMakeFiles/cmTC_c02dc.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c02dc.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWstrictprototypes_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wstrict-prototypes -std=gnu99 -MD -MT CMakeFiles/cmTC_c02dc.dir/src.c.o -MF CMakeFiles/cmTC_c02dc.dir/src.c.o.d -o CMakeFiles/cmTC_c02dc.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_c02dc
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c02dc.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_c02dc.dir/src.c.o -o cmTC_c02dc  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wextra_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_9fdb2/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_9fdb2.dir/build.make CMakeFiles/cmTC_9fdb2.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_9fdb2.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWextra_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wextra -std=gnu99 -MD -MT CMakeFiles/cmTC_9fdb2.dir/src.c.o -MF CMakeFiles/cmTC_9fdb2.dir/src.c.o.d -o CMakeFiles/cmTC_9fdb2.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_9fdb2
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9fdb2.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_9fdb2.dir/src.c.o -o cmTC_9fdb2  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wcastalign_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_f2312/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_f2312.dir/build.make CMakeFiles/cmTC_f2312.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f2312.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWcastalign_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wcast-align -std=gnu99 -MD -MT CMakeFiles/cmTC_f2312.dir/src.c.o -MF CMakeFiles/cmTC_f2312.dir/src.c.o.d -o CMakeFiles/cmTC_f2312.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_f2312
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f2312.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_f2312.dir/src.c.o -o cmTC_f2312  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wnestedexterns_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_f8043/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_f8043.dir/build.make CMakeFiles/cmTC_f8043.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f8043.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWnestedexterns_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wnested-externs -std=gnu99 -MD -MT CMakeFiles/cmTC_f8043.dir/src.c.o -MF CMakeFiles/cmTC_f8043.dir/src.c.o.d -o CMakeFiles/cmTC_f8043.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_f8043
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f8043.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_f8043.dir/src.c.o -o cmTC_f8043  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test Wshadow_SUPPORTED succeeded with the following output:
+Change Dir: /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/opt/homebrew/bin/gmake -f Makefile cmTC_4e1a7/fast && /opt/homebrew/bin/gmake  -f CMakeFiles/cmTC_4e1a7.dir/build.make CMakeFiles/cmTC_4e1a7.dir/build
+gmake[1]: Entering directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_4e1a7.dir/src.c.o
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DWshadow_SUPPORTED  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fPIE   -Wshadow -std=gnu99 -MD -MT CMakeFiles/cmTC_4e1a7.dir/src.c.o -MF CMakeFiles/cmTC_4e1a7.dir/src.c.o.d -o CMakeFiles/cmTC_4e1a7.dir/src.c.o -c /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_4e1a7
+/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4e1a7.dir/link.txt --verbose=1
+/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/28.0.12916984/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments  -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384  CMakeFiles/cmTC_4e1a7.dir/src.c.o -o cmTC_4e1a7  -latomic -lm 
+gmake[1]: Leaving directory '/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-arm64-v8a/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }

@@ -779,10 +779,15 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
 
     private void initCodec() {
         releaseCodec();
+        if (!OpusCodec.isNativeAvailable()) {
+            Log.e(TAG, "Native Opus library unavailable, falling back to PCM");
+            audioCodec = new PcmCodec();
+            return;
+        }
         try {
             audioCodec = new OpusCodec(SAMPLE_RATE_HZ, 1, 32000);
             Log.i(TAG, "Using Opus codec");
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             Log.e(TAG, "Failed to initialize Opus codec, falling back to PCM: " + ex.getMessage());
             audioCodec = new PcmCodec();
         }

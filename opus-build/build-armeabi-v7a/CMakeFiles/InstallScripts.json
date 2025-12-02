@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-armeabi-v7a/cmake_install.cmake",
-		"/Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-armeabi-v7a/opus/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
