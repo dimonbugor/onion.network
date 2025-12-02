@@ -130,6 +130,24 @@
                 app:icon="@drawable/ic_call" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/callToggleMic"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dp12"
+                android:layout_weight="1"
+                android:text="@string/call_toggle_mute" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/callToggleSpeaker"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dp12"
+                android:layout_weight="1"
+                android:text="@string/call_toggle_hold" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/callHangup"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"

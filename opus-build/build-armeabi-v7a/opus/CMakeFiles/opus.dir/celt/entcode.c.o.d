@@ -1,0 +1,23 @@
+opus/CMakeFiles/opus.dir/celt/entcode.c.o: \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/celt/entcode.c \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus-build/build-armeabi-v7a/opus/config.h \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/celt/entcode.h \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/include/opus_types.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/17/include/stdint.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/stdint.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/bits/wchar_limits.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/sys/cdefs.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/android/versioning.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/android/api-level.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/bits/get_device_api_level_inlines.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/android/ndk-version.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/17/include/stddef.h \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/include/opus_defines.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/17/include/limits.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/limits.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/17/include/float.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/linux/limits.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/bits/posix_limits.h \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/celt/ecintrin.h \
+  /Users/oleksandrnekrutenko/Library/Android/sdk/ndk/26.3.11579264/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/include/math.h \
+  /Volumes/KINGSTON/AndroidStudioProjects/onion.network/opus/celt/arch.h

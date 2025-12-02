@@ -5,6 +5,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -20,9 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * WIP: TCP-транспорт для голосових викликів поверх Tor hidden service.
@@ -107,8 +107,15 @@ public final class TcpCallSession implements Closeable {
         }
         InetAddress loopback = InetAddress.getByName(null); // 127.0.0.1
         int bindPort = port <= 0 ? 0 : port;
-        serverSocket = new ServerSocket(bindPort, ACCEPT_BACKLOG, loopback);
-        serverSocket.setReuseAddress(true);
+        ServerSocket socket = new ServerSocket();
+        socket.setReuseAddress(true);
+        try {
+            socket.bind(new InetSocketAddress(loopback, bindPort), ACCEPT_BACKLOG);
+        } catch (IOException bindError) {
+            closeQuietly(socket);
+            throw bindError;
+        }
+        serverSocket = socket;
         String token = generateToken();
         localDescriptor = new Descriptor(advertisedHost, serverSocket.getLocalPort(), token);
         Log.d(TAG, "Server prepared on " + localDescriptor);
@@ -137,19 +144,39 @@ public final class TcpCallSession implements Closeable {
         }
         running.set(true);
         executor.execute(() -> {
-            try {
-                Log.d(TAG, "Connecting to " + remote);
-                Socket socket = (proxy != null) ? new Socket(proxy) : new Socket();
-                socket.connect(new InetSocketAddress(remote.host, remote.port), CONNECT_TIMEOUT_MS);
-                synchronized (this) {
-                    activeSocket = socket;
+            int attempts = 0;
+            long backoffMs = 750L;
+            IOException lastError = null;
+            while (running.get() && attempts < 5) {
+                attempts++;
+                try {
+                    Log.d(TAG, "Connecting to " + remote + " attempt=" + attempts);
+                    Socket socket = (proxy != null) ? new Socket(proxy) : new Socket();
+                    socket.connect(new InetSocketAddress(remote.host, remote.port), CONNECT_TIMEOUT_MS);
+                    synchronized (this) {
+                        activeSocket = socket;
+                    }
+                    listener.onSocketReady(socket);
+                    return;
+                } catch (IOException ex) {
+                    lastError = ex;
+                    String msg = ex.getMessage();
+                    Log.w(TAG, "connect attempt " + attempts + " failed: " + msg);
+                    // Retry on transient SOCKS/Tor issues
+                    if (attempts >= 5) {
+                        break;
+                    }
+                    try {
+                        Thread.sleep(backoffMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    backoffMs = Math.min(backoffMs * 2, 5000L);
                 }
-                listener.onSocketReady(socket);
-            } catch (IOException ex) {
-                Log.e(TAG, "connect failed: " + ex.getMessage());
-                running.set(false);
-                listener.onSocketClosed(ex);
             }
+            running.set(false);
+            listener.onSocketClosed(lastError != null ? lastError : new IOException("Connection failed"));
         });
     }
 
@@ -178,15 +205,10 @@ public final class TcpCallSession implements Closeable {
     @Override
     public void close() {
         running.set(false);
-        executor.execute(() -> {
-            try {
-                closeQuietly(activeSocket);
-                closeQuietly(serverSocket);
-            } finally {
-                listener.onSocketClosed(null);
-            }
-        });
-        executor.shutdown();
+        closeQuietly(activeSocket);
+        closeQuietly(serverSocket);
+        executor.shutdownNow();
+        listener.onSocketClosed(null);
     }
 
     private void ensureRole(Role expected) {

@@ -1,1 +1,0 @@
-/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/cpp/CMakeLists.txt

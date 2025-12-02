@@ -1,0 +1,3 @@
+/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/.cxx/Debug/14s6r5v6/x86_64/CMakeFiles/tor-native.dir
+/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/.cxx/Debug/14s6r5v6/x86_64/CMakeFiles/edit_cache.dir
+/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/.cxx/Debug/14s6r5v6/x86_64/CMakeFiles/rebuild_cache.dir

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Chronometer;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,6 +56,8 @@ public class CallActivity extends AppCompatActivity implements CallListener {
     private Chronometer timerView;
     private MaterialButton acceptButton;
     private MaterialButton hangupButton;
+    private MaterialButton micToggleButton;
+    private MaterialButton speakerToggleButton;
 
     private boolean isIncoming;
     @Nullable
@@ -64,6 +67,7 @@ public class CallActivity extends AppCompatActivity implements CallListener {
     private boolean timerRunning;
 
     private CallManager callManager;
+    private String lastShownError;
     private final Runnable finishRunnable = () -> {
         if (!isFinishing()) {
             finish();
@@ -105,11 +109,14 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         bindRemoteIdentity(remoteAddress);
 
         setupActions();
+        updateMicToggle(false);
+        updateSpeakerToggle(false);
+        setToggleEnabled(false);
 
         CallState currentState = callManager.getState();
         CallSession currentSession = callManager.getSession();
         if (!isIncoming && shouldStartNewCall(currentState, currentSession)) {
-            callManager.startOutgoingCall(remoteAddress);
+            startOutgoingCallWithPermissions();
         }
         updateForState(callManager.getState(), callManager.getSession());
     }
@@ -125,6 +132,8 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         timerView = findViewById(R.id.callTimer);
         acceptButton = findViewById(R.id.callAccept);
         hangupButton = findViewById(R.id.callHangup);
+        micToggleButton = findViewById(R.id.callToggleMic);
+        speakerToggleButton = findViewById(R.id.callToggleSpeaker);
     }
 
     private void setupActions() {
@@ -145,6 +154,22 @@ public class CallActivity extends AppCompatActivity implements CallListener {
                 callManager.hangup();
             });
         }
+
+        if (micToggleButton != null) {
+            micToggleButton.setOnClickListener(v -> {
+                boolean newState = !callManager.isMicMuted();
+                callManager.setMicMuted(newState);
+                updateMicToggle(newState);
+            });
+        }
+
+        if (speakerToggleButton != null) {
+            speakerToggleButton.setOnClickListener(v -> {
+                boolean newState = !callManager.isSpeakerMuted();
+                callManager.setSpeakerMuted(newState);
+                updateSpeakerToggle(newState);
+            });
+        }
     }
 
     private boolean shouldStartNewCall(@NonNull CallState state, @Nullable CallSession session) {
@@ -152,6 +177,27 @@ public class CallActivity extends AppCompatActivity implements CallListener {
             return false;
         }
         return session == null || state == CallState.IDLE || state == CallState.ENDED || state == CallState.FAILED;
+    }
+
+    private void startOutgoingCallWithPermissions() {
+        if (callManager == null || TextUtils.isEmpty(remoteAddress)) {
+            Toast.makeText(this, R.string.call_error_generic, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        PermissionHelper.runWithPermissions(
+                this,
+                EnumSet.of(PermissionHelper.PermissionRequest.MICROPHONE),
+                () -> callManager.startOutgoingCall(remoteAddress),
+                this::handleMicrophonePermissionDenied);
+    }
+
+    private void handleMicrophonePermissionDenied() {
+        Toast.makeText(this, R.string.call_microphone_permission_required, Toast.LENGTH_LONG).show();
+        if (callManager != null) {
+            callManager.hangup();
+        }
+        finish();
     }
 
     private void applyThemeStyling() {
@@ -283,11 +329,24 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         boolean showAccept = isIncoming && state == CallState.RINGING;
         updateAcceptVisibility(showAccept);
 
+        boolean connected = state == CallState.CONNECTED;
+        setToggleEnabled(connected);
+        if (connected && callManager != null) {
+            updateMicToggle(callManager.isMicMuted());
+            updateSpeakerToggle(callManager.isSpeakerMuted());
+        } else {
+            updateMicToggle(false);
+            updateSpeakerToggle(false);
+        }
+
         if (state == CallState.CONNECTED) {
             startTimer(session);
         } else if (state == CallState.ENDED || state == CallState.FAILED) {
             stopTimer(false);
             finishWithDelay();
+            if (state == CallState.FAILED) {
+                showFailureMessage();
+            }
         } else {
             stopTimer(true);
         }
@@ -336,6 +395,37 @@ public class CallActivity extends AppCompatActivity implements CallListener {
             timerRunning = false;
         }
         timerView.setVisibility(hideView ? View.GONE : View.VISIBLE);
+    }
+
+    private void setToggleEnabled(boolean enabled) {
+        if (micToggleButton != null) {
+            micToggleButton.setEnabled(enabled);
+        }
+        if (speakerToggleButton != null) {
+            speakerToggleButton.setEnabled(enabled);
+        }
+    }
+
+    private void updateMicToggle(boolean muted) {
+        if (micToggleButton == null) return;
+        micToggleButton.setText(muted ? R.string.call_toggle_unmute : R.string.call_toggle_mute);
+    }
+
+    private void updateSpeakerToggle(boolean muted) {
+        if (speakerToggleButton == null) return;
+        speakerToggleButton.setText(muted ? R.string.call_toggle_resume : R.string.call_toggle_hold);
+    }
+
+    private void showFailureMessage() {
+        if (callManager == null) return;
+        String message = callManager.consumeLastErrorMessage();
+        if (TextUtils.isEmpty(message)) {
+            message = getString(R.string.call_error_generic);
+        }
+        if (!TextUtils.isEmpty(message) && !TextUtils.equals(message, lastShownError)) {
+            lastShownError = message;
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void setKeepScreenOnForState(CallState state) {
@@ -392,6 +482,13 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         super.onBackPressed();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (!PermissionHelper.handleOnRequestPermissionsResult(this, requestCode, permissions, grantResults)) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
     private void finishWithDelay() {
         cancelPendingFinish();
         if (hangupButton != null) {
@@ -400,6 +497,7 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         if (acceptButton != null) {
             acceptButton.setEnabled(false);
         }
+        setToggleEnabled(false);
         if (statusView != null) {
             statusView.postDelayed(finishRunnable, 900L);
         }

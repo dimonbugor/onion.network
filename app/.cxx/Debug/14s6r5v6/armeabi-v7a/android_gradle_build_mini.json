@@ -1,0 +1,29 @@
+{
+  "buildFiles": [
+    "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/.cxx/Debug/14s6r5v6/armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/oleksandrnekrutenko/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/.cxx/Debug/14s6r5v6/armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "tor-native::@6890427a1f51a3e7e1df": {
+      "artifactName": "tor-native",
+      "abi": "armeabi-v7a",
+      "output": "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/14s6r5v6/obj/armeabi-v7a/libtor-native.so",
+      "runtimeFiles": [
+        "/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/src/main/jniLibs/armeabi-v7a/libopus.so"
+      ]
+    }
+  }
+}

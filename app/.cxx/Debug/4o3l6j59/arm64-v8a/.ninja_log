@@ -1,8 +1,0 @@
-# ninja log v5
-4	91	1758452775884630511	build.ninja	2a74f76b927d8e88
-2	803	1758452504427502392	CMakeFiles/tor-native.dir/tor-native.cpp.o	bc7c6f7feb5064da
-0	37	0	clean	3df67c368f5434f3
-803	2359	1758452505990313480	/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/4o3l6j59/obj/arm64-v8a/libtor-native.so	c0ed083caa6e41c3
-0	7	0	clean	3df67c368f5434f3
-5	1566	1758453420607184198	CMakeFiles/tor-native.dir/tor-native.cpp.o	bc7c6f7feb5064da
-1566	1804	1758453420843641042	/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/4o3l6j59/obj/arm64-v8a/libtor-native.so	c0ed083caa6e41c3

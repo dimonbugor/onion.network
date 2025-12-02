@@ -1,5 +1,6 @@
 package onion.network.call;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -18,26 +19,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
+import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import onion.network.call.CallSignalMessage.SignalType;
+import onion.network.R;
+import onion.network.TorManager;
+import onion.network.call.codec.AudioCodec;
+import onion.network.call.codec.OpusCodec;
+import onion.network.call.codec.PcmCodec;
 import onion.network.clients.ChatClient;
 import onion.network.databases.ChatDatabase;
 import onion.network.models.ChatMessagePayload;
 import onion.network.servers.ChatServer;
-import onion.network.TorManager;
 import onion.network.ui.CallActivity;
-import onion.network.call.TcpCallSession;
-import onion.network.call.TcpCallSession.Descriptor;
 
 public final class CallManager implements ChatServer.OnMessageReceivedListener, ChatClient.OnMessageSentListener {
 
@@ -48,26 +52,47 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
     private final CopyOnWriteArrayList<CallListener> listeners = new CopyOnWriteArrayList<>();
+    private final Object socketWriteLock = new Object();
 
     private AudioManager audioManager;
+    private DataOutputStream socketOutputStream;
 
     private static final int SAMPLE_RATE_HZ = 16000;
     private static final int PCM_FRAME_MS = 20;
     private static final int PCM_FRAME_BYTES = SAMPLE_RATE_HZ * PCM_FRAME_MS / 1000 * 2;
+    private static final byte FRAME_TYPE_AUDIO = 0x01;
+    private static final byte FRAME_TYPE_PING = 0x02;
+    private static final byte FRAME_TYPE_PONG = 0x03;
+    private static final int JITTER_MIN_FRAMES = 3;
+    private static final int JITTER_MAX_FRAMES = 8;
+    private static final long HEARTBEAT_PERIOD_MS = 5_000;
+    private static final long HEARTBEAT_TIMEOUT_MS = 15_000;
+    private static final int SERVER_BIND_MAX_ATTEMPTS = 3;
+    private static final long SERVER_BIND_RETRY_DELAY_MS = 250L;
 
     private CallState state = CallState.IDLE;
     private CallSession session;
     private TcpCallSession tcpSession;
     private Socket transportSocket;
     private final AtomicBoolean suppressTransportCallbacks = new AtomicBoolean(false);
+    private final AtomicBoolean gracefulTerminationExpected = new AtomicBoolean(false);
     private String pendingDescriptorJson;
+    private volatile long lastPongAt = System.currentTimeMillis();
     private ExecutorService audioExecutor;
     private volatile boolean audioRunning;
     private AudioRecord audioRecord;
     private AudioTrack audioTrack;
+    private ScheduledExecutorService heartbeatExecutor;
+    private volatile boolean heartbeatRunning;
+    private volatile long lastPingSent;
+    private volatile boolean micMuted;
+    private volatile boolean speakerMuted;
+    private volatile String lastErrorMessage;
+    private AudioCodec audioCodec;
 
     private CallManager(Context context) {
         this.appContext = context.getApplicationContext();
+        initCodec();
     }
 
     public static synchronized CallManager getInstance(Context context) {
@@ -125,6 +150,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             callId = UUID.randomUUID().toString();
             Log.d(TAG, "startOutgoingCall remote=" + remoteAddress + " callId=" + callId);
             session = new CallSession(remoteAddress, true, callId);
+            gracefulTerminationExpected.set(false);
             changeState(CallState.CALLING);
             pendingDescriptorJson = null;
         }
@@ -134,6 +160,10 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         } catch (IOException ex) {
             Log.e(TAG, "Unable to start TCP transport: " + ex.getMessage());
             toast("Unable to start call");
+            String message = TextUtils.isEmpty(ex.getMessage())
+                    ? appContext.getString(R.string.call_error_generic)
+                    : ex.getMessage();
+            setLastErrorMessage(message);
             tearDown(CallState.FAILED);
         }
     }
@@ -156,7 +186,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
         setupAudioMode(true);
         try {
-            Descriptor remote = TcpCallSession.decodeDescriptor(descriptorJson);
+            TcpCallSession.Descriptor remote = TcpCallSession.decodeDescriptor(descriptorJson);
             startClientTransport(remote);
             sendSignal(CallSignalMessage.answer(callId, "accept"));
         } catch (IOException ex) {
@@ -195,7 +225,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             try {
                 Log.d(TAG, "sendSignal type=" + message.getType() + " to=" + remote);
                 client.sendOne(sender, remote, text, timestamp);
-                if (message.getType() != SignalType.CANDIDATE) {
+                if (message.getType() != CallSignalMessage.SignalType.CANDIDATE) {
                     ChatMessagePayload payload;
                     CallSignalMessage parsed = CallSignalMessage.fromTransportString(text);
                     if (parsed != null) {
@@ -217,25 +247,73 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
 
     private void startServerTransport() throws IOException {
         closeTransport(true);
-        TcpCallSession transport = new TcpCallSession(TcpCallSession.Role.SERVER, new TransportListener());
         String onion = TorManager.getInstance(appContext).getOnion();
         if (TextUtils.isEmpty(onion)) {
             throw new IOException("Onion domain unavailable");
         }
-        Descriptor descriptor = transport.prepareServerEndpoint(onion, TorManager.CALL_PORT);
-        synchronized (this) {
-            tcpSession = transport;
-            if (this.session != null) {
-                this.session.transportToken = descriptor.token;
+        IOException lastError = null;
+        for (int attempt = 1; attempt <= SERVER_BIND_MAX_ATTEMPTS; attempt++) {
+            TcpCallSession transport = new TcpCallSession(TcpCallSession.Role.SERVER, new TransportListener());
+            try {
+                TcpCallSession.Descriptor descriptor = transport.prepareServerEndpoint(onion, TorManager.CALL_PORT);
+                synchronized (this) {
+                    tcpSession = transport;
+                    if (this.session != null) {
+                        this.session.transportToken = descriptor.token;
+                    }
+                }
+                // Відкладена відправка offer поки hidden service повністю доступний.
+                if (this.session != null) {
+                    String callIdSnapshot = this.session.callId;
+                    String payload = TcpCallSession.encodeDescriptor(descriptor);
+                    scheduleOfferAfterHsReady(callIdSnapshot, payload);
+                }
+                return;
+            } catch (IOException ex) {
+                lastError = ex;
+                boolean retriable = isAddressInUse(ex) && attempt < SERVER_BIND_MAX_ATTEMPTS;
+                if (!retriable) {
+                    break;
+                }
+                try {
+                    Thread.sleep(SERVER_BIND_RETRY_DELAY_MS);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
-        if (this.session != null) {
-            String payload = TcpCallSession.encodeDescriptor(descriptor);
-            sendSignal(CallSignalMessage.offer(this.session.callId, payload));
-        }
+        throw lastError != null ? lastError : new IOException("Unable to start call transport");
     }
 
-    private void startClientTransport(Descriptor descriptor) {
+    private void scheduleOfferAfterHsReady(String callId, String payload) {
+        // запуск у окремому потоці, щоб не блокувати UI
+        networkExecutor.execute(() -> {
+            final long maxWaitMs = 7_000L; // максимум очікування готовності hidden service
+            final long pollIntervalMs = 500L;
+            final long publishGraceMs = 1_500L; // додатковий буфер після ready
+            TorManager tor = TorManager.getInstance(appContext);
+            long start = System.currentTimeMillis();
+            while (System.currentTimeMillis() - start < maxWaitMs) {
+                if (tor.isReady() && !TextUtils.isEmpty(tor.getOnion())) {
+                    break;
+                }
+                try { Thread.sleep(pollIntervalMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+            }
+            // Невелика додаткова пауза для публікації дескрипторів
+            try { Thread.sleep(publishGraceMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            CallSession snapshot;
+            synchronized (this) { snapshot = session; }
+            if (snapshot == null || !TextUtils.equals(snapshot.callId, callId)) {
+                Log.d(TAG, "Skipping offer send: call abandoned");
+                return;
+            }
+            Log.d(TAG, "Sending offer after HS ready (wait=" + (System.currentTimeMillis() - start) + "ms)");
+            sendSignal(CallSignalMessage.offer(callId, payload));
+        });
+    }
+
+    private void startClientTransport(TcpCallSession.Descriptor descriptor) {
         closeTransport(true);
         TcpCallSession transport = new TcpCallSession(TcpCallSession.Role.CLIENT, new TransportListener());
         try {
@@ -274,6 +352,37 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     }
 
     private void handleTransportClosed(@Nullable Throwable cause) {
+        CallState stateSnapshot;
+        CallSession sessionSnapshot;
+        TcpCallSession transportSnapshot;
+        synchronized (this) {
+            stateSnapshot = state;
+            sessionSnapshot = session;
+            transportSnapshot = tcpSession;
+        }
+        boolean hasActiveTransport = sessionSnapshot != null || transportSnapshot != null;
+        if (!hasActiveTransport && (stateSnapshot == CallState.IDLE
+                || stateSnapshot == CallState.ENDED
+                || stateSnapshot == CallState.FAILED)) {
+            Log.d(TAG, "Ignoring transport close callback (state=" + stateSnapshot + ")");
+            return;
+        }
+        if (gracefulTerminationExpected.get()) {
+            cause = null;
+        }
+        if (cause != null) {
+            String msg = cause.getMessage();
+            if (TextUtils.isEmpty(msg)) {
+                msg = appContext.getString(R.string.call_error_generic);
+            }
+            setLastErrorMessage(msg);
+            if (cause instanceof IOException io) {
+                // Notify Tor manager on local SOCKS issues to trigger health checks/restart
+                TorManager.getInstance(appContext).reportSocksFailure(io);
+            }
+        } else {
+            setLastErrorMessage(null);
+        }
         Log.d(TAG, "TCP transport closed: " + (cause == null ? "normal" : cause.getMessage()));
         CallState endState = (cause == null) ? CallState.ENDED : CallState.FAILED;
         tearDown(endState);
@@ -283,6 +392,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         TcpCallSession sessionToClose;
         Socket socketToClose;
         stopAudioStreams();
+        stopHeartbeat();
         synchronized (this) {
             sessionToClose = tcpSession;
             tcpSession = null;
@@ -368,16 +478,25 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             }
         }
         socket.setSoTimeout(0);
+        synchronized (socketWriteLock) {
+            socketOutputStream = out;
+        }
+        lastPongAt = System.currentTimeMillis();
+        lastPingSent = lastPongAt;
+        startHeartbeat();
     }
 
     private void startAudioStreams(Socket socket) {
         stopAudioStreams();
+        initCodec();
         audioExecutor = Executors.newFixedThreadPool(2, r -> {
             Thread t = new Thread(r, "tcp-audio");
             t.setDaemon(true);
             return t;
         });
         audioRunning = true;
+        micMuted = false;
+        speakerMuted = false;
         audioExecutor.execute(() -> pumpMicrophone(socket));
         audioExecutor.execute(() -> pumpSpeaker(socket));
     }
@@ -411,6 +530,10 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             }
             audioTrack = null;
         }
+        synchronized (socketWriteLock) {
+            socketOutputStream = null;
+        }
+        releaseCodec();
     }
 
     private void pumpMicrophone(Socket socket) {
@@ -428,18 +551,25 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             return;
         }
         try {
-            OutputStream rawOut = socket.getOutputStream();
-            DataOutputStream out = new DataOutputStream(rawOut);
             while (audioRunning) {
                 int read = record.read(buffer, 0, buffer.length);
                 if (read <= 0) {
                     continue;
                 }
-                out.writeShort(read);
-                out.write(buffer, 0, read);
-                out.flush();
+                if (micMuted) {
+                    continue;
+                }
+                try {
+                    byte[] encoded = audioCodec.encode(buffer, read);
+                    if (encoded == null) {
+                        continue;
+                    }
+                    sendFrame(FRAME_TYPE_AUDIO, encoded, encoded.length, false);
+                } catch (IOException encodeError) {
+                    Log.e(TAG, "Encoding failed: " + encodeError.getMessage());
+                }
             }
-        } catch (IOException | IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             if (audioRunning) {
                 audioRunning = false;
                 Log.e(TAG, "Mic pump error: " + ex.getMessage());
@@ -461,6 +591,9 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
         audioTrack = track;
         byte[] buffer = new byte[PCM_FRAME_BYTES * 4];
+        ArrayDeque<byte[]> queue = new ArrayDeque<>();
+        long frameDurationNs = PCM_FRAME_MS * 1_000_000L;
+        long nextPlaybackNs = 0L;
         try {
             track.play();
         } catch (IllegalStateException ex) {
@@ -471,27 +604,56 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             InputStream rawIn = socket.getInputStream();
             DataInputStream in = new DataInputStream(rawIn);
             while (audioRunning) {
-                int length;
-                try {
-                    length = in.readUnsignedShort();
-                } catch (IOException ex) {
-                    throw ex;
-                }
-                if (length <= 0) {
-                    continue;
-                }
-                if (length > buffer.length) {
-                    buffer = new byte[length];
-                }
-                int offset = 0;
-                while (offset < length) {
-                    int read = in.read(buffer, offset, length - offset);
-                    if (read == -1) {
-                        throw new IOException("Audio stream ended");
+                byte frameType = in.readByte();
+                int length = in.readUnsignedShort();
+                byte[] payload = null;
+                if (length > 0) {
+                    if (buffer.length < length) {
+                        buffer = new byte[length];
                     }
-                    offset += read;
+                    int offset = 0;
+                    while (offset < length) {
+                        int read = in.read(buffer, offset, length - offset);
+                        if (read == -1) {
+                            throw new IOException("Audio stream ended");
+                        }
+                        offset += read;
+                    }
+                    payload = new byte[length];
+                    System.arraycopy(buffer, 0, payload, 0, length);
                 }
-                track.write(buffer, 0, length);
+                switch (frameType) {
+                    case FRAME_TYPE_AUDIO -> {
+                        lastPongAt = System.currentTimeMillis();
+                        if (payload != null) {
+                            try {
+                                byte[] decoded = audioCodec.decode(payload, payload.length);
+                                if (decoded != null && decoded.length > 0) {
+                                    queue.add(decoded);
+                                }
+                            } catch (IOException decodeError) {
+                                Log.e(TAG, "Decoding failed: " + decodeError.getMessage());
+                            }
+                        }
+                        if (nextPlaybackNs == 0L) {
+                            nextPlaybackNs = System.nanoTime() + frameDurationNs * JITTER_MIN_FRAMES;
+                        }
+                        long now = System.nanoTime();
+                        while (!queue.isEmpty() && (now >= nextPlaybackNs || queue.size() > JITTER_MAX_FRAMES)) {
+                            byte[] frame = queue.poll();
+                            if (frame != null) {
+                                if (!speakerMuted) {
+                                    track.write(frame, 0, frame.length);
+                                }
+                            }
+                            nextPlaybackNs += frameDurationNs;
+                            now = System.nanoTime();
+                        }
+                    }
+                    case FRAME_TYPE_PING -> sendFrame(FRAME_TYPE_PONG, null, 0, true);
+                    case FRAME_TYPE_PONG -> lastPongAt = System.currentTimeMillis();
+                    default -> { /* ignore unknown */ }
+                }
             }
         } catch (IOException | IllegalStateException ex) {
             if (audioRunning) {
@@ -508,6 +670,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
     }
 
+    @SuppressLint("MissingPermission")
     @Nullable
     private AudioRecord createAudioRecord() {
         int minBuffer = AudioRecord.getMinBufferSize(
@@ -553,6 +716,84 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
     }
 
+    private void sendFrame(byte type, @Nullable byte[] payload, int length, boolean flush) throws IOException {
+        DataOutputStream out = socketOutputStream;
+        if (out == null) {
+            throw new IOException("Output stream unavailable");
+        }
+        synchronized (socketWriteLock) {
+            out.writeByte(type);
+            out.writeShort(length);
+            if (length > 0 && payload != null) {
+                out.write(payload, 0, length);
+            }
+            if (flush) {
+                out.flush();
+            }
+        }
+    }
+
+    private void startHeartbeat() {
+        stopHeartbeat();
+        heartbeatRunning = true;
+        heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "tcp-heartbeat");
+            t.setDaemon(true);
+            return t;
+        });
+        heartbeatExecutor.scheduleAtFixedRate(() -> {
+            if (!heartbeatRunning) {
+                return;
+            }
+            try {
+                long now = System.currentTimeMillis();
+                if (now - lastPingSent >= HEARTBEAT_PERIOD_MS) {
+                    sendFrame(FRAME_TYPE_PING, null, 0, true);
+                    lastPingSent = now;
+                }
+                if (now - lastPongAt > HEARTBEAT_TIMEOUT_MS) {
+                    throw new IOException("Heartbeat timeout");
+                }
+            } catch (IOException ex) {
+                Log.e(TAG, "Heartbeat failure: " + ex.getMessage());
+                handleTransportClosed(ex);
+            }
+        }, HEARTBEAT_PERIOD_MS, HEARTBEAT_PERIOD_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopHeartbeat() {
+        heartbeatRunning = false;
+        if (heartbeatExecutor != null) {
+            heartbeatExecutor.shutdownNow();
+            heartbeatExecutor = null;
+        }
+    }
+
+    private static boolean isAddressInUse(IOException ex) {
+        if (ex instanceof BindException) {
+            return true;
+        }
+        String message = ex.getMessage();
+        return message != null && message.toLowerCase().contains("address already in use");
+    }
+
+    private void initCodec() {
+        releaseCodec();
+        try {
+            audioCodec = new OpusCodec(SAMPLE_RATE_HZ, 1, 32000);
+            Log.i(TAG, "Using Opus codec");
+        } catch (Exception ex) {
+            Log.e(TAG, "Failed to initialize Opus codec, falling back to PCM: " + ex.getMessage());
+            audioCodec = new PcmCodec();
+        }
+    }
+
+    private void releaseCodec() {
+        if (audioCodec instanceof OpusCodec opus) {
+            opus.release();
+        }
+    }
+
     private void toast(String message) {
         mainHandler.post(() -> Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show());
     }
@@ -575,6 +816,32 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         for (CallListener listener : listeners) {
             deliverState(listener, stateSnapshot, sessionSnapshot);
         }
+    }
+
+    public void setMicMuted(boolean muted) {
+        micMuted = muted;
+    }
+
+    public boolean isMicMuted() {
+        return micMuted;
+    }
+
+    public void setSpeakerMuted(boolean muted) {
+        speakerMuted = muted;
+    }
+
+    public boolean isSpeakerMuted() {
+        return speakerMuted;
+    }
+
+    public @Nullable String consumeLastErrorMessage() {
+        String msg = lastErrorMessage;
+        lastErrorMessage = null;
+        return msg;
+    }
+
+    private void setLastErrorMessage(@Nullable String message) {
+        lastErrorMessage = message;
     }
 
     private void deliverState(CallListener listener) {
@@ -608,6 +875,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     }
 
     private void tearDown(CallState endState) {
+        gracefulTerminationExpected.set(endState == CallState.ENDED);
         closeTransport(true);
         synchronized (this) {
             pendingDescriptorJson = null;
@@ -616,6 +884,9 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         setupAudioMode(false);
         changeState(endState);
         Log.d(TAG, "tearDown -> " + endState);
+        if (endState != CallState.FAILED) {
+            setLastErrorMessage(null);
+        }
     }
 
     @Override
@@ -633,7 +904,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             return;
         }
         Log.d(TAG, "onIncomingSignal type=" + signal.getType() + " from=" + fromAddress);
-        if (signal.getType() != SignalType.OFFER) {
+        if (signal.getType() != CallSignalMessage.SignalType.OFFER) {
             CallSession current;
             synchronized (this) {
                 current = session;
@@ -678,6 +949,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
                 return;
             }
             session = new CallSession(fromAddress, false, signal.getCallId());
+            gracefulTerminationExpected.set(false);
             pendingDescriptorJson = descriptor;
         }
         mainHandler.post(() -> CallActivity.startIncoming(appContext, fromAddress));

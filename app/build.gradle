@@ -19,13 +19,9 @@ android {
         }
 
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+            abiFilters "armeabi-v7a", "arm64-v8a"
         }
         signingConfig signingConfigs.debug
-
-        buildConfigField "String", "CALL_TURN_URLS", "\"turn:your-turn-service.onion:3478?transport=tcp,turns:your-turn-service.onion:5349?transport=tcp\""
-        buildConfigField "String", "CALL_TURN_USERNAME", "\"webrtc\""
-        buildConfigField "String", "CALL_TURN_PASSWORD", "\"supersecret\""
     }
 
     externalNativeBuild {
@@ -79,16 +75,6 @@ android {
         buildConfig true
     }
 
-    afterEvaluate {
-        tasks.matching { it.name.startsWith("merge") && it.name.endsWith("NativeLibs") }.all { task ->
-            task.doLast {
-                copy {
-                    from("${buildDir}/intermediates/merged_native_libs/debug/mergeDebugNativeLibs/out/lib/")
-                    into("src/main/jniLibs/")
-                }
-            }
-        }
-    }
 }
 
 dependencies {

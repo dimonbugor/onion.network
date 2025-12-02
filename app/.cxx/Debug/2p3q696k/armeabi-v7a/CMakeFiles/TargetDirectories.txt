@@ -1,3 +1,0 @@
-/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2p3q696k/armeabi-v7a/CMakeFiles/tor-native.dir
-/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2p3q696k/armeabi-v7a/CMakeFiles/edit_cache.dir
-/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2p3q696k/armeabi-v7a/CMakeFiles/rebuild_cache.dir

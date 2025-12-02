@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/.cxx/Debug/2p3q696k/armeabi-v7a",
-  "command": "/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ --target=armv7-none-linux-androideabi24 --sysroot=/Users/oleksandrnekrutenko/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -Dtor_native_EXPORTS -I/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/cpp -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security   -std=c++17 -fexceptions -frtti -fno-limit-debug-info  -fPIC -std=c++17 -o CMakeFiles/tor-native.dir/tor-native.cpp.o -c /Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/cpp/tor-native.cpp",
-  "file": "/Users/oleksandrnekrutenko/AndroidStudioProjects/onion.network/app/src/main/cpp/tor-native.cpp"
-}
-]

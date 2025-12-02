@@ -196,6 +196,12 @@
 
     <string name="video_download_preparing">Preparing video…</string>
     <string name="video_download_failed">Could not load video</string>
+    <string name="call_toggle_mute">Mute</string>
+    <string name="call_toggle_unmute">Unmute</string>
+    <string name="call_toggle_hold">Hold</string>
+    <string name="call_toggle_resume">Resume</string>
+    <string name="call_error_generic">Connection lost</string>
+    <string name="call_microphone_permission_required">Microphone permission is required to place calls.</string>
 
     <string name="bridge_captcha_title">Tor bridge verification</string>
     <string name="bridge_captcha_message">We need to solve a short captcha to download new bridges. Enter the text from the image below.</string>
