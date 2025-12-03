@@ -115,7 +115,7 @@
                 app:backgroundTint="?attr/colorAccent"
                 app:rippleColor="#fff"
                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-                app:tint="?attr/colorAccent" />
+                app:tint="?attr/colorOnBackground" />
 
         </onion.network.ui.views.ArcButtonLayout>
 
@@ -130,7 +130,7 @@
             app:backgroundTint="?attr/colorAccent"
             app:rippleColor="#fff"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-            app:tint="?attr/colorAccent" />
+            app:tint="?attr/colorOnBackground" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/friendFab"
@@ -143,7 +143,7 @@
             app:backgroundTint="?attr/colorAccent"
             app:rippleColor="#fff"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
-            app:tint="?attr/colorAccent" />
+            app:tint="?attr/colorOnBackground" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

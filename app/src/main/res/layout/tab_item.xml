@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_menu_neon"
         android:visibility="visible"
-        app:tint="?attr/colorAccent"
+        app:tint="?attr/colorOnBackground"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.rounded"
         app:backgroundTint="?attr/colorAccent"
         app:fabCustomSize="@dimen/dp36" />

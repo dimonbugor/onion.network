@@ -355,7 +355,8 @@ public class FriendPage extends BasePage {
         }
         if (address != null) {
             if (preset == UiCustomizationManager.ColorPreset.SYSTEM) {
-                address.setTextColor(ThemeManager.getColor(activity, R.attr.white_80));
+                int onSurface = ThemeManager.getColor(activity, com.google.android.material.R.attr.colorOnSurface);
+                address.setTextColor(ColorUtils.setAlphaComponent(onSurface, 180));
             } else {
                 int onSurface = preset.getOnSurfaceColor(getContext());
                 address.setTextColor(ColorUtils.setAlphaComponent(onSurface, 160));

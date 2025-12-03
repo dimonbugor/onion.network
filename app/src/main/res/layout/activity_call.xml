@@ -123,9 +123,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/dp12"
                 android:layout_weight="1"
-                android:text="@string/call_action_accept"
                 android:visibility="gone"
-                app:iconPadding="@dimen/dp8"
+                app:iconPadding="0dp"
                 app:iconGravity="textStart"
                 app:icon="@drawable/ic_call" />
 
@@ -153,8 +152,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/call_action_hangup"
-                app:iconPadding="@dimen/dp8"
+                app:iconPadding="0dp"
                 app:iconGravity="textStart"
                 app:icon="@drawable/ic_call_end" />
 

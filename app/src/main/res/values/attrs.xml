@@ -24,4 +24,5 @@
     <attr name="white_50" format="reference" />
     <attr name="white_80" format="reference" />
     <attr name="colorOnSurface" format="color" />
+    <attr name="textColorSecondary" format="color" />
 </resources>

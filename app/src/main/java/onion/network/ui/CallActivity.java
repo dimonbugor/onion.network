@@ -263,9 +263,11 @@ public class CallActivity extends AppCompatActivity implements CallListener {
         }
 
         if (acceptButton != null) {
-            acceptButton.setBackgroundTintList(ColorStateList.valueOf(accent));
-            acceptButton.setTextColor(onAccent);
-            acceptButton.setIconTint(ColorStateList.valueOf(onAccent));
+            int hangupColor = ContextCompat.getColor(this, R.color.ui_preset_forest_accent);
+            int white = ContextCompat.getColor(this, android.R.color.white);
+            acceptButton.setBackgroundTintList(ColorStateList.valueOf(hangupColor));
+            acceptButton.setTextColor(white);
+            acceptButton.setIconTint(ColorStateList.valueOf(white));
         }
 
         if (hangupButton != null) {

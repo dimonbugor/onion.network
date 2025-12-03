@@ -264,7 +264,8 @@ public class ConversationPage extends BasePage implements ChatClient.OnMessageSe
                 ? ThemeManager.getColor(activity, com.google.android.material.R.attr.colorOnBackground)
                 : preset.getOnSurfaceColor(activity);
         int secondary = preset == UiCustomizationManager.ColorPreset.SYSTEM
-                ? ThemeManager.getColor(activity, R.attr.white_80)
+                ? ColorUtils.setAlphaComponent(
+                        ThemeManager.getColor(activity, com.google.android.material.R.attr.colorOnSurface), 180)
                 : ColorUtils.setAlphaComponent(onSurface, 180);
 
         holder.name.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.nameTextSizeSp);

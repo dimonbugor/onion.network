@@ -16,7 +16,7 @@
         -->
     <TextView
         android:textStyle="bold"
-        android:textColor="?attr/colorAccent"
+        android:textColor="?attr/colorOnBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
@@ -75,7 +75,7 @@
         -->
     <TextView
         android:textStyle="bold"
-        android:textColor="?attr/colorAccent"
+        android:textColor="?attr/colorOnBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"

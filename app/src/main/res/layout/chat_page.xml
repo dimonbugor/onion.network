@@ -101,7 +101,7 @@
             android:layout_width="@dimen/dp24"
             android:layout_height="@dimen/dp24"
             android:src="@drawable/ic_insert_photo_white_24dp"
-            app:tint="?attr/colorAccent" />
+            app:tint="?attr/colorOnBackground" />
 
         <TextView
             android:id="@+id/attachmentPreviewText"
@@ -120,7 +120,7 @@
             android:background="@drawable/glass_chip_circle"
             android:contentDescription="@string/dialog_button_delete"
             android:src="@drawable/ic_close"
-            app:tint="?attr/colorAccent" />
+            app:tint="?attr/colorOnBackground" />
     </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -164,7 +164,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Attach"
                 android:src="@drawable/ic_insert_photo_white_24dp"
-                app:tint="?attr/colorAccent" />
+                app:tint="?attr/colorOnBackground" />
 
             <ImageButton
                 android:id="@+id/micro"
@@ -177,7 +177,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Micro"
                 android:src="@drawable/ic_mic"
-                app:tint="?attr/colorAccent" />
+                app:tint="?attr/colorOnBackground" />
 
             <ImageButton
                 android:id="@+id/send"
@@ -189,7 +189,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Send"
                 android:src="@drawable/ic_send_black_24dp"
-                app:tint="?attr/colorAccent" />
+                app:tint="?attr/colorOnBackground" />
 
         </RelativeLayout>
     </com.google.android.material.textfield.TextInputLayout>

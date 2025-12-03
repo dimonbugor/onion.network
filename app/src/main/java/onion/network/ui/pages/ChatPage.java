@@ -967,6 +967,10 @@ public class ChatPage extends BasePage
 
         private void applyMessageStyle(ChatHolder holder, boolean outgoing) {
             UiCustomizationManager.ChatComposerConfig config = UiCustomizationManager.getChatComposerConfig(context);
+            int onBackground = ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnBackground);
+            int onSurface = ThemeManager.getColor(context, com.google.android.material.R.attr.colorOnSurface);
+            int white80 = ThemeManager.getColor(context, R.attr.white_80);
+            int white50 = ThemeManager.getColor(context, R.attr.white_50);
 
             holder.message.setTextSize(TypedValue.COMPLEX_UNIT_SP, config.messageTextSizeSp);
             holder.message.setLineSpacing(0f, config.messageLineSpacingMultiplier);
@@ -1032,6 +1036,16 @@ public class ChatPage extends BasePage
             float bubbleRadius = UiCustomizationManager.resolveCornerRadiusPx(context, config.bubbleCornerRadiusPx);
             holder.card.setRadius(bubbleRadius);
             updateBubbleCorners(holder, outgoing, bubbleRadius);
+
+            if (outgoing) {
+                holder.message.setTextColor(white80);
+                holder.status.setTextColor(white50);
+                holder.time.setTextColor(white50);
+            } else {
+                holder.message.setTextColor(onBackground);
+                holder.status.setTextColor(onSurface);
+                holder.time.setTextColor(onSurface);
+            }
         }
 
         private void updateBubbleCorners(ChatHolder holder, boolean outgoing,

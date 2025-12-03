@@ -32,7 +32,7 @@
             android:fontFamily="@font/geologica_400"
             android:padding="@dimen/dp16"
             android:text="@string/load_more"
-            android:textColor="?attr/colorAccent"
+            android:textColor="?attr/colorPrimary"
              />
 
     </com.google.android.material.card.MaterialCardView>

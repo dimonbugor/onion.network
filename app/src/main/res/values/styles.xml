@@ -36,6 +36,7 @@
         <item name="android:textColor">@color/monochrome_black_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/monochrome_black_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/monochrome_black_colorOnSurface</item>
+        <item name="textColorSecondary">@color/monochrome_black_colorOnSurface</item>
     </style>
 
     <style name="AppTheme.MonochromeLight" parent="AppTheme.Base">
@@ -67,6 +68,7 @@
         <item name="android:textColor">@color/monochrome_light_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/monochrome_light_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/monochrome_light_colorOnSurface</item>
+        <item name="textColorSecondary">@color/monochrome_light_colorOnSurface</item>
     </style>
 
     <style name="AppTheme.DarkNeon" parent="AppTheme.Base">
@@ -104,6 +106,7 @@
         <item name="android:textColor">@color/dark_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/dark_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/dark_colorOnSurface</item>
+        <item name="textColorSecondary">@color/dark_colorOnSurface</item>
     </style>
 
     <style name="AppTheme.LightNeon" parent="AppTheme.Base">
@@ -141,6 +144,7 @@
         <item name="android:textColor">@color/light_colorOnBackground</item>
         <item name="android:textColorPrimary">@color/light_colorOnBackground</item>
         <item name="android:textColorSecondary">@color/light_colorOnSurface</item>
+        <item name="textColorSecondary">@color/light_colorOnSurface</item>
     </style>
 
     <style name="Theme.MyApp.Splash" parent="Theme.Material3.DayNight">

@@ -8,7 +8,7 @@
     <color name="dark_colorBackgroundAlpha">#4010192C</color>
 
     <!-- Light Theme Alpha Colors -->
-    <color name="light_overlay">#33A0C6FF</color>
+    <color name="light_overlay">#66000000</color>
     <color name="light_colorAccentAlpha">#664F6CFF</color>
     <color name="light_colorPrimaryContainerAlpha">#33F2F7FF</color>
     <color name="light_colorBackgroundAlpha_80">#CCF5FAFF</color>
