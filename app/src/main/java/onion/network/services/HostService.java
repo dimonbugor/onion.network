@@ -20,9 +20,11 @@ import androidx.core.app.NotificationManagerCompat;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.call.CallManager;
 import onion.network.models.WallBot;
 import onion.network.clients.ChatClient;
 import onion.network.tor.TorStatusFormatter;
@@ -35,10 +37,13 @@ public class HostService extends Service {
     private static final String CHANNEL_ID = "service_channel";
     private static final String CHANNEL_NAME = "Service Channel";
     private static final String TAG = "onion.network:HostService";
+    private static final long UNSENT_RESEND_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+    private static final long TOR_RESTART_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
     private Timer timer;
     private TorManager torManager;
     private Server server;
     private BlogServer blogServer;
+    private CallManager callManager;
     private PowerManager.WakeLock wakeLock;
     private NotificationCompat.Builder notificationBuilder;
     private NotificationManagerCompat notificationManager;
@@ -110,6 +115,7 @@ public class HostService extends Service {
         server = Server.getInstance(this);
         blogServer = BlogServer.getInstance(this);
         torManager = TorManager.getInstance(this);
+        callManager = CallManager.getInstance(this);
         torManager.addLogListener(torLogListener);
         if (torManager.isReady()) {
             postNotificationUpdate(getString(R.string.notification_tor_ready));
@@ -128,7 +134,20 @@ public class HostService extends Service {
                 }
                 RequestTool.getInstance(getApplicationContext()).sendAllRequests();
             }
-        }, 0, 1000 * 60 * 60); // Оновлюємо раз на годину
+        }, 0, UNSENT_RESEND_PERIOD_MS); // Оновлюємо раз на годину
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (callManager != null && callManager.hasActiveCall()) {
+                    log("Skipping Tor restart during active call");
+                    return;
+                }
+                if (torManager != null && torManager.isReady()) {
+                    torManager.restartTor("scheduled reconnect");
+                }
+            }
+        }, TOR_RESTART_PERIOD_MS, TOR_RESTART_PERIOD_MS);
 
         WallBot.getInstance(this); // Ініціалізація WallBot
 

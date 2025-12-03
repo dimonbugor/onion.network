@@ -439,8 +439,26 @@ public class TorManager {
             }
             restartScheduled = true;
         }
+        performRestart(refreshBridges, reason);
+    }
+
+    public void restartTor(String reason) {
+        synchronized (restartLock) {
+            if (restartScheduled) {
+                log("Restart already scheduled, skipping new request");
+                return;
+            }
+            restartScheduled = true;
+            restartAttempts = 0;
+            lastRestartAttemptMs = System.currentTimeMillis();
+        }
+        performRestart(false, reason == null ? "manual restart" : reason);
+    }
+
+    private void performRestart(boolean refreshBridges, String reason) {
         final boolean refreshBridgesFinal = refreshBridges;
-        log("Restarting Tor (" + reason + ")");
+        final String restartReason = reason == null || reason.isEmpty() ? "restart" : reason;
+        log("Restarting Tor (" + restartReason + ")");
         new Thread(() -> {
             try {
                 nativeStopTor();
@@ -463,6 +481,7 @@ public class TorManager {
             try {
                 Thread.sleep(1_500);
             } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
             }
             startTorServer();
             synchronized (restartLock) {

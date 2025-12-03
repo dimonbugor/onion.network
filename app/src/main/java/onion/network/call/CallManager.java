@@ -135,6 +135,16 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         return session;
     }
 
+    public boolean hasActiveCall() {
+        CallState snapshot;
+        synchronized (this) {
+            snapshot = state;
+        }
+        return snapshot != CallState.IDLE
+                && snapshot != CallState.ENDED
+                && snapshot != CallState.FAILED;
+    }
+
     public void startOutgoingCall(String remoteAddress) {
         initialize();
         if (TextUtils.isEmpty(remoteAddress)) {
