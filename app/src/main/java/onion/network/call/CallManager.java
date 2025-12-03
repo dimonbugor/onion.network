@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import onion.network.R;
 import onion.network.TorManager;
+import onion.network.call.CallSocket;
 import onion.network.call.codec.AudioCodec;
 import onion.network.call.codec.OpusCodec;
 import onion.network.call.codec.PcmCodec;
@@ -73,7 +73,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     private CallState state = CallState.IDLE;
     private CallSession session;
     private TcpCallSession tcpSession;
-    private Socket transportSocket;
+    private CallSocket transportSocket;
     private final AtomicBoolean suppressTransportCallbacks = new AtomicBoolean(false);
     private final AtomicBoolean gracefulTerminationExpected = new AtomicBoolean(false);
     private String pendingDescriptorJson;
@@ -155,6 +155,12 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             pendingDescriptorJson = null;
         }
         setupAudioMode(true);
+        if (!waitForTorReady(60_000)) {
+            Log.e(TAG, "Tor not ready, aborting call");
+            toast("Tor not ready");
+            tearDown(CallState.FAILED);
+            return;
+        }
         try {
             startServerTransport();
         } catch (IOException ex) {
@@ -185,6 +191,12 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             changeState(CallState.CONNECTING);
         }
         setupAudioMode(true);
+        if (!waitForTorReady(60_000)) {
+            Log.e(TAG, "Tor not ready, aborting accept");
+            toast("Tor not ready");
+            tearDown(CallState.FAILED);
+            return;
+        }
         try {
             TcpCallSession.Descriptor remote = TcpCallSession.decodeDescriptor(descriptorJson);
             startClientTransport(remote);
@@ -194,6 +206,24 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             toast("Unable to connect");
             tearDown(CallState.FAILED);
         }
+    }
+
+    private boolean waitForTorReady(long timeoutMs) {
+        TorManager tor = TorManager.getInstance(appContext);
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            boolean ready = tor.isReady() && !TextUtils.isEmpty(tor.getOnion());
+            if (ready) {
+                try {
+                    tor.getPort(); // blocks until SOCKS port is parsed
+                    return true;
+                } catch (IOException ignored) {
+                    // keep waiting
+                }
+            }
+            try { Thread.sleep(500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+        }
+        return false;
     }
 
     public void rejectIncomingCall() {
@@ -289,14 +319,20 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     private void scheduleOfferAfterHsReady(String callId, String payload) {
         // запуск у окремому потоці, щоб не блокувати UI
         networkExecutor.execute(() -> {
-            final long maxWaitMs = 7_000L; // максимум очікування готовності hidden service
-            final long pollIntervalMs = 500L;
-            final long publishGraceMs = 1_500L; // додатковий буфер після ready
+            final long maxWaitMs = 60_000L; // більше часу на публікацію дескриптора HS
+            final long pollIntervalMs = 1_000L;
+            final long publishGraceMs = 4_000L; // короткий буфер після готовності
+            final long minReadyHoldMs = 20_000L; // мінімальний час після ready перед відправкою offer
             TorManager tor = TorManager.getInstance(appContext);
             long start = System.currentTimeMillis();
+            long readyAt = -1L;
             while (System.currentTimeMillis() - start < maxWaitMs) {
-                if (tor.isReady() && !TextUtils.isEmpty(tor.getOnion())) {
-                    break;
+                boolean ready = tor.isReady() && !TextUtils.isEmpty(tor.getOnion());
+                if (ready) {
+                    if (readyAt < 0) readyAt = System.currentTimeMillis();
+                    if (System.currentTimeMillis() - readyAt >= minReadyHoldMs) {
+                        break;
+                    }
                 }
                 try { Thread.sleep(pollIntervalMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
             }
@@ -318,6 +354,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         TcpCallSession transport = new TcpCallSession(TcpCallSession.Role.CLIENT, new TransportListener());
         try {
             int socksPort = TorManager.getInstance(appContext).getPort();
+            Log.d(TAG, "Using SOCKS port " + socksPort + " for client transport");
             Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", socksPort));
             transport.setProxy(proxy);
         } catch (IOException ex) {
@@ -334,7 +371,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         transport.connect(descriptor);
     }
 
-    private void onTransportReady(Socket socket) {
+    private void onTransportReady(CallSocket socket) {
         synchronized (this) {
             transportSocket = socket;
         }
@@ -390,7 +427,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
 
     private void closeTransport(boolean suppressCallback) {
         TcpCallSession sessionToClose;
-        Socket socketToClose;
+        CallSocket socketToClose;
         stopAudioStreams();
         stopHeartbeat();
         synchronized (this) {
@@ -398,6 +435,9 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             tcpSession = null;
             socketToClose = transportSocket;
             transportSocket = null;
+            synchronized (socketWriteLock) {
+                socketOutputStream = null;
+            }
         }
         closeQuietly(socketToClose);
         if (sessionToClose != null) {
@@ -412,11 +452,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
 
     private class TransportListener implements TcpCallSession.Listener {
         @Override
-        public void onSocketReady(@NonNull Socket socket) {
-            try {
-                socket.setTcpNoDelay(true);
-            } catch (IOException ignore) {
-            }
+        public void onSocketReady(@NonNull CallSocket socket) {
             mainHandler.post(() -> onTransportReady(socket));
         }
 
@@ -429,7 +465,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
     }
 
-    private static void closeQuietly(@Nullable Socket socket) {
+    private static void closeQuietly(@Nullable CallSocket socket) {
         if (socket == null) return;
         try {
             socket.close();
@@ -437,7 +473,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
     }
 
-    private void performHandshake(Socket socket) throws IOException {
+    private void performHandshake(CallSocket socket) throws IOException {
         CallSession current;
         synchronized (this) {
             current = session;
@@ -486,7 +522,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         startHeartbeat();
     }
 
-    private void startAudioStreams(Socket socket) {
+    private void startAudioStreams(CallSocket socket) {
         stopAudioStreams();
         initCodec();
         audioExecutor = Executors.newFixedThreadPool(2, r -> {
@@ -530,13 +566,10 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             }
             audioTrack = null;
         }
-        synchronized (socketWriteLock) {
-            socketOutputStream = null;
-        }
         releaseCodec();
     }
 
-    private void pumpMicrophone(Socket socket) {
+    private void pumpMicrophone(CallSocket socket) {
         AudioRecord record = createAudioRecord();
         if (record == null) {
             handleTransportClosed(new IOException("AudioRecord init failed"));
@@ -583,7 +616,7 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
         }
     }
 
-    private void pumpSpeaker(Socket socket) {
+    private void pumpSpeaker(CallSocket socket) {
         AudioTrack track = createAudioTrack();
         if (track == null) {
             handleTransportClosed(new IOException("AudioTrack init failed"));

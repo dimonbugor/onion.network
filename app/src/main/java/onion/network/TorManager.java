@@ -108,7 +108,7 @@ public class TorManager {
         List<String> bridgeConfigs;
         List<String> overrideSnapshot = null;
         synchronized (this) {
-            if (bridgeOverride != null && !bridgeOverride.isEmpty()) {
+            if (bridgeOverride != null) { // even empty list means "no bridges"
                 overrideSnapshot = new ArrayList<>(bridgeOverride);
                 bridgeOverride = null;
             }
@@ -129,9 +129,20 @@ public class TorManager {
 
             // Hidden service config
             writer.println("HiddenServiceDir " + hiddenServiceDir.getAbsolutePath());
-            Server server = Server.getInstance(context);
-            writer.println("HiddenServicePort 80 " + server.getSocketName());
-            writer.println("HiddenServicePort " + CALL_PORT + " 127.0.0.1:" + CALL_PORT);
+            try {
+                Server server = Server.getInstance(context);
+                writer.println("HiddenServicePort 80 " + server.getSocketName());
+            } catch (Exception e) {
+                log("Failed to init HTTP server socket for HS: " + e.getMessage());
+                throw e;
+            }
+            try {
+                onion.network.call.CallServer callServer = onion.network.call.CallServer.getInstance(context);
+                writer.println("HiddenServicePort " + CALL_PORT + " " + callServer.getSocketName());
+            } catch (Exception e) {
+                log("Failed to init call server socket for HS: " + e.getMessage());
+                throw e;
+            }
             writer.println();
 
             if (!bridgeConfigs.isEmpty()) {
@@ -273,6 +284,7 @@ public class TorManager {
                 String num = line.substring(i).replaceAll("\\D+", "");
                 int p = Integer.parseInt(num);
                 socksPort = p;
+                Log.i(TAG, "SOCKS port ready: " + p);
                 synchronized (portLock) { portLock.notifyAll(); }
             } catch (Exception ignored) {}
         }
@@ -311,6 +323,10 @@ public class TorManager {
 
     public File getHiddenServiceDir() {
         return hiddenServiceDir;
+    }
+
+    public String getCallSocketPath() {
+        return new File(context.getFilesDir(), "call_socket").getAbsolutePath();
     }
 
     public String getStatus() {

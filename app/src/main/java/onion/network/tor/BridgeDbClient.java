@@ -28,9 +28,9 @@ class BridgeDbClient {
 
     BridgeDbClient() {
         client = new OkHttpClient.Builder()
-                .callTimeout(120, TimeUnit.SECONDS)
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
+                .callTimeout(45, TimeUnit.SECONDS)
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
                 .build();
     }
 

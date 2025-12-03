@@ -1,5 +1,7 @@
 package onion.network.call;
 
+import android.content.Context;
+import android.net.LocalSocket;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -10,11 +12,8 @@ import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Objects;
@@ -23,6 +22,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import onion.network.App;
+import onion.network.call.CallServer;
+import onion.network.call.CallSocket;
 
 /**
  * WIP: TCP-транспорт для голосових викликів поверх Tor hidden service.
@@ -36,13 +39,14 @@ public final class TcpCallSession implements Closeable {
     private static final String TAG = "TcpCallSession";
     private static final int ACCEPT_BACKLOG = 1;
     private static final int CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(20);
+    private static final int MAX_CONNECT_ATTEMPTS = 10;
     private static final SecureRandom RNG = new SecureRandom();
 
     public interface Listener {
         /**
          * Викликається, коли TCP-сокет готовий до обміну даними.
          */
-        void onSocketReady(@NonNull Socket socket);
+        void onSocketReady(@NonNull CallSocket socket);
 
         /**
          * Повідомляємо про завершення або помилку. {@code cause == null} означає штатне завершення.
@@ -85,8 +89,8 @@ public final class TcpCallSession implements Closeable {
     private final Role role;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
-    private ServerSocket serverSocket;
-    private Socket activeSocket;
+    private CallServer callServer;
+    private CallSocket activeSocket;
     private Descriptor localDescriptor;
     private Proxy proxy;
 
@@ -102,25 +106,24 @@ public final class TcpCallSession implements Closeable {
     @NonNull
     public synchronized Descriptor prepareServerEndpoint(@NonNull String advertisedHost, int port) throws IOException {
         ensureRole(Role.SERVER);
-        if (serverSocket != null) {
+        if (callServer != null) {
             return Objects.requireNonNull(localDescriptor, "descriptor");
         }
-        InetAddress loopback = InetAddress.getByName(null); // 127.0.0.1
-        int bindPort = port <= 0 ? 0 : port;
-        ServerSocket socket = new ServerSocket();
-        socket.setReuseAddress(true);
         try {
-            socket.bind(new InetSocketAddress(loopback, bindPort), ACCEPT_BACKLOG);
+            Context ctx = App.context;
+            if (ctx == null) {
+                throw new IOException("App context unavailable");
+            }
+            callServer = CallServer.getInstance(ctx);
+            String token = generateToken();
+            int exposedPort = port <= 0 ? onion.network.TorManager.CALL_PORT : port;
+            localDescriptor = new Descriptor(advertisedHost, exposedPort, token);
+            Log.d(TAG, "Server prepared on " + localDescriptor + " (" + callServer.getSocketName() + ")");
+            executor.execute(this::acceptLoop);
+            return localDescriptor;
         } catch (IOException bindError) {
-            closeQuietly(socket);
             throw bindError;
         }
-        serverSocket = socket;
-        String token = generateToken();
-        localDescriptor = new Descriptor(advertisedHost, serverSocket.getLocalPort(), token);
-        Log.d(TAG, "Server prepared on " + localDescriptor);
-        executor.execute(this::acceptLoop);
-        return localDescriptor;
     }
 
     @NonNull
@@ -145,25 +148,34 @@ public final class TcpCallSession implements Closeable {
         running.set(true);
         executor.execute(() -> {
             int attempts = 0;
-            long backoffMs = 750L;
+            long backoffMs = 1_000L;
             IOException lastError = null;
-            while (running.get() && attempts < 5) {
+            while (running.get() && attempts < MAX_CONNECT_ATTEMPTS) {
                 attempts++;
                 try {
                     Log.d(TAG, "Connecting to " + remote + " attempt=" + attempts);
-                    Socket socket = (proxy != null) ? new Socket(proxy) : new Socket();
+                    java.net.Socket socket = (proxy != null) ? new java.net.Socket(proxy) : new java.net.Socket();
                     socket.connect(new InetSocketAddress(remote.host, remote.port), CONNECT_TIMEOUT_MS);
+                    CallSocket wrapped = CallSocket.from(socket);
                     synchronized (this) {
-                        activeSocket = socket;
+                        activeSocket = wrapped;
                     }
-                    listener.onSocketReady(socket);
+                    listener.onSocketReady(wrapped);
                     return;
                 } catch (IOException ex) {
                     lastError = ex;
                     String msg = ex.getMessage();
                     Log.w(TAG, "connect attempt " + attempts + " failed: " + msg);
+                    // notify Tor manager about SOCKS issues (if available)
+                    try {
+                        Context ctx = onion.network.App.context;
+                        if (ctx != null) {
+                            onion.network.TorManager.getInstance(ctx).reportSocksFailure(ex);
+                        }
+                    } catch (Throwable ignored) {
+                    }
                     // Retry on transient SOCKS/Tor issues
-                    if (attempts >= 5) {
+                    if (attempts >= MAX_CONNECT_ATTEMPTS) {
                         break;
                     }
                     try {
@@ -172,7 +184,7 @@ public final class TcpCallSession implements Closeable {
                         Thread.currentThread().interrupt();
                         break;
                     }
-                    backoffMs = Math.min(backoffMs * 2, 5000L);
+                    backoffMs = Math.min(backoffMs * 2, 10_000L);
                 }
             }
             running.set(false);
@@ -183,11 +195,13 @@ public final class TcpCallSession implements Closeable {
     private void acceptLoop() {
         running.set(true);
         try {
-            Socket socket = serverSocket.accept();
+            LocalSocket socket = callServer.accept();
+            CallSocket wrapped = CallSocket.from(socket);
             synchronized (this) {
-                activeSocket = socket;
+                activeSocket = wrapped;
             }
-            listener.onSocketReady(socket);
+            Log.d(TAG, "Server accepted connection from " + wrapped.describe());
+            listener.onSocketReady(wrapped);
         } catch (IOException ex) {
             if (running.get()) {
                 Log.e(TAG, "accept failed: " + ex.getMessage());
@@ -206,7 +220,6 @@ public final class TcpCallSession implements Closeable {
     public void close() {
         running.set(false);
         closeQuietly(activeSocket);
-        closeQuietly(serverSocket);
         executor.shutdownNow();
         listener.onSocketClosed(null);
     }
@@ -225,7 +238,7 @@ public final class TcpCallSession implements Closeable {
         }
     }
 
-    private static void closeQuietly(@Nullable ServerSocket socket) {
+    private static void closeQuietly(@Nullable CallSocket socket) {
         if (socket == null) return;
         try {
             socket.close();
