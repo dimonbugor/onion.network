@@ -361,5 +361,6 @@
     <string name="if_the_links_are_not_available_yet_check_your_network_connection_and_or_wait_a_few_minutes_for_the_hidden_service_to_be_registered">If the links are not available yet, check your network connection and/or wait a few minutes for the hidden service to be registered.</string>
     <string name="no_posts_yet">No posts yet</string>
     <string name="load_more">Load More</string>
+    <string name="in_the_process_of_finalization">In the process of finalization</string>
 
 </resources>
