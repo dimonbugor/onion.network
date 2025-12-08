@@ -51,6 +51,11 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
     private final Context appContext;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService callSetupExecutor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "call-setup");
+        t.setDaemon(true);
+        return t;
+    });
     private final CopyOnWriteArrayList<CallListener> listeners = new CopyOnWriteArrayList<>();
     private final Object socketWriteLock = new Object();
 
@@ -165,23 +170,32 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             pendingDescriptorJson = null;
         }
         setupAudioMode(true);
-        if (!waitForTorReady(60_000)) {
-            Log.e(TAG, "Tor not ready, aborting call");
-            toast("Tor not ready");
-            tearDown(CallState.FAILED);
-            return;
-        }
-        try {
-            startServerTransport();
-        } catch (IOException ex) {
-            Log.e(TAG, "Unable to start TCP transport: " + ex.getMessage());
-            toast("Unable to start call");
-            String message = TextUtils.isEmpty(ex.getMessage())
-                    ? appContext.getString(R.string.call_error_generic)
-                    : ex.getMessage();
-            setLastErrorMessage(message);
-            tearDown(CallState.FAILED);
-        }
+        String callIdSnapshot = callId;
+        callSetupExecutor.execute(() -> {
+            if (!waitForTorReady(60_000)) {
+                Log.e(TAG, "Tor not ready, aborting call");
+                toast("Tor not ready");
+                tearDown(CallState.FAILED);
+                return;
+            }
+            synchronized (CallManager.this) {
+                if (session == null || !TextUtils.equals(session.callId, callIdSnapshot)) {
+                    Log.d(TAG, "Aborting outgoing call setup: session changed");
+                    return;
+                }
+            }
+            try {
+                startServerTransport();
+            } catch (IOException ex) {
+                Log.e(TAG, "Unable to start TCP transport: " + ex.getMessage());
+                toast("Unable to start call");
+                String message = TextUtils.isEmpty(ex.getMessage())
+                        ? appContext.getString(R.string.call_error_generic)
+                        : ex.getMessage();
+                setLastErrorMessage(message);
+                tearDown(CallState.FAILED);
+            }
+        });
     }
 
     public void acceptIncomingCall() {
@@ -201,27 +215,47 @@ public final class CallManager implements ChatServer.OnMessageReceivedListener, 
             changeState(CallState.CONNECTING);
         }
         setupAudioMode(true);
-        if (!waitForTorReady(60_000)) {
-            Log.e(TAG, "Tor not ready, aborting accept");
-            toast("Tor not ready");
-            tearDown(CallState.FAILED);
-            return;
-        }
-        try {
-            TcpCallSession.Descriptor remote = TcpCallSession.decodeDescriptor(descriptorJson);
-            startClientTransport(remote);
-            sendSignal(CallSignalMessage.answer(callId, "accept"));
-        } catch (IOException ex) {
-            Log.e(TAG, "Failed to parse descriptor: " + ex.getMessage());
-            toast("Unable to connect");
-            tearDown(CallState.FAILED);
-        }
+        final String descriptorJsonSnapshot = descriptorJson;
+        final String callIdSnapshot = callId;
+        callSetupExecutor.execute(() -> {
+            if (!waitForTorReady(60_000)) {
+                Log.e(TAG, "Tor not ready, aborting accept");
+                toast("Tor not ready");
+                tearDown(CallState.FAILED);
+                return;
+            }
+            synchronized (CallManager.this) {
+                if (session == null || !session.callId.equals(callIdSnapshot)) {
+                    Log.d(TAG, "Aborting accept: session changed");
+                    return;
+                }
+            }
+            try {
+                TcpCallSession.Descriptor remote = TcpCallSession.decodeDescriptor(descriptorJsonSnapshot);
+                startClientTransport(remote);
+                sendSignal(CallSignalMessage.answer(callIdSnapshot, "accept"));
+            } catch (IOException ex) {
+                Log.e(TAG, "Failed to parse descriptor: " + ex.getMessage());
+                toast("Unable to connect");
+                tearDown(CallState.FAILED);
+            }
+        });
     }
 
     private boolean waitForTorReady(long timeoutMs) {
         TorManager tor = TorManager.getInstance(appContext);
         long start = System.currentTimeMillis();
         while (System.currentTimeMillis() - start < timeoutMs) {
+            if (Thread.currentThread().isInterrupted()) {
+                return false;
+            }
+            CallState snapshot;
+            synchronized (this) {
+                snapshot = state;
+            }
+            if (snapshot == CallState.IDLE || snapshot == CallState.ENDED || snapshot == CallState.FAILED) {
+                return false;
+            }
             boolean ready = tor.isReady() && !TextUtils.isEmpty(tor.getOnion());
             if (ready) {
                 try {

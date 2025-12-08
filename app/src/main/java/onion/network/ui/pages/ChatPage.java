@@ -875,6 +875,7 @@ public class ChatPage extends BasePage
             boolean tx = sender.equals(torManager.getID());
 
             onion.network.call.CallSignalMessage callSignal = onion.network.call.CallSignalMessage.fromPayload(payload);
+            resetAttachmentViews(holder);
 
             if (sender.equals(torManager.getID())) sender = "You";
 
@@ -1122,6 +1123,34 @@ public class ChatPage extends BasePage
                     return bindAudioAttachment(holder, payload, messageId);
                 default:
                     return false;
+            }
+        }
+
+        private void resetAttachmentViews(ChatHolder holder) {
+            if (holder.attachmentContainer != null) {
+                holder.attachmentContainer.setVisibility(View.GONE);
+                holder.attachmentContainer.setOnClickListener(null);
+            }
+            if (holder.attachmentImage != null) {
+                holder.attachmentImage.setVisibility(View.GONE);
+                holder.attachmentImage.setImageBitmap(null);
+                holder.attachmentImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            }
+            if (holder.attachmentVideoBadge != null) {
+                holder.attachmentVideoBadge.setVisibility(View.GONE);
+            }
+            if (holder.audioRow != null) {
+                holder.audioRow.setVisibility(View.GONE);
+                holder.audioRow.setOnClickListener(null);
+            }
+            if (holder.audioPlayButton != null) {
+                holder.audioPlayButton.setOnClickListener(null);
+            }
+            if (holder.audioStatusView != null) {
+                holder.audioStatusView.setText("");
+            }
+            if (holder.audioDurationView != null) {
+                holder.audioDurationView.setText(holder.itemView.getContext().getString(R.string.zero_time));
             }
         }
 
