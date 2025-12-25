@@ -32,6 +32,8 @@ import java.text.SimpleDateFormat;
 import android.util.Base64;
 import java.util.Date;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import onion.network.R;
 
 public class Utils {
@@ -98,15 +100,8 @@ public class Utils {
     }
 
     public static String sha1Digest(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            if (input != null) {
-                digest.update(input.getBytes(UTF_8));
-            }
-            return org.spongycastle.util.encoders.Hex.toHexString(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        byte[] data = input != null ? input.getBytes(UTF_8) : new byte[0];
+        return DigestUtils.sha1Hex(data);
     }
 
     public static String sha256Base64(byte[] data) {

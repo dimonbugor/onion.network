@@ -93,16 +93,19 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'io.github.webrtc-sdk:android:137.7151.04'
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // Pick only the JARs we actually need to avoid classpath clashes with bcprov
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'com.google.zxing:core:3.5.3'
-    implementation 'org.apache.commons:commons-compress:1.28.0'
+    implementation('org.apache.commons:commons-compress:1.28.0') {
+        exclude group: 'commons-codec', module: 'commons-codec'
+    }
     implementation 'org.tukaani:xz:1.10'
-    implementation files('libs/core-1.52.0.0.jar')
-    implementation files('libs/prov-1.52.0.0.jar')
+    implementation files('libs/commons-codec-1.10.jar')
+    implementation files('libs/core-1.58.0.0.jar')
+    implementation files('libs/prov-1.58.0.0.jar')
 }
 
 // Fix 16KB page size alignment for all native libs (16KB kernel page size devices)
