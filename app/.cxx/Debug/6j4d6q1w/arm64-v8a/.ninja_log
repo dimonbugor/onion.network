@@ -1,0 +1,4 @@
+# ninja log v5
+4	452	1766740753275879258	CMakeFiles/tor-native.dir/opus_codec.cpp.o	3b591ce0735c60d9
+2	1473	1766740754277513328	CMakeFiles/tor-native.dir/tor-native.cpp.o	6d1f07a8b102c973
+1478	1919	1766740754744013413	/Volumes/KINGSTON/AndroidStudioProjects/onion.network/app/build/intermediates/cxx/Debug/6j4d6q1w/obj/arm64-v8a/libtor-native.so	1eb6be14a5a2ee24

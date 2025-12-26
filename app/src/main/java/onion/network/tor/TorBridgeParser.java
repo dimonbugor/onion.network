@@ -286,6 +286,9 @@ public class TorBridgeParser {
         if (lower.contains("bridge webtunnel") || lower.contains(" webtunnel ")) {
             return;
         }
+        if (lower.contains("bridge meek") || lower.contains(" meek_lite ") || lower.contains(" meek ")) {
+            return;
+        }
 
         String normalized = normalizeBridgeLine(trimmed);
         String fingerprint = extractFingerprint(normalized);

@@ -176,6 +176,10 @@ public class TorManager {
                         Log.i("TorManager", "Skipping snowflake bridge: " + bridge);
                         continue;
                     }
+                    if (normalized.contains("bridge meek") || normalized.contains(" meek_lite ") || normalized.contains(" meek ")) {
+                        Log.i("TorManager", "Skipping meek bridge: " + bridge);
+                        continue;
+                    }
                     if (!normalized.startsWith("bridge ")) {
                         trimmed = "Bridge " + trimmed;
                     }
@@ -197,9 +201,6 @@ public class TorManager {
                         }
                         if (normalized.contains("bridge snowflake") || normalized.contains(" snowflake ")) {
                             clients.add("snowflake");
-                        }
-                        if (normalized.contains("bridge meek") || normalized.contains(" meek_lite ") || normalized.contains(" meek ")) {
-                            clients.add("meek");
                         }
                     }
                     writer.println();
