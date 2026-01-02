@@ -89,6 +89,18 @@ public class Server {
             return;
         }
 
+        if ("/wallbot.xml".equals(path) || "/rss".equals(path)) {
+            int n = 50;
+            try {
+                n = Integer.parseInt(uri.getQueryParameter("n"));
+            } catch (Exception ignored) {
+            }
+            String xml = buildWallBotXml(context, n);
+            response.setStatus(200, "OK");
+            response.setContent(xml.getBytes(UTF_8), "text/xml; charset=utf-8");
+            return;
+        }
+
         if (Settings.getPrefs(context).getBoolean("webprofile", true)) {
             if ("/".equals(path)) {
                 String content = "<a href=\"network.onion\">/network.onion</a>";
@@ -278,5 +290,41 @@ public class Server {
 
     public LocalSocket getLs() {
         return ls;
+    }
+
+    private String buildWallBotXml(Context context, int limit) {
+        ItemResult result = ItemDatabase.getInstance(context).get("post", "", limit);
+        StringBuilder sb = new StringBuilder(8192);
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        sb.append("<rss version=\"2.0\"><channel>");
+        sb.append("<title>").append(escapeXml("Profile Feed")).append("</title>");
+
+        for (int i = 0; i < result.size(); i++) {
+            Item it = result.at(i);
+            JSONObject o = it.json();
+            String guid = o.optString("event_id", it.key());
+            String title = o.optString("title", o.optString("text", "post"));
+            String link = o.optString("link", "");
+            String description = o.toString();
+
+            sb.append("<item>");
+            sb.append("<guid>").append(escapeXml(guid)).append("</guid>");
+            sb.append("<title>").append(escapeXml(title)).append("</title>");
+            sb.append("<link>").append(escapeXml(link)).append("</link>");
+            sb.append("<description>").append(escapeXml(description)).append("</description>");
+            sb.append("</item>");
+        }
+
+        sb.append("</channel></rss>");
+        return sb.toString();
+    }
+
+    private String escapeXml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;");
     }
 }

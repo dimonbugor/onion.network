@@ -92,6 +92,7 @@ dependencies {
 
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'io.github.webrtc-sdk:android:137.7151.04'
+    implementation 'org.vosk:android:0.3.38'
 
     // Pick only the JARs we actually need to avoid classpath clashes with bcprov
     testImplementation 'junit:junit:4.13.2'

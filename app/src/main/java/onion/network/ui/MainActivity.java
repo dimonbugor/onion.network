@@ -38,6 +38,9 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.Manifest;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -94,6 +97,7 @@ import onion.network.models.Item;
 import onion.network.models.ItemTask;
 import onion.network.models.Notifier;
 import onion.network.models.QR;
+import onion.network.models.VoiceAgent;
 import onion.network.R;
 import onion.network.models.Site;
 import onion.network.TorManager;
@@ -246,6 +250,17 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, s);
     }
 
+    private void requestMicIfNeeded() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO_PERMISSION);
+        } else {
+            startVoiceAgent();
+        }
+    }
+
     boolean overlayVisible = false;
     private final ExecutorService mediaExecutor = Executors.newSingleThreadExecutor();
 
@@ -261,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WeakReference<ChatPage> chatTargetRef;
     private ActivityResultLauncher<Intent> chatMediaPickerLauncher;
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 501;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -273,6 +289,8 @@ public class MainActivity extends AppCompatActivity {
         appliedTheme = ThemeManager.init(this).getTheme();
 
         setContentView(R.layout.activity_main);
+
+        requestMicIfNeeded();
 
         TorBridgeParser.addCaptchaListener(bridgeCaptchaListener);
         TorBridgeParser.CaptchaChallenge pending = TorBridgeParser.getPendingCaptcha();
@@ -323,6 +341,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         db = ItemDatabase.getInstance(this);
+        startVoiceAgent();
 
         wallPage = new WallPage(this);
         friendPage = new FriendPage(this);
@@ -876,6 +895,9 @@ public class MainActivity extends AppCompatActivity {
         ContextCompat.startForegroundService(this, new Intent(this, HostService.class));
 //        startService(new Intent(this, HostService.class));
     }
+    private void startVoiceAgent() {
+        VoiceAgent.getInstance(this).startVoskListening("vosk-model-small-en-us-0.15.zip", "main");
+    }
 
     void showEnterId() {
         View dialogView = getLayoutInflater().inflate(R.layout.friend_dialog, null);
@@ -1131,6 +1153,13 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         PermissionHelper.handleOnRequestPermissionsResult(this, requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startVoiceAgent();
+            } else {
+                log("Microphone permission denied; voice agent not started");
+            }
+        }
     }
 
     public BasePage currentPage() {

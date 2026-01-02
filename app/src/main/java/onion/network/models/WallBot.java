@@ -23,7 +23,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import onion.network.clients.HttpClient;
 import onion.network.databases.ItemDatabase;
+import onion.network.models.ItemResult;
 import onion.network.helpers.Utils;
+import onion.network.TorManager;
 import onion.network.settings.Settings;
 
 public class WallBot {
@@ -32,6 +34,9 @@ public class WallBot {
     String TAG = "WallBot";
     Context context;
     Timer timer;
+    private static final String[] SYNC_TYPES = new String[]{"post", "name", "thumb", "video", "video_thumb"};
+    private static final int SYNC_PAGE_SIZE = 128;
+    private static final long ORDER_BASE = 100000000000000L;
 
     public WallBot(Context context) {
         this.context = context;
@@ -79,6 +84,11 @@ public class WallBot {
                             } catch (Exception ex) {
                                 log(ex.toString());
                             }
+                            try {
+                                syncFriends();
+                            } catch (Exception ex) {
+                                log("syncFriends error " + ex);
+                            }
                         }
                     }.start();
                 }
@@ -88,14 +98,13 @@ public class WallBot {
 
     }
 
-    private String[] fetchRss(String addr) {
+    private RssEvent[] fetchRss(String addr) {
 
         try {
             byte[] data;
             Uri a = Uri.parse(addr);
             try {
                 data = HttpClient.getbin(a);
-                log(new String(data));
             } catch (IOException ex) {
                 log("feed error");
                 log(ex.toString());
@@ -106,7 +115,7 @@ public class WallBot {
 
             Document doc = documentBuilder.parse(new ByteArrayInputStream(data));
 
-            ArrayList<String> ret = new ArrayList<>();
+            ArrayList<RssEvent> ret = new ArrayList<>();
 
             NodeList items = doc.getElementsByTagName("item");
             for (int i = 0; i < items.getLength(); i++) {
@@ -119,24 +128,56 @@ public class WallBot {
 
                 String title = getTag(item, "title");
                 String link = getTag(item, "link");
+                String guid = getTag(item, "guid");
+                String description = getTag(item, "description");
 
-                if (title == null) continue;
-
-                String post = title.trim();
-                if (link != null) {
-                    Uri uri = Uri.parse(link);
-                    if (uri != null) {
-                        if (uri.getQueryParameter("url") != null) {
-                            link = uri.getQueryParameter("url");
-                        }
-                    }
-                    post += "\n" + link.trim();
+                JSONObject payload;
+                try {
+                    payload = description == null ? new JSONObject() : new JSONObject(description);
+                } catch (Exception ex) {
+                    payload = new JSONObject();
                 }
 
-                ret.add(post);
+                if (title != null && !title.trim().isEmpty() && !payload.has("title")) {
+                    payload.put("title", title.trim());
+                }
+                if (link != null && !link.trim().isEmpty()) {
+                    Uri uri = Uri.parse(link);
+                    if (uri != null && uri.getQueryParameter("url") != null) {
+                        link = uri.getQueryParameter("url");
+                    }
+                    if (!payload.has("link")) {
+                        payload.put("link", link.trim());
+                    }
+                }
+                if (!payload.has("text")) {
+                    StringBuilder sb = new StringBuilder();
+                    if (title != null) sb.append(title.trim());
+                    if (link != null && !link.trim().isEmpty()) {
+                        if (sb.length() > 0) sb.append("\n");
+                        sb.append(link.trim());
+                    }
+                    if (sb.length() > 0) {
+                        payload.put("text", sb.toString());
+                    }
+                }
+
+                long ts = payload.optLong("date", System.currentTimeMillis());
+                String eventId = guid;
+                if (eventId == null || eventId.trim().isEmpty()) {
+                    eventId = payload.optString("event_id", "");
+                }
+                if (eventId == null || eventId.trim().isEmpty()) {
+                    eventId = Utils.sha1Digest((title == null ? "" : title) + "|" + (link == null ? "" : link) + "|" + payload.toString());
+                }
+                eventId = eventId.trim();
+                payload.put("event_id", eventId);
+                payload.put("date", ts);
+
+                ret.add(new RssEvent(eventId, payload, ts));
             }
 
-            return ret.toArray(new String[ret.size()]);
+            return ret.toArray(new RssEvent[ret.size()]);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -150,7 +191,7 @@ public class WallBot {
 
         ItemDatabase db = ItemDatabase.getInstance(context);
 
-        String[] ss = fetchRss(Settings.getPrefs(context).getString("wallbotfeed", ""));
+        RssEvent[] ss = fetchRss(Settings.getPrefs(context).getString("wallbotfeed", ""));
 
         if (ss == null) return;
 
@@ -158,31 +199,16 @@ public class WallBot {
 
         if (ss.length == 0) return;
 
-        String[] ids = new String[ss.length];
-        String[] delkeys = new String[ss.length];
         for (int i = 0; i < ss.length; i++) {
-            ids[i] = Utils.sha1Digest(ss[i]);
-            delkeys[i] = "bot" + ids[i];
-        }
-
-        String q = "itemtype='post' AND itemkey LIKE 'bot%'";
-        for (String id : ids) {
-            q += " AND itemkey != ?";
-        }
-        int n = db.getWritableDatabase().delete("items", q, delkeys);
-        log("del " + n);
-
-        for (int si = 0; si < ss.length; si++) {
-
-            long k = System.currentTimeMillis();
-            long i = 100000000000000l - k;
-
-            JSONObject o = new JSONObject();
-            o.put("text", ss[si]);
-            o.put("date", k);
-
-            db.putIgnore(new Item("post", "bot" + ids[si], "" + i, o));
-
+            long ts = ss[i].timestamp;
+            long idx = ORDER_BASE - ts;
+            JSONObject payload = ss[i].payload;
+            if (!payload.has("event_id")) {
+                try {
+                    payload.put("event_id", ss[i].id);
+                } catch (Exception ignored) {}
+            }
+            db.putIgnore(new Item("post", ss[i].id, "" + idx, payload));
         }
 
         log("ready");
@@ -193,6 +219,67 @@ public class WallBot {
         if (l == null || l.getLength() == 0) return null;
         if (!(l.item(0) instanceof Element)) return null;
         return ((Element) l.item(0)).getTextContent();
+    }
+
+    private void syncFriends() {
+        ArrayList<String> friends = new ArrayList<>();
+        try {
+            ItemDatabase db = ItemDatabase.getInstance(context);
+            ItemResult itemResult = db.get("friend", "", 64);
+            for (int i = 0; i < itemResult.size(); i++) {
+                String addr = itemResult.at(i).key();
+                if (addr != null && !addr.trim().isEmpty()) {
+                    friends.add(addr.trim().toLowerCase());
+                }
+            }
+        } catch (Exception ex) {
+            log("load friends err " + ex.getMessage());
+        }
+        if (friends.isEmpty()) {
+            return;
+        }
+        String self = TorManager.getInstance(context).getID();
+        for (String addr : friends) {
+            if (addr.equals(self)) continue;
+            for (String type : SYNC_TYPES) {
+                new SyncItemTask(context, addr, type, "", SYNC_PAGE_SIZE).execute2();
+            }
+        }
+    }
+
+    private static class SyncItemTask extends ItemTask {
+        private final ItemDatabase db;
+
+        SyncItemTask(Context context, String address, String type, String index, int count) {
+            super(context, address, type, index, count);
+            this.db = ItemDatabase.getInstance(context);
+        }
+
+        @Override
+        protected void onPostExecute(ItemResult itemResult) {
+            if (itemResult == null || !itemResult.ok()) {
+                return;
+            }
+            try {
+                for (int i = 0; i < itemResult.size(); i++) {
+                    db.put(itemResult.at(i));
+                }
+            } catch (Exception ex) {
+                Log.w("WallBotSync", "store error " + ex.getMessage());
+            }
+        }
+    }
+
+    private static class RssEvent {
+        final String id;
+        final JSONObject payload;
+        final long timestamp;
+
+        RssEvent(String id, JSONObject payload, long timestamp) {
+            this.id = id;
+            this.payload = payload;
+            this.timestamp = timestamp;
+        }
     }
 
 }

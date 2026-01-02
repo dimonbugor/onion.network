@@ -31,6 +31,7 @@ import onion.network.tor.TorStatusFormatter;
 import onion.network.servers.BlogServer;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;
+import onion.network.models.VoiceAgent;
 
 public class HostService extends Service {
     private static final int NOTIFICATION_ID = 1;
@@ -82,6 +83,8 @@ public class HostService extends Service {
         if (torManager.isReady()) {
             postNotificationUpdate(getString(R.string.notification_tor_ready));
         }
+        // Запускаємо фонового voice-агента (Vosk) якщо є дозвіл і модель
+        VoiceAgent.getInstance(getApplicationContext()).startVoskListening("vosk-model-small-en-us-0.15.zip", "host-service");
         return START_STICKY;
     }
 
@@ -178,6 +181,7 @@ public class HostService extends Service {
         if (torManager != null) {
             torManager.removeLogListener(torLogListener);
         }
+        VoiceAgent.getInstance(getApplicationContext()).stopVoskListening();
 
         super.onDestroy();
     }
