@@ -79,6 +79,12 @@ public class Server {
         Uri uri = Uri.parse(request.getPath());
         String path = uri.getPath();
 
+        if (!authOk(uri)) {
+            response.setStatus(403, "Forbidden");
+            response.setContentPlain("Forbidden");
+            return;
+        }
+
         if ("/upload".equals(path)) {
             handleUpload(request, response);
             return;
@@ -290,6 +296,15 @@ public class Server {
 
     public LocalSocket getLs() {
         return ls;
+    }
+
+    private boolean authOk(Uri uri) {
+        String token = Settings.getPrefs(context).getString("authtoken", "");
+        if (token == null || token.trim().isEmpty()) {
+            return true;
+        }
+        String q = uri.getQueryParameter("auth");
+        return token.equals(q);
     }
 
     private String buildWallBotXml(Context context, int limit) {

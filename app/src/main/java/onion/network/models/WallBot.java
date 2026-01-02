@@ -103,6 +103,12 @@ public class WallBot {
         try {
             byte[] data;
             Uri a = Uri.parse(addr);
+            Uri.Builder builder = a.buildUpon();
+            String token = Settings.getPrefs(context).getString("authtoken", "");
+            if (token != null && !token.trim().isEmpty() && a.getQueryParameter("auth") == null) {
+                builder.appendQueryParameter("auth", token.trim());
+                a = builder.build();
+            }
             try {
                 data = HttpClient.getbin(a);
             } catch (IOException ex) {

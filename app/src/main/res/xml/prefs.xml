@@ -33,6 +33,12 @@
         android:summary="Allow a preview of your profile to be viewed using normal web browsers"
         />
 
+    <EditTextPreference
+        android:key="authtoken"
+        android:title="Auth token"
+        android:summary="Optional token to tag and validate own traffic"
+        android:dialogTitle="Set auth token" />
+
 
 
 

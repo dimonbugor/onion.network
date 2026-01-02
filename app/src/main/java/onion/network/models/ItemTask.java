@@ -102,6 +102,10 @@ public class ItemTask {
                 .append(index)
                 .append("&n=")
                 .append(count + 1);
+        String token = Settings.getPrefs(context).getString("authtoken", "");
+        if (token != null && !token.trim().isEmpty()) {
+            builder.append("&auth=").append(Uri.encode(token.trim()));
+        }
         if (knownHash != null && !knownHash.isEmpty()) {
             builder.append("&h=").append(Uri.encode(knownHash));
             builder.append("&skip=1");

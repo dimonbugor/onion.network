@@ -98,6 +98,7 @@ import onion.network.models.ItemTask;
 import onion.network.models.Notifier;
 import onion.network.models.QR;
 import onion.network.models.VoiceAgent;
+import onion.network.BuildConfig;
 import onion.network.R;
 import onion.network.models.Site;
 import onion.network.TorManager;
@@ -282,6 +283,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         startHostService();
+        if ("headless".equals(BuildConfig.FLAVOR)) {
+            finish();
+            return;
+        }
 
         Log.i(TAG, "onCreate");
         ThemeManager.init(this).applyNoActionBarTheme(this);

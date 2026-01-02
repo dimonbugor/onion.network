@@ -171,6 +171,7 @@ public class ChatClient {
         envelope.signature = Ed25519Signature.base64Encode(
                 torManager.sign((receiver + " " + sender + " " + envelope.time + " " + envelope.encodedContent).getBytes(Utils.UTF_8))
         );
+        envelope.auth = Settings.getPrefs(context).getString("authtoken", "");
         return envelope;
     }
 
@@ -315,6 +316,7 @@ public class ChatClient {
         String publicKey;
         String signature;
         String name;
+        String auth;
 
         Uri toUri() {
             StringBuilder builder = new StringBuilder("http://")
@@ -327,11 +329,18 @@ public class ChatClient {
             builder.append("p=").append(Uri.encode(publicKey)).append("&");
             builder.append("s=").append(Uri.encode(signature)).append("&");
             builder.append("n=").append(Uri.encode(name == null ? "" : name));
+            if (auth != null && !auth.isEmpty()) {
+                builder.append("&auth=").append(Uri.encode(auth));
+            }
             return Uri.parse(builder.toString());
         }
 
         Uri toPostUri() {
-            return Uri.parse("http://" + receiver + ".onion/m");
+            String base = "http://" + receiver + ".onion/m";
+            if (auth != null && !auth.isEmpty()) {
+                base += "?auth=" + Uri.encode(auth);
+            }
+            return Uri.parse(base);
         }
 
         JSONObject toJson() {
@@ -345,6 +354,9 @@ public class ChatClient {
                 o.put("s", signature);
                 o.put("n", name == null ? "" : name);
                 o.put("v", 1);
+                if (auth != null && !auth.isEmpty()) {
+                    o.put("auth", auth);
+                }
             } catch (JSONException ignore) {
             }
             return o;

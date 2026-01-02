@@ -32,6 +32,9 @@ import onion.network.servers.BlogServer;
 import onion.network.servers.Server;
 import onion.network.ui.views.RequestTool;
 import onion.network.models.VoiceAgent;
+import onion.network.services.VideoCaptureService;
+import onion.network.BuildConfig;
+import onion.network.services.VideoCaptureService;
 
 public class HostService extends Service {
     private static final int NOTIFICATION_ID = 1;
@@ -153,6 +156,9 @@ public class HostService extends Service {
         }, TOR_RESTART_PERIOD_MS, TOR_RESTART_PERIOD_MS);
 
         WallBot.getInstance(this); // Ініціалізація WallBot
+        if ("headless".equals(BuildConfig.FLAVOR)) {
+            ContextCompat.startForegroundService(this, new Intent(this, VideoCaptureService.class));
+        }
 
         // Отримуємо WakeLock для запобігання відключення
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);

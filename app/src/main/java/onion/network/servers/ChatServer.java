@@ -62,6 +62,9 @@ public class ChatServer {
             return handlePost(request);
         }
         Uri uri = Uri.parse(request.getPath());
+        if (!authOk(uri, request)) {
+            return false;
+        }
         return handleLegacy(uri);
     }
 
@@ -80,6 +83,11 @@ public class ChatServer {
             String pubkey = json.optString("p", null);
             String signature = json.optString("s", null);
             String name = json.optString("n", "");
+            String auth = json.optString("auth", null);
+            if (!authOk(auth)) {
+                log("auth fail");
+                return false;
+            }
             return processMessage(sender, receiver, time, message, pubkey, signature, name);
         } catch (JSONException ex) {
             log("invalid post json");
@@ -102,8 +110,40 @@ public class ChatServer {
         final String pubkey = uri.getQueryParameter("p");
         final String signature = uri.getQueryParameter("s");
         final String name = uri.getQueryParameter("n") != null ? uri.getQueryParameter("n") : "";
+        final String auth = uri.getQueryParameter("auth");
+        if (!authOk(auth)) {
+            log("auth fail");
+            return false;
+        }
 
         return processMessage(sender, receiver, time, m, pubkey, signature, name);
+    }
+
+    private boolean authOk(String auth) {
+        String token = Settings.getPrefs(context).getString("authtoken", "");
+        if (token == null || token.trim().isEmpty()) {
+            return true;
+        }
+        return token.equals(auth);
+    }
+
+    private boolean authOk(Uri uri, HttpServer.Request request) {
+        String token = Settings.getPrefs(context).getString("authtoken", "");
+        if (token == null || token.trim().isEmpty()) {
+            return true;
+        }
+        String q = uri.getQueryParameter("auth");
+        if (token.equals(q)) return true;
+        String bodyAuth = null;
+        try {
+            String body = request.hasBody() ? new String(request.getBody(), StandardCharsets.UTF_8) : null;
+            if (!TextUtils.isEmpty(body)) {
+                JSONObject json = new JSONObject(body);
+                bodyAuth = json.optString("auth", null);
+            }
+        } catch (Exception ignored) {
+        }
+        return token.equals(bodyAuth);
     }
 
     private boolean processMessage(String sender,
